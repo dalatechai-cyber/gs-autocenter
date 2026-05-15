@@ -1,0 +1,56 @@
+GS Auto Center — Brand Colors
+Source: GS auto center Brandguideline.pdf
+Extracted: 2026-05-15
+
+================================================================
+PRIMARY PALETTE (slide 15 — "Үндсэн өнгө" / Primary Colors)
+Each color carries a brand attribute.
+================================================================
+
+#DC0D01    RGB(220, 13, 1)       — хүчирхэг (Powerful)         [signature brand red]
+#5B0702    RGB(91, 7, 2)         — Мэргэжлийн (Professional)
+#E7E7E7    RGB(231, 231, 231)    — тогтвортой (Stable)
+#353338    RGB(53, 51, 56)       — чанартай (Quality)
+
+================================================================
+EXTENDED RED PALETTE (slide 16 — "Нэмэлт өнгө" / Additional Colors)
+Tonal range from signature red to deep maroon.
+================================================================
+
+#DC0D01    RGB(220, 13, 1)
+#B00B01    RGB(176, 11, 1)
+#970902    RGB(151, 9, 2)
+#810902    RGB(129, 9, 2)
+#620702    RGB(98, 7, 2)
+#300402    RGB(48, 4, 2)
+
+================================================================
+EXTENDED NEUTRAL PALETTE (slide 17 — "Нэмэлт өнгө" / Additional Colors)
+White-to-black range for backgrounds, typography, and surfaces.
+================================================================
+
+#FFFFFF    RGB(255, 255, 255)
+#F3F3F3    RGB(243, 243, 243)
+#D1D1D1    RGB(209, 209, 209)
+#1A1A1A    RGB(26, 26, 26)
+#131313    RGB(19, 19, 19)
+
+================================================================
+ALL HEX CODES (deduplicated, sorted)
+================================================================
+#131313
+#1A1A1A
+#300402
+#353338
+#5B0702
+#620702
+#810902
+#970902
+#B00B01
+#D1D1D1
+#DC0D01
+#E7E7E7
+#F3F3F3
+#FFFFFF
+
+Note: The PDF does not include CMYK or Pantone equivalents — only HEX and RGB are specified.

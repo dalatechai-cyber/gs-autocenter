@@ -1,0 +1,119 @@
+GS Auto Center — Vehicles, Brands, Product References
+Source: GS autocenter CATALOG.pdf  (12 pages, dated 2025)
+Extracted: 2026-05-15
+
+================================================================
+IMPORTANT NOTE
+================================================================
+This PDF is a COMPANY PROFILE / introductory brochure, not a parts
+catalog or price list. It contains NO specific vehicle models,
+NO part SKUs / model numbers, and NO prices. The fields below
+capture every brand, vehicle category, and product reference that
+actually appears in the document — nothing fabricated.
+
+================================================================
+VEHICLE BRANDS SERVICED
+================================================================
+TOYOTA                — Jeep-class vehicles (page 4: "TOYOTA болон LEXUS
+                        брэндийн жийп ангилалын автомашин")
+LEXUS                 — Jeep-class vehicles (same context as above)
+
+Note: The catalog states the service center specializes in TOYOTA and
+LEXUS SUV/jeep-class repair, but does NOT list individual model names
+(e.g. no Land Cruiser, LX, GX, etc. are mentioned by name).
+
+================================================================
+PARTNER / DISTRIBUTED BRANDS
+================================================================
+JAPAN TOK             — Official distributor in Mongolia since 2019 (page 8).
+                        Sold through 70+ retail points in Ulaanbaatar plus
+                        contracted dealers in 10+ aimags (Darkhan-Uul,
+                        Orkhon, Dornod, Bayankhongor, Selenge, Umnugovi,
+                        Uvs, Zavkhan, etc.). Product line covers suspension
+                        parts for Japanese sedans (see categories below).
+
+================================================================
+PRODUCT CATEGORIES (page 10 — closest thing to "model numbers")
+================================================================
+01  Явах эд ангийн сэлбэгүүд              Chassis / suspension parts
+02  Хөдөлгүүрийн эд ангийн сэлбэгүүд      Engine parts
+03  Цахилгааны эд ангиуд                  Electrical parts
+04  Салоны дотор эд ангиуд                Interior cabin parts
+05  Гадна деталь, боди сэлбэгүүд          Exterior body parts
+06  Тос, тосолгооны бүтээгдэхүүн          Oils & lubricants
+07  Автохимийн бүтээгдэхүүн               Automotive chemicals
+08  Автын дагалдах хэрэгсэл               Auto accessories
+09  Аккумулятор                           Batteries
+10  Дугуй                                 Tires
+
+================================================================
+SPECIFIC PART TYPES NAMED (JAPAN TOK line, page 8)
+================================================================
+- Цаапны шаарик                  (chassis bushings)
+- 5 бул / 3 бул                  (5-bolt / 3-bolt joints)
+- Гармушик резин                 (CV-joint boots / rubber components)
+- Амортизатор                    (shock absorbers)
+- Өндгөн тулгуур                 (ball joints)
+- Босоо тэнцүүлэгч               (vertical stabilizer)
+- Тяг                            (tie rod)
+- Шарнер                         (universal joint / hinge)
+- Тулк                           (bushings)
+- Свеча                          (spark plugs)
+- Наклад                         (brake pads / linings)
+
+Coverage: "all types of Japanese passenger-car suspension parts."
+
+================================================================
+COUNTRIES OF ORIGIN (importing from)
+================================================================
+USA, Japan, Arab states (UAE region) — OEM new parts, used original
+strip-down parts, and aftermarket parts
+Hong Kong, Arab states              — Used original strip-down parts
+South Korea, Germany, UK            — Oils, lubricants, auto chemicals,
+                                       accessories
+Total SKU count quoted: 2,000+ items.
+
+================================================================
+COMPANY STATISTICS
+================================================================
+Founded                : 2011 (import/trade), 2013 (service center)
+Years of experience    : 13+
+Service branches       : 2
+Employees              : 40+
+Customers served       : 8,000+
+Contracted distributors: 70+
+Product SKU count      : 2,000+
+Senior engineers       : 25+ (25+ years experience)
+Lead mechanics         : 15+
+Mechanical engineers   : 17+
+Engineering mechanics  : 8+ (8+ years experience)
+
+================================================================
+CORPORATE / FLEET CLIENTS NAMED
+================================================================
+- Алтан тариа ХХК (Altan Tariа LLC)
+- Монгол Даатгал ХХК (Mongol Daatgal LLC)
+- Шунхлай ХХК (Shunkhlai LLC)
+- Түмэн шувуут ХХК (Tumen Shuvuut LLC)
+- Бевэртек Монголиа ХХК (Bevertek Mongolia LLC)
+- ("plus 30+ organizations under standing service contracts")
+
+================================================================
+CONTACT
+================================================================
+Phone : +976 77-200-570, 91-200-570, 95-200-570
+Web   : www.gs-autocenter.mn
+Branch 1: Ulaanbaatar, BGD, 3rd khoroo, opposite Ministry of Road
+          & Transport, along Narny Zam, SW of Enkhtaivan Bridge
+Branch 2: Ulaanbaatar, KhUD, 3rd khoroo, west of Khusug Trade
+Registered HQ: Mongolia, Ulaanbaatar, BGD, 3rd khoroo, Industrial
+               Center Zone (16010), Narny Zam Street 6/2
+
+================================================================
+NOT PRESENT IN THIS DOCUMENT
+================================================================
+- Individual vehicle make/model listings (no Land Cruiser 200, LX 570
+  trim listings, etc.)
+- Part numbers / SKUs / OEM reference codes
+- Prices, quotes, or service rates
+- Tire sizes, battery capacities, or any spec tables
