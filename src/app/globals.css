@@ -1,26 +1,223 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =============================================================
+   GS AUTO CENTER — DESIGN FOUNDATION
+   Black is the canvas. Red is the scalpel. Hairlines, not shadows.
+   ============================================================= */
+
+@theme {
+  /* ---------- Reds — the scalpel ---------- */
+  --color-gs-red-50:  #FEE5E3;
+  --color-gs-red-100: #FBC5C1;
+  --color-gs-red-200: #F49994;
+  --color-gs-red-300: #ED6D67;
+  --color-gs-red-400: #E63D38;
+  --color-gs-red-500: #DC0D01;   /* PRIMARY */
+  --color-gs-red-600: #B00B01;
+  --color-gs-red-700: #970902;
+  --color-gs-red-800: #810902;
+  --color-gs-red-900: #620702;
+  --color-gs-red-950: #300402;
+  --color-gs-red:      #DC0D01;
+  --color-gs-red-deep: #5B0702;
+
+  /* ---------- Inks — the canvas ---------- */
+  --color-ink:        #131313;   /* page background — near-black */
+  --color-ink-raised: #181818;
+  --color-ink-card:   #1C1C1F;
+  --color-charcoal:   #353338;   /* dividers, secondary strokes */
+  --color-iron:       #4F4D52;
+  --color-graphite:   #8A878D;   /* muted body */
+  --color-fog:        #B8B6BB;
+  --color-mist:       #D1D1D1;
+  --color-paper:      #E7E7E7;   /* default text */
+  --color-paper-soft: #F3F3F3;
+  --color-snow:       #FFFFFF;
+
+  /* Semantic */
+  --color-background: var(--color-ink);
+  --color-foreground: var(--color-paper);
+  --color-accent:     var(--color-gs-red);
+
+  /* ---------- Type scale — mechanical, intentional ---------- */
+  --text-2xs: 0.6875rem;                /* 11px — engraved labels */
+  --text-2xs--line-height: 1rem;
+  --text-2xs--letter-spacing: 0.14em;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.1rem;
+  --text-xs--letter-spacing: 0.04em;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.4rem;
+
+  --text-base: 1rem;
+  --text-base--line-height: 1.65;
+
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6;
+
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.5;
+
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.25;
+
+  --text-3xl: 2.25rem;                  /* 36px */
+  --text-3xl--line-height: 1.12;
+  --text-3xl--letter-spacing: -0.01em;
+
+  --text-4xl: 3rem;                     /* 48px */
+  --text-4xl--line-height: 1.04;
+  --text-4xl--letter-spacing: -0.015em;
+
+  --text-5xl: 4rem;                     /* 64px */
+  --text-5xl--line-height: 1;
+  --text-5xl--letter-spacing: -0.02em;
+
+  --text-6xl: 5.5rem;                   /* 88px — hero */
+  --text-6xl--line-height: 0.96;
+  --text-6xl--letter-spacing: -0.025em;
+
+  --text-7xl: 7.5rem;                   /* 120px — display */
+  --text-7xl--line-height: 0.92;
+  --text-7xl--letter-spacing: -0.03em;
+
+  /* ---------- Motion — mechanical, never bouncy ---------- */
+  --ease-mech:    cubic-bezier(0.16, 1, 0.3, 1);   /* sharp ease-out */
+  --ease-mech-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-blade:   cubic-bezier(0.22, 1, 0.36, 1);  /* wipe / slice */
+
+  --duration-quick:      120ms;
+  --duration-fast:       150ms;
+  --duration-base:       180ms;
+  --duration-deliberate: 320ms;
+  --duration-cinematic:  600ms;
+
+  /* ---------- Shape ---------- */
+  --radius-blade: 2px;
+  --radius-tile:  4px;
+  --radius-frame: 8px;
+
+  /* ---------- Animations ---------- */
+  --animate-rise:       rise 480ms var(--ease-mech) both;
+  --animate-wipe-right: wipe-right 640ms var(--ease-blade) both;
+  --animate-pulse-red:  pulse-red 1.8s var(--ease-mech) infinite;
 }
 
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes wipe-right {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+@keyframes pulse-red {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0   var(--color-gs-red); }
+  50%      { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
+}
+
+/* Inline block: font tokens that reference next/font runtime vars */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-montserrat), "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  --font-wordmark: var(--font-audiowide), "Eurostile", "Bank Gothic", "Arial Narrow", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* =============================================================
+   BASE LAYER — dark canvas, Mongolian-first typography defaults
+   ============================================================= */
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "liga", "calt", "ss01";
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: 1.65;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    min-height: 100svh;
+  }
+
+  ::selection {
+    background: var(--color-gs-red);
+    color: var(--color-snow);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-gs-red);
+    outline-offset: 3px;
+  }
+
+  /* Engraved scrollbar */
+  *::-webkit-scrollbar        { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track  { background: var(--color-ink); }
+  *::-webkit-scrollbar-thumb  { background: var(--color-charcoal); border-radius: 0; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--color-iron); }
+
+  ::placeholder { color: var(--color-iron); }
+}
+
+/* =============================================================
+   COMPONENT LAYER — primitive patterns reused everywhere
+   ============================================================= */
+@layer components {
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: var(--text-2xs);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-gs-red);
+  }
+
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-charcoal) 12%,
+      var(--color-charcoal) 88%,
+      transparent
+    );
+  }
+
+  .hairline-red {
+    height: 1px;
+    background: var(--color-gs-red);
+  }
+
+  /* Engraved grid backdrop — like a machinist's blueprint */
+  .grid-engraved {
+    background-image:
+      linear-gradient(to right,  rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 96px 96px;
+  }
+
+  /* Vignette to focus center over engraved grid */
+  .vignette {
+    background:
+      radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        var(--color-ink) 78%
+      );
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 *.pdf
+
+# inspection / scratch artifacts
+public/brand/05_Фонт/_inspect/
