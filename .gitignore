@@ -44,6 +44,8 @@ next-env.d.ts
 # inspection / scratch artifacts
 public/brand/05_Фонт/_inspect/
 
-# large 3D model binaries — never commit; Blender prep produces them locally
-public/models/*.glb
+# 3D model binaries — raw inputs only. Production-ready *-ready.glb ARE committed
+# (small enough, needed by Vercel build for the interactive explorer).
+public/models/lc200.glb
+public/models/lx570.glb
 public/models/*.gltf
