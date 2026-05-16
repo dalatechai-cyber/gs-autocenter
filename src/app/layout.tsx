@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import Nav from "@/components/Nav";
 import "./globals.css";
 
 const montserrat = localFont({
@@ -60,7 +61,10 @@ export default function RootLayout({
       lang="mn"
       className={`${montserrat.variable} ${audiowide.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }
