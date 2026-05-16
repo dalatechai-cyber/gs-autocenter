@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm install && npm run build:css && npm run build:react",
+  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/logo.jpg"
+    }
+  ]
+}

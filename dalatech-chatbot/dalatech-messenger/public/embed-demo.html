@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalaTech Chatbot - Embeddable Widget Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .demo-content {
+            max-width: 900px;
+            padding: 60px 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #2B2B2B;
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 20px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+            text-align: left;
+        }
+        .feature {
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .feature h3 {
+            margin: 0 0 10px 0;
+            color: #2B2B2B;
+            font-size: 18px;
+        }
+        .feature p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .cta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .notice {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 40px;
+            text-align: left;
+        }
+        .notice strong {
+            color: #92400e;
+            font-size: 16px;
+        }
+        .notice p {
+            margin: 10px 0 0 0;
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-content">
+        <h1>🚀 DalaTech.ai Chatbot</h1>
+        <p class="subtitle">
+            Experience the power of AI-driven customer support.<br>
+            This page demonstrates the embeddable chatbot widget in action.
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature">
+                <h3>✅ Easy Integration</h3>
+                <p>One code snippet. Works on any website. No dependencies.</p>
+            </div>
+            <div class="feature">
+                <h3>🎨 Customizable</h3>
+                <p>Match your brand with custom colors, position, and styling.</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Responsive</h3>
+                <p>Perfect on mobile, tablet, and desktop devices.</p>
+            </div>
+            <div class="feature">
+                <h3>🤖 AI Powered</h3>
+                <p>Intelligent responses using Google Gemini AI technology.</p>
+            </div>
+            <div class="feature">
+                <h3>💬 Real-time Chat</h3>
+                <p>Instant responses. Conversation history. Always available.</p>
+            </div>
+            <div class="feature">
+                <h3>🔒 Secure & Safe</h3>
+                <p>Isolated iframe. No conflicts. Privacy protected.</p>
+            </div>
+        </div>
+
+        <div class="notice">
+            <strong>👉 Look at the bottom-right corner!</strong>
+            <p>Click the chat button to start a conversation with our AI assistant. Try asking about our services, pricing, or technical questions.</p>
+        </div>
+
+        <a href="/embed-guide.html" class="cta">
+            📋 Get Embed Code
+        </a>
+    </div>
+
+    <!-- DalaTech.ai Chatbot Widget -->
+    <!-- This is the embeddable code that users would copy and paste -->
+    
+    <button id="dalatech-chat-toggle"
+            aria-label="Open chat"
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2B2B2B 0%, #1F1F1F 100%); border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; overflow: hidden; padding: 0; transition: transform 0.3s ease, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #ECECEC;">
+      💬
+    </button>
+
+    <div id="dalatech-chatbot-container"
+         style="display: none; position: fixed; bottom: 90px; right: 20px; width: 400px; height: 600px; max-height: 80vh; background: #1F1F1F; border-radius: 16px; box-shadow: 0 5px 40px rgba(0,0,0,0.5); z-index: 99999; overflow: hidden; border: 1px solid #333;">
+      <iframe src="/index.html"
+              width="100%" height="100%" frameborder="0"
+              style="border-radius: 16px;"
+              title="DalaTech.ai Chatbot"></iframe>
+    </div>
+
+    <style>
+      #dalatech-chat-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      }
+      
+      @media (max-width: 480px) {
+        #dalatech-chatbot-container {
+          width: calc(100% - 32px) !important;
+          height: 70vh !important;
+          bottom: 90px !important;
+          right: 16px !important;
+        }
+      }
+    </style>
+
+    <script>
+      (function() {
+        const container = document.getElementById('dalatech-chatbot-container');
+        const btn = document.getElementById('dalatech-chat-toggle');
+
+        if (!container || !btn) {
+          console.error('DalaTech chatbot elements not found');
+          return;
+        }
+
+        btn.addEventListener('click', function() {
+          const isHidden = container.style.display === 'none' || container.style.display === '';
+          container.style.display = isHidden ? 'block' : 'none';
+          btn.style.transform = isHidden ? 'rotate(45deg)' : 'rotate(0deg)';
+          btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        });
+      })();
+    </script>
+</body>
+</html>

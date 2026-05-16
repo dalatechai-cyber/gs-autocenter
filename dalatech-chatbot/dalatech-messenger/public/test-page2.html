@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page 2 - Widget Persistence Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0fdf4;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #059669;
+        }
+        .nav-links {
+            margin-top: 30px;
+            padding: 20px;
+            background: #d1fae5;
+            border-radius: 8px;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .nav-links a:hover {
+            background: #047857;
+        }
+        .success-message {
+            margin-top: 30px;
+            padding: 20px;
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Test Page 2</h1>
+        <p>This is the second test page. If the fix is working correctly, the chatbot should maintain its open/closed state from the previous page.</p>
+        
+        <div class="success-message">
+            <h3>✨ Expected Behavior:</h3>
+            <p><strong>If the chatbot was open on Page 1:</strong> It should be open here too.</p>
+            <p><strong>If the chatbot was closed on Page 1:</strong> It should remain closed here.</p>
+            <p><strong>Chat history:</strong> All previous messages should still be visible.</p>
+        </div>
+        
+        <div class="nav-links">
+            <h3>Navigation:</h3>
+            <a href="test-page1.html">← Back to Test Page 1</a>
+            <a href="index.html">Main Chatbot Page</a>
+        </div>
+    </div>
+    
+    <!-- Include the widget script -->
+    <script src="widget.js"></script>
+</body>
+</html>

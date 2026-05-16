@@ -1,0 +1,46 @@
+Package Report
+
+-----------------------------------------------------------------------------
+Document:
+Name: lightbox-2.ai
+Color Mode: RGB color
+Color Profile: none
+Ruler Units: centimeters
+Artboard Dimensions: 282.2222 cm x 230.2228 cm
+Show Images in Outline Mode: OFF
+Highlight Substituted Fonts: OFF
+Highlight Substituted Glyphs: OFF
+Preserve Text Editability
+Simulate Colored Paper: OFF
+
+-----------------------------------------------------------------------------
+Spot Color Objects:
+
+-----------------------------------------------------------------------------
+Missing Fonts:NONE
+
+-----------------------------------------------------------------------------
+Protected Fonts that were not packaged:NONE
+
+-----------------------------------------------------------------------------
+Fonts:
+Montserrat Bold (TrueType)
+
+-----------------------------------------------------------------------------
+Embedded Fonts:
+NONE
+
+-----------------------------------------------------------------------------
+Missing Links:
+NONE
+
+-----------------------------------------------------------------------------
+Linked Images:
+
+C:\Users\e-source01\Downloads\futuristic-time-machines-design 1.png
+Type: Transparent RGB
+Bits per Pixel: 32
+Channels: 4
+Size: 203937K, 8000 by 6526 pixels
+Dimensions: 8000 by 6526 points 
+Resolution: 72 by 72 pixels per inch

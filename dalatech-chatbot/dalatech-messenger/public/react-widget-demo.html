@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalaTech React Chat Widget Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .demo-container {
+            max-width: 800px;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .features {
+            text-align: left;
+            margin: 30px 0;
+        }
+        .features h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .widget-notice {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border-left: 4px solid #667eea;
+        }
+        .widget-notice strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🚀 DalaTech.ai React Chat Widget</h1>
+        <p>
+            Welcome to the demonstration of the DalaTech.ai React-powered floating chat widget. 
+            This is a modern, fully-featured chatbot interface built with React and Tailwind CSS.
+        </p>
+        
+        <div class="features">
+            <h2>Features:</h2>
+            <ul>
+                <li>Floating button in bottom-right corner</li>
+                <li>Expand/collapse chat window on click</li>
+                <li>Real-time message exchange with backend API</li>
+                <li>Loading indicator during API calls</li>
+                <li>Conversation history persistence</li>
+                <li>Error handling for failed requests</li>
+                <li>Styled with Tailwind CSS</li>
+                <li>Responsive design (mobile & desktop)</li>
+                <li>Default collapsed state on page load</li>
+            </ul>
+        </div>
+
+        <div class="widget-notice">
+            <strong>👉 Look at the bottom-right corner!</strong><br>
+            Click the chat button to start a conversation with DalaTech.ai's AI assistant.
+        </div>
+    </div>
+
+    <!-- Load the React Chat Widget -->
+    <script type="module" src="/react-chat-widget.js"></script>
+</body>
+</html>

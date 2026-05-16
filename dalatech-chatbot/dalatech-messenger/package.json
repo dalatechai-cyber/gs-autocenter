@@ -1,0 +1,25 @@
+{
+  "name": "dalatech-chatbot",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI-powered sales consultant chatbot for DalaTech.ai",
+  "scripts": {
+    "dev": "vercel dev",
+    "dev:react": "vite",
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
+    "build:react": "vite build",
+    "check": "node --check api/chat.js && node --check public/app.js && node --check public/widget.js && echo '✅ All files validated'"
+  },
+  "dependencies": {
+    "node-fetch": "^3.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.10",
+    "vite": "^7.3.1"
+  }
+}

@@ -1,0 +1,51 @@
+<!-- DalaTech.ai Chatbot Widget -->
+<!-- Copy and paste this entire code snippet before the closing </body> tag of your HTML -->
+
+<button id="dalatech-chat-toggle"
+        aria-label="Open chat"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2B2B2B 0%, #1F1F1F 100%); border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; overflow: hidden; padding: 0; transition: transform 0.3s ease, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #ECECEC;">
+  💬
+</button>
+
+<div id="dalatech-chatbot-container"
+     style="display: none; position: fixed; bottom: 90px; right: 20px; width: 400px; height: 600px; max-height: 80vh; background: #1F1F1F; border-radius: 16px; box-shadow: 0 5px 40px rgba(0,0,0,0.5); z-index: 99999; overflow: hidden; border: 1px solid #333;">
+  <iframe src="https://dalatech-chatbot.vercel.app"
+          width="100%" height="100%" frameborder="0"
+          style="border-radius: 16px;"
+          title="DalaTech.ai Chatbot"></iframe>
+</div>
+
+<style>
+  #dalatech-chat-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  
+  @media (max-width: 480px) {
+    #dalatech-chatbot-container {
+      width: calc(100% - 32px) !important;
+      height: 70vh !important;
+      bottom: 90px !important;
+      right: 16px !important;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    const container = document.getElementById('dalatech-chatbot-container');
+    const btn = document.getElementById('dalatech-chat-toggle');
+
+    if (!container || !btn) {
+      console.error('DalaTech chatbot elements not found');
+      return;
+    }
+
+    btn.addEventListener('click', function() {
+      const isHidden = container.style.display === 'none' || container.style.display === '';
+      container.style.display = isHidden ? 'block' : 'none';
+      btn.style.transform = isHidden ? 'rotate(45deg)' : 'rotate(0deg)';
+      btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    });
+  })();
+</script>

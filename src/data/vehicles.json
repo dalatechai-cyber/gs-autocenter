@@ -1,0 +1,64 @@
+[
+  {
+    "id": "land-cruiser-300",
+    "name": "Land Cruiser 300",
+    "category": "Crossovers & SUV",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-300-front.png",
+    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-300-side.png",
+    "featured": true
+  },
+  {
+    "id": "land-cruiser-250",
+    "name": "Land Cruiser 250",
+    "category": "Crossovers & SUV",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2026/Apr/LC250.jpg",
+    "featured": true
+  },
+  {
+    "id": "land-cruiser-70",
+    "name": "Land Cruiser 70 Series",
+    "category": "Crossovers & SUV",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-70-front.png",
+    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-70-side.png",
+    "featured": false
+  },
+  {
+    "id": "rav4",
+    "name": "RAV4",
+    "category": "Crossovers & SUV",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2026/Jan/4-3-2-1-download.png",
+    "featured": false
+  },
+  {
+    "id": "alphard",
+    "name": "Alphard",
+    "category": "MPV-Van",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-alphard-front.png",
+    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-alphard-side.png",
+    "featured": true
+  },
+  {
+    "id": "granvia",
+    "name": "Granvia",
+    "category": "MPV-Van",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-granvia-front.png",
+    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-granvia-side.png",
+    "featured": false
+  },
+  {
+    "id": "hiace",
+    "name": "HiAce",
+    "category": "MPV-Van",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-hiace-front.png",
+    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-hiace-side.png",
+    "featured": false
+  },
+  {
+    "id": "hilux",
+    "name": "Hilux",
+    "category": "Pickup Truck",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-hilux-new-front.png",
+    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-hilux-new-side.png",
+    "featured": false
+  }
+]

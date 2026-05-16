@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalaTech Chatbot - Embeddable Widget Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1F1F1F;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .code-section {
+            background: #1F1F1F;
+            color: #ECECEC;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .code-section pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .copy-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #1d4ed8;
+        }
+        .copy-btn:active {
+            background: #1e40af;
+        }
+        .note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .note strong {
+            color: #92400e;
+        }
+        .steps {
+            margin: 30px 0;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #1F1F1F;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature {
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+        }
+        .feature h4 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 DalaTech.ai Chatbot - Embeddable Widget</h1>
+        <p class="subtitle">Add AI-powered chat support to your website in seconds</p>
+
+        <div class="features">
+            <div class="feature">
+                <h4>✨ Easy Installation</h4>
+                <p>Copy and paste one code snippet into your HTML</p>
+            </div>
+            <div class="feature">
+                <h4>🎨 Custom Styling</h4>
+                <p>Inline styles, no external CSS dependencies</p>
+            </div>
+            <div class="feature">
+                <h4>📱 Responsive</h4>
+                <p>Works perfectly on desktop and mobile devices</p>
+            </div>
+            <div class="feature">
+                <h4>🔒 Secure</h4>
+                <p>Isolated iframe, no conflicts with your site</p>
+            </div>
+        </div>
+
+        <div class="steps">
+            <div class="step">
+                <h3>Step 1: Copy the Code</h3>
+                <p>Copy the entire code snippet below. This includes the chat button, iframe container, and functionality.</p>
+            </div>
+
+            <div class="step">
+                <h3>Step 2: Paste Into Your Website</h3>
+                <p>Paste the code just before the closing <code>&lt;/body&gt;</code> tag of your HTML file or in your website's footer.</p>
+            </div>
+
+            <div class="step">
+                <h3>Step 3: Done! 🎉</h3>
+                <p>The chatbot will appear in the bottom-right corner of your website. Click it to start chatting!</p>
+            </div>
+        </div>
+
+        <h2>📋 Embeddable Code</h2>
+        <div class="note">
+            <strong>⚠️ Important:</strong> Replace <code>https://dalatech-chatbot.vercel.app</code> with your actual DalaTech chatbot URL if it's different.
+        </div>
+
+        <div class="code-section">
+            <pre id="embed-code">&lt;!-- DalaTech.ai Chatbot Widget --&gt;
+&lt;button id="dalatech-chat-toggle"
+        aria-label="Open chat"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2B2B2B 0%, #1F1F1F 100%); border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; overflow: hidden; padding: 0; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #ECECEC;"&gt;
+  💬
+&lt;/button&gt;
+
+&lt;div id="dalatech-chatbot-container"
+     style="display: none; position: fixed; bottom: 90px; right: 20px; width: 400px; height: 600px; max-height: 80vh; background: #1F1F1F; border-radius: 16px; box-shadow: 0 5px 40px rgba(0,0,0,0.5); z-index: 99999; overflow: hidden; border: 1px solid #333;"&gt;
+  &lt;iframe src="https://dalatech-chatbot.vercel.app"
+          width="100%" height="100%" frameborder="0"
+          style="border-radius: 16px;"
+          title="DalaTech.ai Chatbot"&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  #dalatech-chat-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  
+  @media (max-width: 480px) {
+    #dalatech-chatbot-container {
+      width: calc(100% - 32px) !important;
+      height: 70vh !important;
+      bottom: 90px !important;
+      right: 16px !important;
+    }
+  }
+&lt;/style&gt;
+
+&lt;script&gt;
+  (function() {
+    const container = document.getElementById('dalatech-chatbot-container');
+    const btn = document.getElementById('dalatech-chat-toggle');
+
+    if (!container || !btn) {
+      console.error('DalaTech chatbot elements not found');
+      return;
+    }
+
+    btn.addEventListener('click', function() {
+      const isHidden = container.style.display === 'none' || container.style.display === '';
+      container.style.display = isHidden ? 'block' : 'none';
+      btn.style.transform = isHidden ? 'rotate(45deg)' : 'rotate(0deg)';
+      btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    });
+  })();
+&lt;/script&gt;</pre>
+            <button class="copy-btn" onclick="copyCode()">📋 Copy Code to Clipboard</button>
+        </div>
+
+        <h2>🎨 Customization Options</h2>
+        <div class="step">
+            <h3>Change the Button Icon</h3>
+            <p>Replace <code>💬</code> with any emoji or use an image:</p>
+            <div class="code-section">
+                <pre>&lt;!-- With emoji --&gt;
+🤖
+
+&lt;!-- With image --&gt;
+&lt;img src="/your-logo.png" 
+     alt="Chat" 
+     style="width: 100%; height: 100%; object-fit: cover;"&gt;</pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Change Position</h3>
+            <p>Modify the <code>bottom</code> and <code>right</code> values in the inline styles:</p>
+            <div class="code-section">
+                <pre>bottom: 20px;  /* Distance from bottom */
+right: 20px;   /* Distance from right */
+
+/* Or use left instead of right */
+left: 20px;    /* Distance from left */</pre>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Change Size</h3>
+            <p>Adjust the <code>width</code> and <code>height</code> values:</p>
+            <div class="code-section">
+                <pre>/* Button size */
+width: 60px; 
+height: 60px;
+
+/* Container size */
+width: 400px;
+height: 600px;</pre>
+            </div>
+        </div>
+
+        <h2>❓ Troubleshooting</h2>
+        <div class="step">
+            <h3>Button doesn't appear</h3>
+            <p>Make sure you've pasted the code before the <code>&lt;/body&gt;</code> tag and not inside another element with <code>position: relative</code> or low <code>z-index</code>.</p>
+        </div>
+
+        <div class="step">
+            <h3>Chatbot doesn't load</h3>
+            <p>Check that the iframe URL is correct and accessible. Open the URL in a new browser tab to verify it works.</p>
+        </div>
+
+        <div class="step">
+            <h3>Button conflicts with other elements</h3>
+            <p>Adjust the <code>z-index</code> value (currently 99999) if needed, or change the position values.</p>
+        </div>
+
+        <h2>📞 Support</h2>
+        <p>Need help? Contact DalaTech.ai:</p>
+        <ul>
+            <li>📧 Email: dalatech.ai@gmail.com</li>
+            <li>📱 Phone: 99273339</li>
+        </ul>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('embed-code').textContent;
+            navigator.clipboard.writeText(code).then(function() {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#10b981';
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.style.background = '#2563eb';
+                }, 2000);
+            }).catch(function(err) {
+                alert('Failed to copy. Please select and copy manually.');
+                console.error('Copy failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
