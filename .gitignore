@@ -43,3 +43,7 @@ next-env.d.ts
 
 # inspection / scratch artifacts
 public/brand/05_Фонт/_inspect/
+
+# large 3D model binaries — never commit; Blender prep produces them locally
+public/models/*.glb
+public/models/*.gltf
