@@ -114,7 +114,7 @@ function FeaturedCard({
       className="group/card relative flex flex-col overflow-hidden border border-charcoal/60 bg-ink-raised transition-colors duration-200 ease-out hover:border-paper/30"
     >
       {/* Image pedestal — light stage for the car */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-b from-snow via-snow to-paper-soft">
+      <div className="relative aspect-[16/10] overflow-hidden bg-snow">
         {/* Ambient red ground glow */}
         <div
           aria-hidden
@@ -195,7 +195,7 @@ function SecondaryCard({
       aria-label={`${name} — ${CATEGORY_MN[category] ?? category}`}
       className="group/card relative flex flex-col overflow-hidden border border-charcoal/60 bg-ink-raised transition-colors duration-200 ease-out hover:border-paper/30"
     >
-      <div className="relative aspect-[5/3] overflow-hidden bg-gradient-to-b from-snow via-snow to-paper-soft">
+      <div className="relative aspect-[5/3] overflow-hidden bg-snow">
         <div
           aria-hidden
           className="absolute -bottom-4 left-1/2 h-12 w-2/3 -translate-x-1/2 rounded-full bg-gs-red/30 blur-2xl"

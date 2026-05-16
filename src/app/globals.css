@@ -145,6 +145,7 @@
     background: var(--color-ink);
     color: var(--color-paper);
     min-height: 100svh;
+    overflow-x: clip;
   }
 
   ::selection {
