@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PhoneIcon } from "./icons";
+import {
+  BRANCH_1_HOURS,
+  BRANCH_1_LOCATION,
+  PHONE_DISPLAY,
+  PHONE_HREF,
+} from "@/lib/contact";
 
 const LINKS = [
   { href: "#uilchilgee", label: "Үйлчилгээ" },
@@ -12,9 +18,6 @@ const LINKS = [
   { href: "#bidnii-tuhai", label: "Бидний тухай" },
   { href: "#holboo", label: "Холбоо барих" },
 ] as const;
-
-const PHONE_HREF = "tel:+97677200570";
-const PHONE_DISPLAY = "+976 77-200-570";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -190,7 +193,7 @@ function MobileDrawer({
           className="relative flex flex-1 flex-col px-5 pt-10 sm:px-7"
           aria-label="Үндсэн цэс"
         >
-          <ol className="flex flex-col gap-7">
+          <ul className="flex flex-col gap-7">
             {LINKS.map(({ href, label }, i) => (
               <li
                 key={href}
@@ -200,7 +203,10 @@ function MobileDrawer({
                 }}
                 className="flex items-baseline gap-4"
               >
-                <span className="font-wordmark text-[10px] uppercase tracking-[0.24em] tabular-nums text-gs-red">
+                <span
+                  aria-hidden
+                  className="font-wordmark text-[10px] uppercase tracking-[0.24em] tabular-nums text-gs-red"
+                >
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <Link
@@ -212,7 +218,7 @@ function MobileDrawer({
                 </Link>
               </li>
             ))}
-          </ol>
+          </ul>
         </nav>
 
         {/* Phone block — bottom */}
@@ -230,7 +236,9 @@ function MobileDrawer({
           </a>
           <div className="mt-4 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em] text-graphite">
             <span aria-hidden className="block size-1.5 bg-gs-red" />
-            <span>Өдөр бүр 09:00 – 19:00 · Салбар 1</span>
+            <span>
+              {BRANCH_1_HOURS} · {BRANCH_1_LOCATION.split(" · ")[1]}
+            </span>
           </div>
         </div>
       </aside>

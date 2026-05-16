@@ -1,6 +1,5 @@
 import { ArrowRight, PhoneIcon } from "./icons";
-
-const PHONE_HREF = "tel:+97677200570";
+import { PHONE_HREF } from "@/lib/contact";
 
 export default function Hero() {
   return (

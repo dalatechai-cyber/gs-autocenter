@@ -63,8 +63,11 @@ function Stat({
     <div
       className={`relative flex flex-col gap-3 px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-14 ${mobileBorders} ${desktopBorders} ${index === 4 ? "lg:col-span-1" : ""}`}
     >
-      {/* Cell index — tiny audiowide marker */}
-      <span className="font-wordmark text-[10px] uppercase tracking-[0.24em] text-gs-red tabular-nums">
+      {/* Cell index — decorative, hidden from screen readers */}
+      <span
+        aria-hidden
+        className="font-wordmark text-[10px] uppercase tracking-[0.24em] tabular-nums text-gs-red"
+      >
         {String(index + 1).padStart(2, "0")}
       </span>
 
