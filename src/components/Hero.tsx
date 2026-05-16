@@ -6,7 +6,7 @@ export default function Hero() {
     <section
       id="hero"
       aria-label="GS Auto Center — Toyota & Lexus засвар үйлчилгээ"
-      className="relative isolate flex min-h-svh flex-col overflow-hidden bg-ink"
+      className="relative isolate flex min-h-svh flex-col overflow-clip bg-ink"
     >
       {/* Engraved blueprint grid */}
       <div
@@ -22,7 +22,7 @@ export default function Hero() {
       {/* Background watermark — TOYOTA · LEXUS in Audiowide, bleeds off-screen */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 select-none overflow-hidden"
+        className="pointer-events-none absolute inset-0 select-none overflow-clip"
       >
         <span
           className="absolute bottom-[-6%] left-[-4%] block whitespace-nowrap font-wordmark uppercase text-paper/[0.03]"

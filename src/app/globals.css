@@ -136,6 +136,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-feature-settings: "kern", "liga", "calt", "ss01";
+    overflow-x: clip;
   }
 
   body {
