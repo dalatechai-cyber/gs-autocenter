@@ -90,6 +90,67 @@ export default function VehicleExplorerClient() {
     if (!mv) return;
 
     let cancelled = false;
+
+    // Per-vehicle body paint color. The GLBs are baked with light gray
+    // materials from the Blender prep script (rgb 0.78,0.78,0.80) which
+    // model-viewer renders as chalky white. Override per-material at
+    // runtime so the body reads as a proper dark metallic.
+    const paintByVehicle: Record<VehicleKey, [number, number, number, number]> = {
+      lc200: [0.040, 0.050, 0.062, 1], // obsidian dark navy
+      lx570: [0.520, 0.540, 0.560, 1], // Lexus atomic silver
+    };
+    const paint = paintByVehicle[vehicleKey];
+
+    const overrideMaterials = () => {
+      const model = (mv as unknown as { model?: { materials: unknown[] } }).model;
+      if (!model) return;
+      for (const m of model.materials) {
+        const mat = m as {
+          name?: string;
+          pbrMetallicRoughness: {
+            setBaseColorFactor: (rgba: [number, number, number, number]) => void;
+            setMetallicFactor: (v: number) => void;
+            setRoughnessFactor: (v: number) => void;
+          };
+        };
+        const name = (mat.name ?? "").toLowerCase();
+        // Glass / windows / lights — leave whatever the GLB had.
+        if (
+          name.includes("glass") ||
+          name.includes("window") ||
+          name.includes("headlight") ||
+          name.includes("taillight") ||
+          name.includes("lamp") ||
+          name.includes("led")
+        ) {
+          continue;
+        }
+        // Tires / rubber — matte dark.
+        if (name.includes("tire") || name.includes("gum") || name.includes("rubber")) {
+          mat.pbrMetallicRoughness.setBaseColorFactor([0.035, 0.035, 0.037, 1]);
+          mat.pbrMetallicRoughness.setMetallicFactor(0);
+          mat.pbrMetallicRoughness.setRoughnessFactor(0.92);
+          continue;
+        }
+        // Wheel rims / chrome — bright polished metal.
+        if (
+          name.includes("rim") ||
+          name.includes("wheel") ||
+          name.includes("chrome") ||
+          name.includes("brake")
+        ) {
+          mat.pbrMetallicRoughness.setBaseColorFactor([0.68, 0.69, 0.71, 1]);
+          mat.pbrMetallicRoughness.setMetallicFactor(1);
+          mat.pbrMetallicRoughness.setRoughnessFactor(0.22);
+          continue;
+        }
+        // Default = body paint.
+        mat.pbrMetallicRoughness.setBaseColorFactor(paint);
+        mat.pbrMetallicRoughness.setMetallicFactor(0.92);
+        mat.pbrMetallicRoughness.setRoughnessFactor(0.34);
+      }
+    };
+
     const onLoad = () => {
       if (cancelled) return;
       const orbit = mv.getCameraOrbit();
@@ -99,6 +160,7 @@ export default function VehicleExplorerClient() {
       const targetYLifted = target.y + dim.y * 0.25;
       mv.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${tightRadius}m`;
       mv.cameraTarget = `${target.x}m ${targetYLifted}m ${target.z}m`;
+      overrideMaterials();
     };
 
     mv.addEventListener("load", onLoad);
