@@ -296,16 +296,10 @@ export default function CarModel({
       doorPivotsRef.current.set(doorId, { pivot, sign });
     }
 
-    // Compute fit bbox from KNOWN car-part meshes only (body, wheels, doors,
-    // glass, lights). Random helper / animation-rig nodes in the GLB can sit
-    // far from the actual car body and would otherwise blow up the bbox.
-    const fitTargets: THREE.Mesh[] = [];
-    for (const meshes of meshesByPartId.values()) {
-      fitTargets.push(...meshes);
-    }
-    const finalBox = fitTargets.length
-      ? bboxOf(fitTargets)
-      : new THREE.Box3().setFromObject(scene);
+    // Bbox over all visible meshes. We intentionally use the FULL scene
+    // rather than the part-id filtered set, because the LC200 GLB has many
+    // unnamed mesh leaves that aren't matched but are visually important.
+    const finalBox = new THREE.Box3().setFromObject(scene);
     const finalSize = finalBox.getSize(new THREE.Vector3());
     const finalCenter = finalBox.getCenter(new THREE.Vector3());
     const maxDim = Math.max(finalSize.x, finalSize.z) || 1; // car length, not height
