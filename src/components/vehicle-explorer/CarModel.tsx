@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useGLTF, Html, useBounds } from "@react-three/drei";
+import { useGLTF, Html } from "@react-three/drei";
 import { useSpring } from "@react-spring/three";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -189,7 +189,6 @@ export default function CarModel({
 }: Props) {
   const { scene } = useGLTF(url) as unknown as { scene: THREE.Group };
   const groupRef = useRef<THREE.Group>(null);
-  const bounds = useBounds();
 
   const mats = useMemo(() => buildMaterials(paintColor), [paintColor]);
 
@@ -305,22 +304,12 @@ export default function CarModel({
     const maxDim = Math.max(finalSize.x, finalSize.z) || 1; // car length, not height
     setFit({
       center: finalCenter.clone().negate(),
-      scale: 5.2 / maxDim,
+      // Target the car length to fill ~5.5 world units so it dominates the
+      // camera frame at fov 30 / distance ~5.5.
+      scale: 5.5 / maxDim,
       bboxHeight: finalSize.y,
     });
   }, [scene, meshesByPartId, fit]);
-
-  // Once the model is centered/grounded, ask Bounds to re-fit the camera.
-  useEffect(() => {
-    if (!fit) return;
-    // Two-frame delay so the primitive position prop has applied.
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        bounds.refresh().clip().fit();
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [fit, bounds]);
 
   const hoodSpring = useSpring({
     rot: hoodOpen ? (Math.PI / 180) * 62 : 0,
@@ -424,21 +413,19 @@ export default function CarModel({
 
   const showEngineBay = hoodOpen && hoodPivotRef.current !== null;
 
-  // Bounds (in the parent) handles auto-fitting the camera. We translate
-  // the scene so its bbox center sits at origin (so auto-rotate spins around
-  // the right point) AND its bbox bottom touches y=0 (so contact shadows hit).
-  let groundedY = 0;
-  if (fit) {
-    // fit.center already holds the NEGATED bbox center. Add half the bbox
-    // height so we shift up by half-height → bbox bottom at y=0.
-    groundedY = fit.center.y + (fit.bboxHeight ?? 0) / 2;
-  }
+  // The model's bbox center is offset from its origin. We translate the
+  // scene so its bbox center sits at world origin, then shift up by half
+  // the bbox height so its BOTTOM rests at y=0 (so contact shadows align
+  // under the wheels). fit.scale auto-sizes the model so the whole car
+  // length fills a consistent visual frame.
+  const finalScale = fit?.scale ?? 1;
+  const groundedY = fit ? fit.center.y + (fit.bboxHeight ?? 0) / 2 : 0;
   const safeCenter: [number, number, number] = fit
     ? [fit.center.x, groundedY, fit.center.z]
     : [0, 0, 0];
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} scale={finalScale}>
       <primitive
         object={scene}
         position={safeCenter}
