@@ -291,11 +291,20 @@ export default function CarModel({
       doorPivotsRef.current.set(doorId, { pivot, sign });
     }
 
-    const finalBox = new THREE.Box3().setFromObject(scene);
+    // Compute fit bbox from KNOWN car-part meshes only (body, wheels, doors,
+    // glass, lights). Random helper / animation-rig nodes in the GLB can sit
+    // far from the actual car body and would otherwise blow up the bbox.
+    const fitTargets: THREE.Mesh[] = [];
+    for (const meshes of meshesByPartId.values()) {
+      fitTargets.push(...meshes);
+    }
+    const finalBox = fitTargets.length
+      ? bboxOf(fitTargets)
+      : new THREE.Box3().setFromObject(scene);
     const finalSize = finalBox.getSize(new THREE.Vector3());
     const finalCenter = finalBox.getCenter(new THREE.Vector3());
-    const maxDim = Math.max(finalSize.x, finalSize.y, finalSize.z) || 1;
-    setFit({ center: finalCenter.clone().negate(), scale: 11 / maxDim });
+    const maxDim = Math.max(finalSize.x, finalSize.z) || 1; // car length, not height
+    setFit({ center: finalCenter.clone().negate(), scale: 5.2 / maxDim });
   }, [scene, meshesByPartId, fit]);
 
   const hoodSpring = useSpring({
@@ -400,14 +409,13 @@ export default function CarModel({
 
   const showEngineBay = hoodOpen && hoodPivotRef.current !== null;
 
-  // While fit is being computed, render the scene at a sane default scale so
-  // the car is at least visible. Once fit lands, it re-renders with the
-  // bounding-box-fitted transform.
-  const safeScale = fit?.scale ?? 2.2;
+  // Bounds (in the parent) handles auto-fitting the camera to this group.
+  // We only use `fit` to translate the model so its bbox center sits at origin
+  // (otherwise auto-rotate spins around the wrong point).
   const safeCenter = fit?.center.toArray() ?? [0, 0, 0];
 
   return (
-    <group ref={groupRef} scale={safeScale} position={[0, -0.55, 0]}>
+    <group ref={groupRef}>
       <primitive
         object={scene}
         position={safeCenter}

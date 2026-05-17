@@ -5,6 +5,7 @@ import {
   OrbitControls,
   Environment,
   ContactShadows,
+  Bounds,
   useGLTF,
   Html,
   useProgress,
@@ -125,7 +126,7 @@ function Stage({
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ position: [4.0, 2.0, cfg.cameraDistance], fov: 32 }}
+      camera={{ position: [3.2, 1.4, cfg.cameraDistance], fov: 30 }}
       gl={{
         antialias: true,
         powerPreference: "high-performance",
@@ -167,27 +168,29 @@ function Stage({
       <pointLight position={[0, -0.5, 5]} intensity={0.35} color={"#ffb88a"} distance={12} />
 
       <Suspense fallback={<CanvasLoader />}>
-        <CarModel
-          key={vehicleKey}
-          url={cfg.url}
-          parts={cfg.parts}
-          paintColor={cfg.paintColor}
-          hoveredId={hoveredId}
-          pickedId={pickedId}
-          hoodOpen={hoodOpen}
-          openDoors={openDoors}
-          engineBay={cfg.engineBay}
-          onHover={setHovered}
-          onPick={handlePick}
-          onEngineBayPick={onEngineBayPick}
-          autoRotate={autoRotate}
-        />
+        <Bounds fit clip observe margin={1.05}>
+          <CarModel
+            key={vehicleKey}
+            url={cfg.url}
+            parts={cfg.parts}
+            paintColor={cfg.paintColor}
+            hoveredId={hoveredId}
+            pickedId={pickedId}
+            hoodOpen={hoodOpen}
+            openDoors={openDoors}
+            engineBay={cfg.engineBay}
+            onHover={setHovered}
+            onPick={handlePick}
+            onEngineBayPick={onEngineBayPick}
+            autoRotate={autoRotate}
+          />
+        </Bounds>
         <ContactShadows
-          position={[0, -1.55, 0]}
-          opacity={0.82}
-          scale={16}
-          blur={2.6}
-          far={4}
+          position={[0, -0.95, 0]}
+          opacity={0.78}
+          scale={12}
+          blur={2.4}
+          far={3.2}
           color={"#000000"}
           resolution={1024}
         />
