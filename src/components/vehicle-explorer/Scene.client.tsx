@@ -187,7 +187,7 @@ export default function VehicleExplorerClient() {
         </div>
 
         <div className="relative mt-2 border-x border-b border-charcoal/60 bg-gradient-to-b from-ink-raised via-ink to-ink">
-          <div className="relative h-[560px] w-full sm:h-[640px] lg:h-[720px]">
+          <div className="relative h-[70vh] min-h-[600px] w-full sm:min-h-[640px] lg:min-h-[720px]">
             <model-viewer
               ref={viewerRef as React.RefObject<HTMLElement>}
               key={vehicleKey}
@@ -199,10 +199,9 @@ export default function VehicleExplorerClient() {
               exposure="1.2"
               tone-mapping="aces"
               camera-controls
-              camera-orbit="-25deg 75deg auto"
-              field-of-view="32deg"
-              min-camera-orbit="auto auto 3.5m"
-              max-camera-orbit="auto auto 12m"
+              camera-orbit="-25deg 78deg auto"
+              field-of-view="22deg"
+              camera-target="0m 200m 0m"
               interaction-prompt="none"
               loading="eager"
               reveal="auto"
