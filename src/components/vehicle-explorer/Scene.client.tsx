@@ -125,7 +125,7 @@ function Stage({
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ position: [3.4, 1.8, cfg.cameraDistance], fov: 30 }}
+      camera={{ position: [3.0, 1.7, cfg.cameraDistance], fov: 32 }}
       gl={{
         antialias: true,
         powerPreference: "high-performance",
@@ -183,11 +183,11 @@ function Stage({
           autoRotate={autoRotate}
         />
         <ContactShadows
-          position={[0, -0.95, 0]}
-          opacity={0.78}
-          scale={12}
-          blur={2.4}
-          far={3.2}
+          position={[0, 0.01, 0]}
+          opacity={0.85}
+          scale={14}
+          blur={2.6}
+          far={3.6}
           color={"#000000"}
           resolution={1024}
         />
@@ -195,7 +195,7 @@ function Stage({
 
       <OrbitControls
         enablePan={false}
-        target={[0, 0.8, 0]}
+        target={[0, 1.0, 0]}
         minDistance={3.2}
         maxDistance={12}
         minPolarAngle={Math.PI / 7}

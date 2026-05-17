@@ -63,10 +63,10 @@ function buildMaterials(paintColor: string) {
   });
 
   const wheelRim = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#bcbec4"),
-    metalness: 1.0,
-    roughness: 0.18,
-    envMapIntensity: 1.5,
+    color: new THREE.Color("#3d3f44"),
+    metalness: 0.92,
+    roughness: 0.42,
+    envMapIntensity: 1.05,
   });
 
   const headlight = new THREE.MeshStandardMaterial({
@@ -304,9 +304,9 @@ export default function CarModel({
     const maxDim = Math.max(finalSize.x, finalSize.z) || 1; // car length, not height
     setFit({
       center: finalCenter.clone().negate(),
-      // Target the car length to fill ~5.5 world units so it dominates the
+      // Target the car length to fill ~7 world units so it dominates the
       // camera frame at fov 30 / distance ~5.5.
-      scale: 5.5 / maxDim,
+      scale: 7 / maxDim,
       bboxHeight: finalSize.y,
     });
   }, [scene, meshesByPartId, fit]);
