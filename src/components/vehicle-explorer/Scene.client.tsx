@@ -67,6 +67,51 @@ export default function VehicleExplorerClient() {
     setPicked(null);
   }, [vehicleKey]);
 
+  /**
+   * Once each GLB loads, frame it consistently regardless of the model's
+   * underlying unit scale (LC200 uses mm, LX570 may use meters, etc).
+   *
+   * 1. Read the auto-computed camera orbit (model-viewer's default fit) and
+   *    pull the radius in by 35% so the car commands the frame.
+   * 2. Re-anchor the look-at target on the model's bbox center + raise Y by
+   *    ~25% of the bbox height so the car sits visually centered, not
+   *    sinking toward the bottom of the canvas.
+   */
+  useEffect(() => {
+    const mv = viewerRef.current as
+      | (HTMLElement & {
+          getCameraOrbit: () => { theta: number; phi: number; radius: number };
+          getCameraTarget: () => { x: number; y: number; z: number };
+          getDimensions: () => { x: number; y: number; z: number };
+          cameraOrbit: string;
+          cameraTarget: string;
+        })
+      | null;
+    if (!mv) return;
+
+    let cancelled = false;
+    const onLoad = () => {
+      if (cancelled) return;
+      const orbit = mv.getCameraOrbit();
+      const target = mv.getCameraTarget();
+      const dim = mv.getDimensions();
+      const tightRadius = orbit.radius * 0.65;
+      const targetYLifted = target.y + dim.y * 0.25;
+      mv.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${tightRadius}m`;
+      mv.cameraTarget = `${target.x}m ${targetYLifted}m ${target.z}m`;
+    };
+
+    mv.addEventListener("load", onLoad);
+    // If the model is already loaded by the time this effect runs (the
+    // `key` swap remount may complete fast enough), apply once immediately.
+    if ((mv as unknown as { loaded?: boolean }).loaded) onLoad();
+
+    return () => {
+      cancelled = true;
+      mv.removeEventListener("load", onLoad);
+    };
+  }, [vehicleKey]);
+
   const cfg = VEHICLES[vehicleKey];
 
   const pickedPart = useMemo(
@@ -201,7 +246,7 @@ export default function VehicleExplorerClient() {
               camera-controls
               camera-orbit="-25deg 78deg auto"
               field-of-view="22deg"
-              camera-target="0m 200m 0m"
+              camera-target="auto auto auto"
               interaction-prompt="none"
               loading="eager"
               reveal="auto"
