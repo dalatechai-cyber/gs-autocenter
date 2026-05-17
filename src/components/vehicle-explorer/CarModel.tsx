@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { useGLTF, Html } from "@react-three/drei";
+import { useGLTF, Html, useBounds } from "@react-three/drei";
 import { useSpring } from "@react-spring/three";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -189,6 +189,7 @@ export default function CarModel({
 }: Props) {
   const { scene } = useGLTF(url) as unknown as { scene: THREE.Group };
   const groupRef = useRef<THREE.Group>(null);
+  const bounds = useBounds();
 
   const mats = useMemo(() => buildMaterials(paintColor), [paintColor]);
 
@@ -239,7 +240,11 @@ export default function CarModel({
   const doorPivotsRef = useRef<
     Map<string, { pivot: THREE.Group; sign: number }>
   >(new Map());
-  const [fit, setFit] = useState<{ center: THREE.Vector3; scale: number } | null>(null);
+  const [fit, setFit] = useState<{
+    center: THREE.Vector3;
+    scale: number;
+    bboxHeight: number;
+  } | null>(null);
 
   useEffect(() => {
     if (fit) return;
@@ -304,8 +309,24 @@ export default function CarModel({
     const finalSize = finalBox.getSize(new THREE.Vector3());
     const finalCenter = finalBox.getCenter(new THREE.Vector3());
     const maxDim = Math.max(finalSize.x, finalSize.z) || 1; // car length, not height
-    setFit({ center: finalCenter.clone().negate(), scale: 5.2 / maxDim });
+    setFit({
+      center: finalCenter.clone().negate(),
+      scale: 5.2 / maxDim,
+      bboxHeight: finalSize.y,
+    });
   }, [scene, meshesByPartId, fit]);
+
+  // Once the model is centered/grounded, ask Bounds to re-fit the camera.
+  useEffect(() => {
+    if (!fit) return;
+    // Two-frame delay so the primitive position prop has applied.
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bounds.refresh().clip().fit();
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [fit, bounds]);
 
   const hoodSpring = useSpring({
     rot: hoodOpen ? (Math.PI / 180) * 62 : 0,
@@ -409,10 +430,18 @@ export default function CarModel({
 
   const showEngineBay = hoodOpen && hoodPivotRef.current !== null;
 
-  // Bounds (in the parent) handles auto-fitting the camera to this group.
-  // We only use `fit` to translate the model so its bbox center sits at origin
-  // (otherwise auto-rotate spins around the wrong point).
-  const safeCenter = fit?.center.toArray() ?? [0, 0, 0];
+  // Bounds (in the parent) handles auto-fitting the camera. We translate
+  // the scene so its bbox center sits at origin (so auto-rotate spins around
+  // the right point) AND its bbox bottom touches y=0 (so contact shadows hit).
+  let groundedY = 0;
+  if (fit) {
+    // fit.center already holds the NEGATED bbox center. Add half the bbox
+    // height so we shift up by half-height → bbox bottom at y=0.
+    groundedY = fit.center.y + (fit.bboxHeight ?? 0) / 2;
+  }
+  const safeCenter: [number, number, number] = fit
+    ? [fit.center.x, groundedY, fit.center.z]
+    : [0, 0, 0];
 
   return (
     <group ref={groupRef}>
