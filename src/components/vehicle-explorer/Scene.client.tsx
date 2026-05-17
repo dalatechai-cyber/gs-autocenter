@@ -160,8 +160,13 @@ export default function VehicleExplorerClient() {
       const dim = mv.getDimensions();
       const tightRadius = orbit.radius * 0.65;
       const targetYLifted = target.y + dim.y * 0.25;
+      // The LC200 GLB has helper geometry that drags the bbox center far
+      // right of the visible car. Bias the target X toward the model origin
+      // so the actual body sits at canvas center. 35% pull works for both
+      // GLBs (LX570 has a similar but smaller offset).
+      const targetXBiased = target.x * 0.35;
       mv.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${tightRadius}m`;
-      mv.cameraTarget = `${target.x}m ${targetYLifted}m ${target.z}m`;
+      mv.cameraTarget = `${targetXBiased}m ${targetYLifted}m ${target.z}m`;
       overrideMaterials();
     };
 
