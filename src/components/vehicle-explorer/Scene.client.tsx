@@ -144,10 +144,12 @@ export default function VehicleExplorerClient() {
           mat.pbrMetallicRoughness.setRoughnessFactor(0.22);
           continue;
         }
-        // Default = body paint.
+        // Default = body paint. Metallic dialed back so the dark base color
+        // contributes more diffuse — pure-metal would look mirror-silver
+        // under the studio HDRI regardless of base.
         mat.pbrMetallicRoughness.setBaseColorFactor(paint);
-        mat.pbrMetallicRoughness.setMetallicFactor(0.92);
-        mat.pbrMetallicRoughness.setRoughnessFactor(0.34);
+        mat.pbrMetallicRoughness.setMetallicFactor(0.55);
+        mat.pbrMetallicRoughness.setRoughnessFactor(0.42);
       }
     };
 
@@ -303,7 +305,7 @@ export default function VehicleExplorerClient() {
               environment-image="/hdri/studio.hdr"
               shadow-intensity="2"
               shadow-softness="0.85"
-              exposure="1.2"
+              exposure="0.85"
               tone-mapping="aces"
               camera-controls
               camera-orbit="-25deg 78deg auto"
