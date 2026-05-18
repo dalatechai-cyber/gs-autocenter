@@ -38,14 +38,52 @@ export const metadata: Metadata = {
     template: "%s · GS Auto Center",
   },
   description:
-    "TOYOTA болон LEXUS брэндийн жийп ангилалын автомашины засвар үйлчилгээний цогцолбор. 13 жилийн туршлага. Улаанбаатар.",
+    "TOYOTA болон LEXUS брэндийн жийп ангилалын автомашины мэргэжлийн засвар үйлчилгээ. 13 жилийн туршлага, JAPAN TOK оригинал сэлбэг, MNS 5025:2010 стандарт. Улаанбаатар, Нарны зам.",
   applicationName: "GS Auto Center",
+  keywords: [
+    "GS Auto Center",
+    "автозасвар",
+    "Toyota засвар",
+    "Lexus засвар",
+    "Land Cruiser",
+    "жийп засвар",
+    "оригинал сэлбэг",
+    "JAPAN TOK",
+    "Улаанбаатар автосервис",
+    "Нарны зам",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
-    title: "GS Auto Center",
+    title: "GS Auto Center · TOYOTA & LEXUS засвар үйлчилгээ",
     description:
-      "Бид таныг аюулгүй зорчиход тусална. TOYOTA & LEXUS засвар, үйлчилгээ, сэлбэг.",
+      "Бид таныг аюулгүй зорчиход тусална. TOYOTA & LEXUS жийпийн дагнасан засвар, үйлчилгээ, оригинал сэлбэг. Улаанбаатар, 2011 оноос.",
+    url: "/",
+    siteName: "GS Auto Center",
     locale: "mn_MN",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GS Auto Center · TOYOTA & LEXUS засвар үйлчилгээ",
+    description:
+      "Бид таныг аюулгүй зорчиход тусална. TOYOTA & LEXUS жийпийн дагнасан засвар, үйлчилгээ, оригинал сэлбэг.",
+  },
+  formatDetection: {
+    telephone: true,
+    address: false,
+    email: false,
   },
 };
 
