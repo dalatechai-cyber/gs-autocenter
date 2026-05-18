@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      aria-label="GS Auto Center — Toyota & Lexus засвар үйлчилгээ"
+      aria-label="GS Auto Center · Toyota & Lexus засвар үйлчилгээ"
       className="relative isolate flex min-h-svh flex-col overflow-clip bg-ink"
     >
       {/* Engraved blueprint grid */}
@@ -13,13 +13,18 @@ export default function Hero() {
         aria-hidden
         className="grid-engraved pointer-events-none absolute inset-0 opacity-60"
       />
-      {/* Radial vignette — pulls focus toward centre */}
+      {/* Ambient drifting red glow · gives the page a living pulse */}
+      <div
+        aria-hidden
+        className="ambient-glow pointer-events-none absolute -left-1/4 top-1/3 h-[80vh] w-[90vw]"
+      />
+      {/* Radial vignette · pulls focus toward centre */}
       <div
         aria-hidden
         className="vignette pointer-events-none absolute inset-0"
       />
 
-      {/* Background watermark — TOYOTA · LEXUS in Audiowide, bleeds off-screen */}
+      {/* Background watermark · TOYOTA · LEXUS in Audiowide, bleeds off-screen */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 select-none overflow-clip"
@@ -36,7 +41,7 @@ export default function Hero() {
         </span>
       </div>
 
-      {/* Diagonal red hairline — wipes across after content arrives */}
+      {/* Diagonal red hairline · wipes across after content arrives */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-[-10%] top-[58%] h-px w-[120%] origin-left -rotate-[12deg] bg-gs-red/40"
@@ -46,7 +51,7 @@ export default function Hero() {
         }}
       />
 
-      {/* Right side rail — desktop only */}
+      {/* Right side rail · desktop only */}
       <div className="pointer-events-none absolute right-7 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-4 lg:flex">
         <span aria-hidden className="block h-12 w-px bg-charcoal/80" />
         <span className="origin-center -rotate-90 whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.32em] text-graphite">
@@ -68,7 +73,7 @@ export default function Hero() {
           />
           <span aria-hidden className="block h-px w-12 bg-gs-red" />
           <span className="eyebrow">
-            2011 — оноос хойш · 13+ жилийн туршлага
+            2011 оноос хойш · 13+ жилийн туршлага
           </span>
         </div>
 
@@ -128,7 +133,7 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll indicator — bottom right, desktop only */}
+      {/* Scroll indicator · bottom right, desktop only */}
       <div
         className="pointer-events-none absolute bottom-8 right-6 hidden flex-col items-center gap-3 lg:flex"
         style={{ animation: "var(--animate-rise)", animationDelay: "700ms" }}

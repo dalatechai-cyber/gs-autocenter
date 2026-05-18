@@ -49,7 +49,7 @@ export default function Nav() {
         data-scrolled={scrolled || undefined}
         className="group/nav fixed inset-x-0 top-0 z-50 border-b border-transparent transition-[background-color,backdrop-filter,border-color] duration-300 ease-out data-[scrolled]:border-charcoal/60 data-[scrolled]:bg-ink/85 data-[scrolled]:backdrop-blur-md"
       >
-        {/* Red hairline — wipes in on scroll */}
+        {/* Red hairline · wipes in on scroll */}
         <div
           aria-hidden
           className="absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-gs-red transition-transform duration-500 ease-out group-data-[scrolled]/nav:scale-x-100"
@@ -59,7 +59,7 @@ export default function Nav() {
           {/* Logo */}
           <Link
             href="/"
-            aria-label="GS Auto Center — нүүр хуудас"
+            aria-label="GS Auto Center · нүүр хуудас"
             className="flex shrink-0 items-center"
           >
             <Image
@@ -172,7 +172,7 @@ function MobileDrawer({
           className="absolute inset-x-0 top-0 h-px bg-gs-red"
         />
 
-        {/* Header bar — matches main nav height */}
+        {/* Header bar · matches main nav height */}
         <div className="relative flex h-16 items-center justify-between border-b border-charcoal/60 px-5 sm:h-20 sm:px-7">
           <span className="text-[10px] uppercase tracking-[0.24em] text-graphite">
             Цэс
@@ -221,7 +221,7 @@ function MobileDrawer({
           </ul>
         </nav>
 
-        {/* Phone block — bottom */}
+        {/* Phone block · bottom */}
         <div className="relative border-t border-charcoal/60 px-5 py-6 sm:px-7">
           <div className="text-[10px] uppercase tracking-[0.22em] text-graphite">
             Утсаар холбоо барих

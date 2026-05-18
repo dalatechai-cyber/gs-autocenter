@@ -473,7 +473,7 @@ function HudCorner({
             hoveredHotspot ? "text-gs-red" : "text-paper/40"
           }`}
         >
-          {hoveredHotspot?.name ?? "—"}
+          {hoveredHotspot?.name ?? "·"}
         </div>
       </div>
 
@@ -709,7 +709,7 @@ export default function VehicleExplorer() {
   return (
     <section
       id="explorer"
-      aria-label="Загварын судалгаа — 3D"
+      aria-label="Загварын судалгаа · 3D"
       className="relative overflow-hidden bg-ink py-20 sm:py-24 lg:py-28"
     >
       <div
@@ -741,7 +741,7 @@ export default function VehicleExplorer() {
             <span className="text-gs-red">судалгаа</span>
           </h2>
           <p className="mt-5 max-w-prose text-sm text-graphite sm:text-base">
-            Машины аль ч хэсгийг сонгож үзээрэй — GS Auto Center дэх засвар,
+            Машины аль ч хэсгийг сонгож үзээрэй. GS Auto Center дэх засвар,
             үйлчилгээний дэлгэрэнгүй нээгдэнэ.
           </p>
         </header>

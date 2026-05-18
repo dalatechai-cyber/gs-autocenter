@@ -33,7 +33,7 @@ const audiowide = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL("https://gs-autocenter.vercel.app"),
   title: {
-    default: "GS Auto Center — TOYOTA & LEXUS засвар үйлчилгээ",
+    default: "GS Auto Center · TOYOTA & LEXUS засвар үйлчилгээ",
     template: "%s · GS Auto Center",
   },
   description:
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "GS Auto Center",
     description:
-      "Бид таныг аюулгүй зорчиход тусална. TOYOTA & LEXUS — засвар, үйлчилгээ, сэлбэг.",
+      "Бид таныг аюулгүй зорчиход тусална. TOYOTA & LEXUS засвар, үйлчилгээ, сэлбэг.",
     locale: "mn_MN",
     type: "website",
   },

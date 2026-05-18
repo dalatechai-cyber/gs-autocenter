@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 /* =============================================================
-   GS AUTO CENTER — DESIGN FOUNDATION
+   GS AUTO CENTER · DESIGN FOUNDATION
    Black is the canvas. Red is the scalpel. Hairlines, not shadows.
    ============================================================= */
 
 @theme {
-  /* ---------- Reds — the scalpel ---------- */
+  /* ---------- Reds · the scalpel ---------- */
   --color-gs-red-50:  #FEE5E3;
   --color-gs-red-100: #FBC5C1;
   --color-gs-red-200: #F49994;
@@ -21,8 +21,8 @@
   --color-gs-red:      #DC0D01;
   --color-gs-red-deep: #5B0702;
 
-  /* ---------- Inks — the canvas ---------- */
-  --color-ink:        #131313;   /* page background — near-black */
+  /* ---------- Inks · the canvas ---------- */
+  --color-ink:        #131313;   /* page background · near-black */
   --color-ink-raised: #181818;
   --color-ink-card:   #1C1C1F;
   --color-charcoal:   #353338;   /* dividers, secondary strokes */
@@ -39,8 +39,8 @@
   --color-foreground: var(--color-paper);
   --color-accent:     var(--color-gs-red);
 
-  /* ---------- Type scale — mechanical, intentional ---------- */
-  --text-2xs: 0.6875rem;                /* 11px — engraved labels */
+  /* ---------- Type scale · mechanical, intentional ---------- */
+  --text-2xs: 0.6875rem;                /* 11px · engraved labels */
   --text-2xs--line-height: 1rem;
   --text-2xs--letter-spacing: 0.14em;
 
@@ -75,15 +75,15 @@
   --text-5xl--line-height: 1;
   --text-5xl--letter-spacing: -0.02em;
 
-  --text-6xl: 5.5rem;                   /* 88px — hero */
+  --text-6xl: 5.5rem;                   /* 88px · hero */
   --text-6xl--line-height: 0.96;
   --text-6xl--letter-spacing: -0.025em;
 
-  --text-7xl: 7.5rem;                   /* 120px — display */
+  --text-7xl: 7.5rem;                   /* 120px · display */
   --text-7xl--line-height: 0.92;
   --text-7xl--letter-spacing: -0.03em;
 
-  /* ---------- Motion — mechanical, never bouncy ---------- */
+  /* ---------- Motion · mechanical, never bouncy ---------- */
   --ease-mech:    cubic-bezier(0.16, 1, 0.3, 1);   /* sharp ease-out */
   --ease-mech-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-blade:   cubic-bezier(0.22, 1, 0.36, 1);  /* wipe / slice */
@@ -125,7 +125,7 @@
 }
 
 /* =============================================================
-   BASE LAYER — dark canvas, Mongolian-first typography defaults
+   BASE LAYER · dark canvas, Mongolian-first typography defaults
    ============================================================= */
 @layer base {
   html {
@@ -169,7 +169,7 @@
 }
 
 /* =============================================================
-   COMPONENT LAYER — primitive patterns reused everywhere
+   COMPONENT LAYER · primitive patterns reused everywhere
    ============================================================= */
 @layer components {
   .eyebrow {
@@ -197,7 +197,7 @@
     background: var(--color-gs-red);
   }
 
-  /* Engraved grid backdrop — like a machinist's blueprint */
+  /* Engraved grid backdrop · like a machinist's blueprint */
   .grid-engraved {
     background-image:
       linear-gradient(to right,  rgba(255, 255, 255, 0.025) 1px, transparent 1px),
@@ -214,6 +214,57 @@
         var(--color-ink) 78%
       );
   }
+
+  /* Scroll reveal · opacity + tiny lift. Driven by data-revealed attr. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 700ms var(--ease-mech),
+      transform 700ms var(--ease-mech);
+    will-change: opacity, transform;
+  }
+  .reveal[data-revealed="true"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* No-JS fallback · show everything */
+  @media (scripting: none) {
+    .reveal { opacity: 1; transform: none; }
+  }
+  .reveal-delay-1 { transition-delay: 80ms; }
+  .reveal-delay-2 { transition-delay: 160ms; }
+  .reveal-delay-3 { transition-delay: 240ms; }
+  .reveal-delay-4 { transition-delay: 320ms; }
+  .reveal-delay-5 { transition-delay: 400ms; }
+
+  /* Subtle red caret pulse · used on hero for "alive" feel */
+  .pulse-bar {
+    background: var(--color-gs-red);
+    animation: bar-pulse 2.4s var(--ease-mech) infinite;
+    transform-origin: bottom;
+  }
+
+  /* Slow ambient glow · moves once per ~14s */
+  .ambient-glow {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(220, 13, 1, 0.25) 0%,
+      rgba(220, 13, 1, 0) 60%
+    );
+    animation: glow-drift 14s ease-in-out infinite;
+    filter: blur(40px);
+  }
+}
+
+@keyframes bar-pulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.9; }
+  50%      { transform: scaleY(2.2); opacity: 1; }
+}
+
+@keyframes glow-drift {
+  0%, 100% { transform: translate3d(-6%, 0, 0) scale(1); opacity: 0.7; }
+  50%      { transform: translate3d(6%, -2%, 0) scale(1.08); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
