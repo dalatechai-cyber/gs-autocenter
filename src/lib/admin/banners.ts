@@ -99,20 +99,6 @@ export async function deleteBanner(id: string): Promise<boolean> {
 export async function getActiveBanner(now: Date = new Date()): Promise<Banner | null> {
   const banners = await readBanners();
   const ts = now.getTime();
-  const audit = banners.map((b) => ({
-    id: b.id.slice(0, 8),
-    isActive: b.isActive,
-    startDate: b.startDate,
-    endDate: b.endDate,
-    inWindow:
-      !Number.isNaN(Date.parse(b.startDate)) &&
-      !Number.isNaN(Date.parse(b.endDate)) &&
-      Date.parse(b.startDate) <= ts &&
-      ts <= Date.parse(b.endDate),
-  }));
-  console.log(
-    `[banner-audit] now=${new Date(ts).toISOString()} count=${banners.length} audit=${JSON.stringify(audit)}`,
-  );
   const active = banners
     .filter((b) => b.isActive)
     .filter((b) => {
