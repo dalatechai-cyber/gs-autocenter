@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "WebSearch",
+      "WebFetch(domain:sketchfab.com)",
+      "WebFetch(domain:www.fab.com)",
+      "WebFetch(domain:88cars3d.com)",
+      "WebFetch(domain:www.renderhub.com)",
+      "WebFetch(domain:api.sketchfab.com)",
+      "WebFetch(domain:discord.com)",
+      "WebFetch(domain:www.patreon.com)"
+    ]
+  }
+}
