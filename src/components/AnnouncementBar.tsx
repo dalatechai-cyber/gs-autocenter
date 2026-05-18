@@ -1,13 +1,18 @@
+import { Suspense } from "react";
+
 import { PhoneIcon } from "./icons";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contact";
 import { getActiveBanner } from "@/lib/admin/banners";
 import type { Banner } from "@/lib/admin/types";
 
 /**
- * Slim banner above the navigation. Reads the currently active banner from
- * Vercel Blob (managed at /admin); falls back to a static default if no
- * banner is scheduled so the layout above the nav stays consistent.
+ * Slim banner above the navigation.
+ *
+ * The visible shell renders during static prerender as a sync fallback so the
+ * layout under Next 16 Cache Components stays valid; the live read from Vercel
+ * Blob streams in inside a Suspense boundary on each request.
  */
+
 const DEFAULT_ANNOUNCEMENT = {
   kicker: "Шинэ",
   body: "TOYOTA, LEXUS жийпийн засвар үйлчилгээ · урьдчилсан цаг захиалга нээлттэй",
@@ -46,9 +51,20 @@ function resolveBanner(banner: Banner | null): Resolved {
   };
 }
 
-export default async function AnnouncementBar() {
+export default function AnnouncementBar() {
+  return (
+    <Suspense fallback={<Bar resolved={resolveBanner(null)} />}>
+      <LiveBar />
+    </Suspense>
+  );
+}
+
+async function LiveBar() {
   const banner = await getActiveBanner().catch(() => null);
-  const a = resolveBanner(banner);
+  return <Bar resolved={resolveBanner(banner)} />;
+}
+
+function Bar({ resolved: a }: { resolved: Resolved }) {
   const repeated = Array.from({ length: 4 });
 
   return (
