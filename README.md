@@ -20,6 +20,31 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in the values. Required keys:
+
+| Key | Where it is used | How to obtain it |
+| --- | --- | --- |
+| `ADMIN_PASSWORD` | `/admin/login` — protects the marketing banner panel. | Choose a strong string locally. In production set it in **Vercel → Project Settings → Environment Variables**. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob storage for banner data (`gs-banners.json`) and uploaded images. | Vercel Dashboard → Storage → Blob → "Connect" → copy the `BLOB_READ_WRITE_TOKEN` shown under `.env.local`. |
+
+Without `ADMIN_PASSWORD` the admin login page shows a clear setup warning
+instead of the form. Without `BLOB_READ_WRITE_TOKEN` saving banners fails.
+
+## Admin panel
+
+GS marketing manages the announcement bar at `/admin`:
+
+1. Visit `/admin/login`, enter the `ADMIN_PASSWORD`.
+2. The dashboard lists every banner with status (live / scheduled / ended / off).
+3. **+ Шинэ зарлал** creates a banner (title, body, optional link, optional
+   image, start and end dates, active toggle).
+4. The active banner appears immediately in the red bar above the navigation.
+5. Use the per-row buttons to edit, deactivate, or delete.
+
+Banner data and images live in Vercel Blob; no external database is needed.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         hostname: "toyota-mongolia.mn",
         pathname: "/uploaded/images/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
     ],
   },
 };
