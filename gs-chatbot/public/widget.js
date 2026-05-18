@@ -406,7 +406,8 @@
                 </button>
             </div>
             <div class="gs-chat-widget-branding">
-                GS Auto Center · +976 77-200-570
+                GS Auto Center · +976 77-200-570<br>
+                Powered by <a href="https://www.dalatech.online/" target="_blank" rel="noopener noreferrer">dalatech.ai</a>
             </div>
         </div>
     `;
@@ -448,13 +449,18 @@
 
         function saveChatMessages() {
             try {
+                // Persist raw text only (textContent for both roles). Bot
+                // bubbles are stored as their visible text and re-rendered
+                // through renderBotText() on reload, which escapes first.
+                // Saving innerHTML would round-trip raw HTML and re-execute
+                // anything dangerous next session.
                 const messages = Array.from(messagesDiv.querySelectorAll('.gs-chat-widget-message:not(#gs-chat-typing)'))
                     .map(msgDiv => {
                         const isUser = msgDiv.classList.contains('user');
                         const content = msgDiv.querySelector('.gs-chat-widget-message-content');
                         if (!content) return null;
                         return {
-                            text: isUser ? content.textContent : content.innerHTML,
+                            text: content.textContent,
                             sender: isUser ? 'user' : 'bot'
                         };
                     })
@@ -529,6 +535,25 @@
             });
         }
 
+        // Escape everything that could become HTML, THEN re-introduce the
+        // narrow set of formatting we allow (bold via **foo**, newlines as
+        // <br>). This blocks any raw HTML or event-handler payload that
+        // could come back from the model on an off day.
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;');
+        }
+
+        function renderBotText(text) {
+            return escapeHtml(text)
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+        }
+
         function addMessage(text, sender, shouldSave = true) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `gs-chat-widget-message ${sender}`;
@@ -536,7 +561,7 @@
             content.className = 'gs-chat-widget-message-content';
 
             if (sender === 'bot') {
-                content.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                content.innerHTML = renderBotText(text);
             } else {
                 content.textContent = text;
             }
