@@ -1,16 +1,14 @@
-import { Suspense } from "react";
-
 import { PhoneIcon } from "./icons";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contact";
 import { getActiveBanner } from "@/lib/admin/banners";
 import type { Banner } from "@/lib/admin/types";
 
 /**
- * Slim banner above the navigation.
- *
- * The visible shell renders during static prerender as a sync fallback so the
- * layout under Next 16 Cache Components stays valid; the live read from Vercel
- * Blob streams in inside a Suspense boundary on each request.
+ * Slim banner above the navigation. Reads the currently active banner from
+ * Vercel Blob (managed at /admin) per request, with a graceful default if
+ * none is scheduled. The host page must be dynamic (`force-dynamic`) so the
+ * await here resolves into the response instead of being deferred into a
+ * Suspense stream that Vercel sometimes truncates.
  */
 
 const DEFAULT_ANNOUNCEMENT = {
@@ -51,20 +49,9 @@ function resolveBanner(banner: Banner | null): Resolved {
   };
 }
 
-export default function AnnouncementBar() {
-  return (
-    <Suspense fallback={<Bar resolved={resolveBanner(null)} />}>
-      <LiveBar />
-    </Suspense>
-  );
-}
-
-async function LiveBar() {
+export default async function AnnouncementBar() {
   const banner = await getActiveBanner().catch(() => null);
-  return <Bar resolved={resolveBanner(banner)} />;
-}
-
-function Bar({ resolved: a }: { resolved: Resolved }) {
+  const a = resolveBanner(banner);
   const repeated = Array.from({ length: 4 });
 
   return (
