@@ -33,10 +33,17 @@ export async function signIn(password: string): Promise<boolean> {
   if (!expected) return false;
   if (!safeEqual(password, expected)) return false;
   const store = await cookies();
+  // SameSite=strict blocks the session cookie on any cross-site nav into
+  // /admin (including links in phishing email). The admin UI is
+  // first-party-only so we don't need cross-site posts.
+  // Secure is enforced on Vercel (always HTTPS) and in production builds;
+  // dropped in local dev where http://localhost is unavoidable.
+  const isSecure =
+    process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   store.set(ADMIN_COOKIE, tokenFor(expected), {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    secure: isSecure,
     path: "/",
     maxAge: COOKIE_MAX_AGE,
   });
