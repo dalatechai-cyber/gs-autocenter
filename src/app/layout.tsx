@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import Nav from "@/components/Nav";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import "./globals.css";
+
+const chatbotUrl = process.env.NEXT_PUBLIC_CHATBOT_URL?.replace(/\/$/, "");
 
 const montserrat = localFont({
   src: [
@@ -104,6 +107,12 @@ export default function RootLayout({
         <AnnouncementBar />
         <Nav />
         {children}
+        {chatbotUrl ? (
+          <Script
+            src={`${chatbotUrl}/widget.js`}
+            strategy="afterInteractive"
+          />
+        ) : null}
       </body>
     </html>
   );

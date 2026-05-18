@@ -80,37 +80,47 @@ class AnalyticsTracker {
      */
     detectIntent(message) {
         const lowercaseMsg = message.toLowerCase();
-        
+
         // Price inquiry
-        if (/үнэ|төлбөр|хэд|price|cost/i.test(message)) {
+        if (/үнэ|төлбөр|хэд|өртөг|price|cost/i.test(message)) {
             return 'pricing';
         }
-        
-        // Technical questions
-        if (/backend|код|программ|технологи|хэрэгжүүлэлт/i.test(message)) {
-            return 'technical';
+
+        // Booking / appointment intent
+        if (/цаг ?захи|захиал|booking|appointment|очих/i.test(message)) {
+            return 'booking';
         }
-        
-        // Purchase intent
-        if (/авъя|худалдаж|захиалах|эхлүүл|buy|purchase/i.test(message)) {
-            return 'purchase_intent';
-        }
-        
-        // Contact request
-        if (/холбогдох|утас|и-?мэйл|contact|phone/i.test(message)) {
+
+        // Contact / location / hours
+        if (/холбогдох|утас|дугаар|хаяг|байршил|байрла|нээлт|хаалт|цагийн ?хуваарь|contact|phone|address|hours/i.test(message)) {
             return 'contact_request';
         }
-        
-        // Product inquiry
-        if (/(chatbot|website|receptionist|ai|вебсайт|чатбот)/i.test(message)) {
-            return 'product_inquiry';
+
+        // Parts inquiry (JAPAN TOK or OEM)
+        if (/japan ?tok|tok|сэлбэг|шарик|амортизатор|резин|бөмбөлөг|холбоос|залгуур/i.test(message)) {
+            return 'parts_inquiry';
         }
-        
+
+        // Service inquiry (repairs, diagnostics, maintenance)
+        if (/засвар|оношилгоо|оношл|хөдөлгүүр|цахилгаан|тос|тосолгоо|тоормос|кондиц|халаалт|үйлчилгээ|service|repair|diagnost/i.test(message)) {
+            return 'service_inquiry';
+        }
+
+        // Vehicle / brand inquiry
+        if (/(toyota|lexus|land ?cruiser|prado|жийп|машин)/i.test(message)) {
+            return 'vehicle_inquiry';
+        }
+
+        // Technical question
+        if (/код|программ|систем|алдаа/i.test(message)) {
+            return 'technical';
+        }
+
         // Greeting
         if (/^(сайн|байна|уу|hi|hello|hey)/i.test(lowercaseMsg) && message.length < 30) {
             return 'greeting';
         }
-        
+
         return 'general';
     }
 

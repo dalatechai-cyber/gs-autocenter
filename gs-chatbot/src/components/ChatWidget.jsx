@@ -12,8 +12,8 @@ const ChatWidget = () => {
   // Load chat history and messages from localStorage on mount
   useEffect(() => {
     try {
-      const savedHistory = localStorage.getItem('dalatech-chat-history');
-      const savedMessages = localStorage.getItem('dalatech-chat-messages');
+      const savedHistory = localStorage.getItem('gs-chat-history');
+      const savedMessages = localStorage.getItem('gs-chat-messages');
       
       if (savedHistory) {
         setChatHistory(JSON.parse(savedHistory));
@@ -26,14 +26,14 @@ const ChatWidget = () => {
         } else {
           // Set default welcome message
           setMessages([{
-            text: 'Сайн байна уу? DalaTech.ai цахим туслахад тавтай морил.<br><br>Танд ямар сэлбэг хэрэгтэй байна вэ?',
+            text: 'Сайн байна уу? GS Auto Center-д тавтай морилно уу.<br><br>TOYOTA, LEXUS жийпийн засвар, JAPAN TOK сэлбэг, цаг захиалга — танд яаж туслах вэ?',
             sender: 'bot'
           }]);
         }
       } else {
         // Set default welcome message
         setMessages([{
-          text: 'Сайн байна уу? DalaTech.ai цахим туслахад тавтай морил.<br><br>Танд ямар сэлбэг хэрэгтэй байна вэ?',
+          text: 'Сайн байна уу? GS Auto Center-д тавтай морилно уу.<br><br>TOYOTA, LEXUS жийпийн засвар, JAPAN TOK сэлбэг, цаг захиалга — танд яаж туслах вэ?',
           sender: 'bot'
         }]);
       }
@@ -41,7 +41,7 @@ const ChatWidget = () => {
       console.error('Failed to load from localStorage:', e);
       // Set default welcome message on error
       setMessages([{
-        text: 'Сайн байна уу? DalaTech.ai цахим туслахад тавтай морил.<br><br>Танд ямар сэлбэг хэрэгтэй байна вэ?',
+        text: 'Сайн байна уу? GS Auto Center-д тавтай морилно уу.<br><br>TOYOTA, LEXUS жийпийн засвар, JAPAN TOK сэлбэг, цаг захиалга — танд яаж туслах вэ?',
         sender: 'bot'
       }]);
     }
@@ -51,7 +51,7 @@ const ChatWidget = () => {
   useEffect(() => {
     try {
       if (messages.length > 0) {
-        localStorage.setItem('dalatech-chat-messages', JSON.stringify(messages));
+        localStorage.setItem('gs-chat-messages', JSON.stringify(messages));
       }
     } catch (e) {
       console.error('Failed to save messages:', e);
@@ -62,7 +62,7 @@ const ChatWidget = () => {
   useEffect(() => {
     try {
       if (chatHistory.length > 0) {
-        localStorage.setItem('dalatech-chat-history', JSON.stringify(chatHistory));
+        localStorage.setItem('gs-chat-history', JSON.stringify(chatHistory));
       }
     } catch (e) {
       console.error('Failed to save chat history:', e);
@@ -175,7 +175,7 @@ const ChatWidget = () => {
         onClick={toggleChat}
         className="fixed bottom-5 right-5 w-[60px] h-[60px] rounded-full border-none cursor-pointer shadow-lg flex items-center justify-center text-[28px] z-[999] font-serif text-[#ECECEC] transition-all duration-500 ease-in-out hover:scale-110 hover:shadow-2xl"
         style={{
-          background: 'linear-gradient(135deg, #2B2B2B 0%, #1F1F1F 100%)',
+          background: 'linear-gradient(135deg, #DC0D01 0%, #970902 100%)',
           transform: isOpen ? 'scale(0.95) rotate(90deg)' : 'scale(1) rotate(0deg)'
         }}
         title={isOpen ? "Close chat" : "Chat with us"}
@@ -216,7 +216,7 @@ const ChatWidget = () => {
       {/* Chat Container */}
       {isOpen && (
         <div
-          className="fixed bottom-[90px] right-5 w-[400px] h-[600px] bg-[#1F1F1F] rounded-2xl shadow-2xl flex flex-col z-[998] overflow-hidden font-serif"
+          className="fixed bottom-[90px] right-5 w-[400px] h-[600px] bg-[#131313] rounded-2xl shadow-2xl flex flex-col z-[998] overflow-hidden font-sans border border-[rgba(220,13,1,0.18)]"
           style={{
             animation: 'slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}
@@ -225,36 +225,36 @@ const ChatWidget = () => {
           <div
             className="p-5 rounded-t-2xl flex justify-between items-center"
             style={{
-              background: 'linear-gradient(135deg, #2B2B2B 0%, #1F1F1F 100%)',
-              color: '#ECECEC'
+              background: 'linear-gradient(135deg, #DC0D01 0%, #5B0702 100%)',
+              color: '#FFFFFF'
             }}
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-[#333]">
                 <img
-                  src="./logo.jpg"
-                  alt="DalaTech.ai Logo"
+                  src="/logo.png"
+                  alt="GS Auto Center"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '💬';
+                    e.target.parentElement.innerHTML = 'GS';
                   }}
                 />
               </div>
               <div>
-                <h3 className="m-0 text-base font-semibold">DalaTech.ai</h3>
-                <p className="m-0 mt-1 text-xs opacity-70 text-[#999]">Цахим туслах</p>
+                <h3 className="m-0 text-base font-semibold">GS Auto Center</h3>
+                <p className="m-0 mt-1 text-xs opacity-80 text-white">Онлайн туслах</p>
               </div>
             </div>
             <div
-              className="bg-white bg-opacity-10 px-2.5 py-1 rounded-[20px] text-[11px] font-medium border border-white border-opacity-10 whitespace-nowrap text-[#999]"
+              className="bg-white bg-opacity-15 px-2.5 py-1 rounded-[20px] text-[11px] font-medium border border-white border-opacity-20 whitespace-nowrap text-white"
             >
-              ✅ 226 Бараа
+              🔧 Toyota · Lexus
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 bg-[#1F1F1F] flex flex-col gap-3">
+          <div className="flex-1 overflow-y-auto p-4 bg-[#131313] flex flex-col gap-3">
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -263,8 +263,8 @@ const ChatWidget = () => {
                 <div
                   className="max-w-[85%] px-3.5 py-2.5 rounded-[14px] text-sm leading-relaxed break-words"
                   style={{
-                    background: msg.sender === 'user' ? '#2B2B2B' : 'transparent',
-                    color: '#ECECEC',
+                    background: msg.sender === 'user' ? '#DC0D01' : '#262626',
+                    color: msg.sender === 'user' ? '#FFFFFF' : '#F3F3F3',
                     borderTopRightRadius: msg.sender === 'user' ? '4px' : '14px',
                     borderTopLeftRadius: msg.sender === 'bot' ? '4px' : '14px'
                   }}
@@ -281,9 +281,9 @@ const ChatWidget = () => {
             {isLoading && (
               <div className="flex justify-start animate-fadeIn">
                 <div className="flex gap-1 px-3.5 py-2.5 bg-transparent rounded-[14px]">
-                  <div className="w-2 h-2 rounded-full bg-[#666] animate-typing" />
-                  <div className="w-2 h-2 rounded-full bg-[#666] animate-typing" style={{ animationDelay: '0.2s' }} />
-                  <div className="w-2 h-2 rounded-full bg-[#666] animate-typing" style={{ animationDelay: '0.4s' }} />
+                  <div className="w-2 h-2 rounded-full bg-[#DC0D01] animate-typing" />
+                  <div className="w-2 h-2 rounded-full bg-[#DC0D01] animate-typing" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-2 h-2 rounded-full bg-[#DC0D01] animate-typing" style={{ animationDelay: '0.4s' }} />
                 </div>
               </div>
             )}
@@ -292,30 +292,28 @@ const ChatWidget = () => {
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSubmit} className="p-4 border-t border-[#333] bg-[#1F1F1F] flex gap-2">
+          <form onSubmit={handleSubmit} className="p-4 border-t border-[rgba(220,13,1,0.18)] bg-[#131313] flex gap-2">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Зурвас бичих..."
               disabled={isLoading}
-              className="flex-1 px-3.5 py-2.5 border-none rounded-[14px] text-sm outline-none transition-all bg-[#333] text-[#ECECEC] placeholder-[#666] focus:bg-[#3a3a3a] disabled:opacity-50"
+              className="flex-1 px-3.5 py-2.5 border border-[rgba(220,13,1,0.20)] rounded-[14px] text-sm outline-none transition-all bg-[#1A1A1A] text-[#F3F3F3] placeholder-[#8A8A8A] focus:border-[#DC0D01] disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="w-9 h-9 border-none rounded-full bg-transparent text-[#999] cursor-pointer flex items-center justify-center transition-colors hover:text-[#ECECEC] disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Илгээх"
+              className="w-9 h-9 border-none rounded-full bg-[#DC0D01] text-white cursor-pointer flex items-center justify-center transition-colors hover:bg-[#B00B01] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ➤
             </button>
           </form>
 
           {/* Branding */}
-          <div className="p-2 text-center bg-[#1F1F1F] border-t border-[#2B2B2B] text-[10px] text-[#555555]">
-            Powered by{' '}
-            <a href="https://www.dalatech.online/" target="_blank" rel="noopener noreferrer" className="text-[#555555] no-underline">
-              dalatech.ai
-            </a>
+          <div className="p-2 text-center bg-[#131313] border-t border-[#2B2B2B] text-[10px] text-[#8A8A8A]">
+            GS Auto Center · +976 77-200-570
           </div>
         </div>
       )}
