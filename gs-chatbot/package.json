@@ -1,8 +1,8 @@
 {
-  "name": "dalatech-chatbot",
+  "name": "gs-autocenter-chatbot",
   "version": "1.0.0",
   "type": "module",
-  "description": "AI-powered sales consultant chatbot for DalaTech.ai",
+  "description": "GS Auto Center AI chatbot — TOYOTA & LEXUS service, JAPAN TOK parts, Mongolian-language assistant powered by Claude.",
   "scripts": {
     "dev": "vercel dev",
     "dev:react": "vite",

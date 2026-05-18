@@ -1,18 +1,18 @@
 :root {
-    --dt-bg: #050A18;
-    --dt-surface: #0D1430;
-    --dt-surface-2: #121A3A;
-    --dt-surface-3: #1A2349;
-    --dt-primary: #2563EB;
-    --dt-primary-soft: rgba(37, 99, 235, 0.16);
-    --dt-primary-hover: #1D4ED8;
-    --dt-accent: #38BDF8;
-    --dt-accent-soft: rgba(56, 189, 248, 0.14);
-    --dt-text: #F0F4FF;
-    --dt-muted: #8B9FC4;
-    --dt-border: rgba(56, 189, 248, 0.15);
-    --dt-border-strong: rgba(56, 189, 248, 0.30);
-    --dt-shadow: 0 24px 60px -20px rgba(2, 8, 23, 0.85);
+    --dt-bg: #131313;
+    --dt-surface: #1A1A1A;
+    --dt-surface-2: #1F1F1F;
+    --dt-surface-3: #262626;
+    --dt-primary: #DC0D01;
+    --dt-primary-soft: rgba(220, 13, 1, 0.16);
+    --dt-primary-hover: #B00B01;
+    --dt-accent: #DC0D01;
+    --dt-accent-soft: rgba(220, 13, 1, 0.14);
+    --dt-text: #F3F3F3;
+    --dt-muted: #8A8A8A;
+    --dt-border: rgba(220, 13, 1, 0.18);
+    --dt-border-strong: rgba(220, 13, 1, 0.35);
+    --dt-shadow: 0 24px 60px -20px rgba(19, 19, 19, 0.85);
     --dt-radius: 20px;
     --dt-radius-msg: 14px;
     --dt-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -38,8 +38,8 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     background:
-        radial-gradient(1200px 600px at 80% -10%, rgba(37, 99, 235, 0.18), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(56, 189, 248, 0.10), transparent 60%),
+        radial-gradient(1200px 600px at 80% -10%, rgba(220, 13, 1, 0.18), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(220, 13, 1, 0.10), transparent 60%),
         var(--dt-bg);
     display: flex;
     flex-direction: column;
@@ -60,7 +60,7 @@ body {
     display: flex;
     flex-direction: column;
     background:
-        linear-gradient(180deg, rgba(56, 189, 248, 0.04) 0%, rgba(13, 20, 48, 0) 30%),
+        linear-gradient(180deg, rgba(220, 13, 1, 0.04) 0%, rgba(26, 26, 26, 0) 30%),
         var(--dt-surface);
     border-radius: var(--dt-radius);
     border: 1px solid var(--dt-border);
@@ -91,8 +91,8 @@ body {
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(640px 360px at 12% 0%, rgba(56, 189, 248, 0.06), transparent 60%),
-        radial-gradient(540px 320px at 100% 100%, rgba(37, 99, 235, 0.07), transparent 60%);
+        radial-gradient(640px 360px at 12% 0%, rgba(220, 13, 1, 0.06), transparent 60%),
+        radial-gradient(540px 320px at 100% 100%, rgba(220, 13, 1, 0.07), transparent 60%);
     z-index: 0;
 }
 
@@ -106,7 +106,7 @@ body {
     position: relative;
     z-index: 2;
     background:
-        linear-gradient(180deg, rgba(13, 20, 48, 0.85) 0%, rgba(13, 20, 48, 0.55) 100%);
+        linear-gradient(180deg, rgba(26, 26, 26, 0.85) 0%, rgba(26, 26, 26, 0.55) 100%);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -126,7 +126,7 @@ body {
     align-items: center;
     justify-content: center;
     background:
-        radial-gradient(60% 60% at 50% 50%, rgba(56, 189, 248, 0.18), transparent 70%),
+        radial-gradient(60% 60% at 50% 50%, rgba(220, 13, 1, 0.18), transparent 70%),
         var(--dt-surface-2);
     border: 1px solid var(--dt-border);
     flex-shrink: 0;
@@ -234,10 +234,10 @@ body {
 .dt-messages::-webkit-scrollbar { width: 6px; }
 .dt-messages::-webkit-scrollbar-track { background: transparent; }
 .dt-messages::-webkit-scrollbar-thumb {
-    background: rgba(56, 189, 248, 0.16);
+    background: rgba(220, 13, 1, 0.16);
     border-radius: 999px;
 }
-.dt-messages::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.32); }
+.dt-messages::-webkit-scrollbar-thumb:hover { background: rgba(220, 13, 1, 0.32); }
 
 .dt-empty {
     display: flex;
@@ -262,7 +262,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    filter: drop-shadow(0 12px 36px rgba(56, 189, 248, 0.30));
+    filter: drop-shadow(0 12px 36px rgba(220, 13, 1, 0.30));
 }
 
 .dt-empty-title {
@@ -307,7 +307,7 @@ body {
     border-radius: 8px;
     flex-shrink: 0;
     background:
-        radial-gradient(50% 50% at 50% 50%, rgba(125, 211, 252, 0.95) 0%, rgba(56, 189, 248, 0.55) 50%, transparent 75%),
+        radial-gradient(50% 50% at 50% 50%, rgba(252, 165, 165, 0.95) 0%, rgba(220, 13, 1, 0.55) 50%, transparent 75%),
         var(--dt-surface-2);
     border: 1px solid var(--dt-border);
     align-self: flex-end;
@@ -345,7 +345,7 @@ body {
         linear-gradient(180deg, #2D6BF0 0%, var(--dt-primary) 100%);
     color: #FFFFFF;
     border-top-right-radius: 4px;
-    box-shadow: 0 8px 22px -12px rgba(37, 99, 235, 0.7);
+    box-shadow: 0 8px 22px -12px rgba(220, 13, 1, 0.7);
 }
 
 .dt-typing {
@@ -378,7 +378,7 @@ body {
 
 .dt-input-row {
     padding: 12px 16px 14px;
-    background: linear-gradient(180deg, rgba(13, 20, 48, 0) 0%, rgba(13, 20, 48, 0.9) 30%);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0) 0%, rgba(26, 26, 26, 0.9) 30%);
     border-top: 1px solid var(--dt-border);
     position: relative;
     z-index: 2;
@@ -396,8 +396,8 @@ body {
 }
 
 .dt-input-wrap:focus-within {
-    border-color: rgba(56, 189, 248, 0.55);
-    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14);
+    border-color: rgba(220, 13, 1, 0.55);
+    box-shadow: 0 0 0 4px rgba(220, 13, 1, 0.14);
     background: var(--dt-surface);
 }
 

@@ -8,7 +8,7 @@
     },
     {
       "source": "/favicon.ico",
-      "destination": "/logo.jpg"
+      "destination": "/logo.png"
     }
   ]
 }
