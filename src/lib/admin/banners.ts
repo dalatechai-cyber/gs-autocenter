@@ -107,8 +107,23 @@ export async function getActiveBanner(now: Date = new Date()): Promise<Banner | 
       if (Number.isNaN(start) || Number.isNaN(end)) return false;
       return start <= ts && ts <= end;
     });
-  if (active.length === 0) return null;
+  if (active.length === 0) {
+    console.log(
+      `[banner-active] result=null count=${banners.length} now=${new Date(ts).toISOString()} raw=${JSON.stringify(
+        banners.map((b) => ({
+          id: b.id.slice(0, 8),
+          isActive: b.isActive,
+          startDate: b.startDate,
+          endDate: b.endDate,
+        })),
+      )}`,
+    );
+    return null;
+  }
   active.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+  console.log(
+    `[banner-active] result=${active[0].id.slice(0, 8)} title="${active[0].title.slice(0, 30)}"`,
+  );
   return active[0];
 }
 
