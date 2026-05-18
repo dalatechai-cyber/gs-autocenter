@@ -1,5 +1,7 @@
 import { ArrowRight, PhoneIcon } from "./icons";
 import { PHONE_HREF } from "@/lib/contact";
+import ParticleField from "./ParticleField";
+import MagneticButton from "./MagneticButton";
 
 /* ---------------------------------------------------------------------------
    Hero: three layers of depth
@@ -17,7 +19,7 @@ const LINE_ONE: Word[] = [
 ];
 const LINE_TWO: Word[] = [
   { text: "аюулгүй",  tone: "red", delay: 430 },
-  { text: "зорчиход", tone: "red", delay: 540 },
+  { text: "зорчиход", delay: 540 },
 ];
 const LINE_THREE: Word[] = [
   { text: "туслана.", delay: 660 },
@@ -63,22 +65,25 @@ export default function Hero() {
         className="vignette pointer-events-none absolute inset-0"
       />
 
-      {/* Giant watermark, bleeds off the right edge. */}
+      {/* Giant watermark, fits within viewport at every breakpoint */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 select-none overflow-clip"
+        className="hero-watermark pointer-events-none absolute inset-0 select-none overflow-clip"
       >
         <span
-          className="absolute -bottom-[6%] left-[-4%] block whitespace-nowrap font-wordmark uppercase text-paper/[0.035]"
+          className="absolute -bottom-[4%] left-[-2%] block whitespace-nowrap font-wordmark uppercase text-paper/[0.045]"
           style={{
-            fontSize: "clamp(7.5rem, 22vw, 22rem)",
+            fontSize: "clamp(8rem, 28vw, 26rem)",
             lineHeight: 0.82,
             letterSpacing: "-0.045em",
           }}
         >
-          GS AUTO CENTER
+          GS AUTO
         </span>
       </div>
+
+      {/* Particle field, decorative ambient dots */}
+      <ParticleField />
 
       {/* ===== MIDGROUND LAYER ============================================= */}
 
@@ -200,13 +205,13 @@ export default function Hero() {
           className="mt-10 flex flex-col gap-3 sm:mt-14 sm:flex-row sm:gap-4"
           style={{ animation: "var(--animate-rise)", animationDelay: "1000ms" }}
         >
-          <a
+          <MagneticButton
             href={PHONE_HREF}
             className="cta-shine pressable group/cta inline-flex items-center justify-center gap-3 bg-gs-red px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-snow transition-colors duration-150 ease-out hover:bg-gs-red-600 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-snow"
           >
             <PhoneIcon className="size-4" />
             Цаг захиалах
-          </a>
+          </MagneticButton>
           <a
             href="#uilchilgee"
             className="pressable group/cta inline-flex items-center justify-center gap-3 border border-charcoal px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-150 ease-out hover:border-paper"
