@@ -48,6 +48,37 @@
             box-shadow: 0 16px 36px -10px rgba(220, 13, 1, 0.7), 0 0 0 1px rgba(220, 13, 1, 0.4);
         }
         .gs-chat-widget-button.open { transform: scale(0.95); }
+
+        /* Attention-grabbing pulse ring — paused when chat is open and on hover */
+        .gs-chat-widget-button::before,
+        .gs-chat-widget-button::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(220, 13, 1, 0.55);
+            pointer-events: none;
+            animation: gs-chat-pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+        }
+        .gs-chat-widget-button::after { animation-delay: 1.1s; }
+        .gs-chat-widget-button:hover::before,
+        .gs-chat-widget-button:hover::after,
+        .gs-chat-widget-button.open::before,
+        .gs-chat-widget-button.open::after {
+            animation-play-state: paused;
+            opacity: 0;
+        }
+
+        @keyframes gs-chat-pulse {
+            0%   { transform: scale(1);    opacity: 0.75; }
+            70%  { transform: scale(1.6);  opacity: 0;    }
+            100% { transform: scale(1.6);  opacity: 0;    }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .gs-chat-widget-button::before,
+            .gs-chat-widget-button::after { animation: none; opacity: 0; }
+        }
         .gs-chat-widget-button .icon { display: inline-block; transition: opacity 220ms ease, transform 220ms ease; }
         .gs-chat-widget-button .icon-chat { position: relative; opacity: 1; transform: scale(1); }
         .gs-chat-widget-button.open .icon-chat { position: absolute; opacity: 0; transform: scale(0.6); }
@@ -196,6 +227,34 @@
             box-shadow: 0 6px 18px -10px rgba(220, 13, 1, 0.7);
         }
 
+        .gs-chat-quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 4px 0 2px;
+            animation: gs-chat-msg-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .gs-chat-quick-replies.hidden { display: none; }
+        .gs-chat-quick-btn {
+            font-family: inherit;
+            font-size: 12px;
+            line-height: 1.3;
+            color: #F3F3F3;
+            background: rgba(220, 13, 1, 0.10);
+            border: 1px solid rgba(220, 13, 1, 0.35);
+            border-radius: 999px;
+            padding: 7px 12px;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
+            text-align: left;
+            max-width: 100%;
+        }
+        .gs-chat-quick-btn:hover {
+            background: rgba(220, 13, 1, 0.22);
+            border-color: rgba(220, 13, 1, 0.65);
+        }
+        .gs-chat-quick-btn:active { transform: scale(0.97); }
+
         .gs-chat-widget-typing {
             display: inline-flex;
             align-items: center;
@@ -327,6 +386,13 @@
                         Сайн байна уу? GS Auto Center-д тавтай морилно уу.<br><br>Бид TOYOTA, LEXUS жийп ангиллын мэргэжлийн засвар үйлчилгээ, JAPAN TOK оригинал сэлбэг санал болгож байна.<br><br>Танд яаж туслах вэ?
                     </div>
                 </div>
+                <div class="gs-chat-quick-replies" id="gs-chat-quick-replies" role="group" aria-label="Шуурхай асуултууд">
+                    <button type="button" class="gs-chat-quick-btn" data-q="Хаана байрладаг вэ?">📍 Хаана байрладаг вэ?</button>
+                    <button type="button" class="gs-chat-quick-btn" data-q="Ямар үйлчилгээ байна вэ?">🔧 Ямар үйлчилгээ байна вэ?</button>
+                    <button type="button" class="gs-chat-quick-btn" data-q="JAPAN TOK сэлбэг авах боломжтой юу?">🛠️ JAPAN TOK сэлбэг</button>
+                    <button type="button" class="gs-chat-quick-btn" data-q="Цаг захиалмаар байна">📞 Цаг захиалах</button>
+                    <button type="button" class="gs-chat-quick-btn" data-q="Ажлын цаг хэд вэ?">🕒 Ажлын цаг хэд вэ?</button>
+                </div>
             </div>
             <div class="gs-chat-widget-input-area">
                 <input
@@ -440,6 +506,29 @@
         overlay.addEventListener('click', toggleChat);
         loadWidgetState();
 
+        // Quick-reply shortcuts: clicking one fills the input and sends.
+        // They disappear once the user has interacted at least once
+        // (either via shortcut or by typing).
+        const quickReplies = document.getElementById('gs-chat-quick-replies');
+        function hideQuickReplies() {
+            if (quickReplies && !quickReplies.classList.contains('hidden')) {
+                quickReplies.classList.add('hidden');
+            }
+        }
+        if (quickReplies) {
+            // If returning user already has a conversation, hide them on load.
+            if (chatHistory.length > 0) hideQuickReplies();
+
+            quickReplies.addEventListener('click', (e) => {
+                const btn = e.target.closest('.gs-chat-quick-btn');
+                if (!btn) return;
+                const q = btn.dataset.q || btn.textContent.trim();
+                hideQuickReplies();
+                input.value = q;
+                sendMessage();
+            });
+        }
+
         function addMessage(text, sender, shouldSave = true) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `gs-chat-widget-message ${sender}`;
@@ -480,6 +569,7 @@
             const text = input.value.trim();
             if (!text || isLoading) return;
 
+            hideQuickReplies();
             addMessage(text, 'user');
             input.value = '';
             input.disabled = true;

@@ -161,7 +161,7 @@ export function sanitizeHtml(text) {
  */
 export function hasSuspiciousPatterns(text) {
     if (!text || typeof text !== 'string') return false;
-    
+
     const suspiciousPatterns = [
         /<script/i,
         /javascript:/i,
@@ -172,8 +172,56 @@ export function hasSuspiciousPatterns(text) {
         /<object/i,
         /<embed/i
     ];
-    
+
     return suspiciousPatterns.some(pattern => pattern.test(text));
+}
+
+/**
+ * Heuristic detector for prompt-injection / jailbreak attempts.
+ *
+ * Returns true for clear-cut manipulation language in English or Mongolian
+ * (Cyrillic). Detection is lossy by design — when it fires we don't reject
+ * the request outright; the handler returns a canned refusal so the model
+ * never sees the manipulated turn. Suspicious-but-ambiguous phrasing falls
+ * through and is handled by the hardened system prompt instead.
+ */
+export function hasPromptInjectionPatterns(text) {
+    if (!text || typeof text !== 'string') return false;
+
+    const t = text.toLowerCase();
+
+    const patterns = [
+        // English jailbreak / role manipulation
+        /ignore (all |any |the |your )?(previous|prior|above|earlier) (instructions?|rules?|prompts?|directives?)/,
+        /disregard (all |any |the |your )?(previous|prior|above) (instructions?|rules?|prompts?)/,
+        /forget (everything|all|your|the) (instructions?|rules?|prompts?|training)/,
+        /you (are|'re) (now|actually) (a|an) /,
+        /act as (a|an|if you)/,
+        /pretend (to be|you are|that you)/,
+        /roleplay as/,
+        /\bdan\b.{0,20}(mode|jailbreak|do anything)/,
+        /developer mode/,
+        /jailbreak/,
+        /reveal (your|the) (system|initial|original) (prompt|instructions|message)/,
+        /show me (your|the) (system|initial|original) (prompt|instructions)/,
+        /what (are|were) your (instructions|rules|system prompt)/,
+        /repeat (your|the) (instructions|system prompt|rules) (back|verbatim|word for word)/,
+        /print (your|the) (instructions|system prompt|initial prompt)/,
+        /\bsudo\b/,
+        // Mongolian (Cyrillic) jailbreak variants
+        /өмнөх (заавар|зааварчилгаа|дүрэм|анхааруулга)/,
+        /(заавар|дүрэм|анхааруулга).{0,40}(мартаж|устгаж|орхиж|үл анхаар)/,
+        /мартаж.{0,20}(заавар|дүрэм)/,
+        /чи (одоо|өдгөө) (өөр|шинэ)/,
+        /чи бол.{0,40}(өөр|шинэ|chatgpt|gpt|claude)/,
+        /(чи|та).{0,20}(дүр эсгэ|дүр болж)/,
+        /(дүр эсгэ|дүр болж).{0,30}(бай|байгаач)/,
+        /системийн (заавар|prompt|анхны)/,
+        /(анхны|системийн) (заавар|зааварчилгаа|дүрэм).{0,30}(юу вэ|хэлээч|үзүүл|задал)/,
+        /(заавар|дүрэм).{0,15}(үзүүл|задал|хэлээч|илчил)/
+    ];
+
+    return patterns.some(p => p.test(t));
 }
 
 export const ValidationLimits = {
