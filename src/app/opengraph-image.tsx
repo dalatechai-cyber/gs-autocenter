@@ -3,9 +3,16 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export const alt =
-  "GS Auto Center · TOYOTA & LEXUS жийпийн засвар үйлчилгээ · Улаанбаатар";
+  "GS Auto Center · TOYOTA & LEXUS service · Ulaanbaatar";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+// satori in next/og cannot resolve weight from variable TTF files, so we
+// avoid embedding the project's Montserrat-Variable.ttf and stick to the
+// runtime's default sans (which renders Latin reliably). The image keeps
+// the brand visual language: dark ink canvas, red scalpel accent, logo.
+// The Mongolian headline lives in og:description, which is honored by
+// every social card platform.
 
 export default async function OgImage() {
   const logoPath = join(
@@ -14,16 +21,7 @@ export default async function OgImage() {
     "logo",
     "gs-logo-horizontal-white.png",
   );
-  const fontPath = join(
-    process.cwd(),
-    "public",
-    "fonts",
-    "Montserrat-Variable.ttf",
-  );
-  const [logoBuffer, fontBuffer] = await Promise.all([
-    readFile(logoPath),
-    readFile(fontPath),
-  ]);
+  const logoBuffer = await readFile(logoPath);
   const logoSrc = `data:image/png;base64,${logoBuffer.toString("base64")}`;
 
   return new ImageResponse(
@@ -37,7 +35,7 @@ export default async function OgImage() {
           justifyContent: "space-between",
           background: "#131313",
           color: "#E7E7E7",
-          fontFamily: "Montserrat, sans-serif",
+          fontFamily: "sans-serif",
           padding: "72px 80px",
           position: "relative",
         }}
@@ -81,7 +79,7 @@ export default async function OgImage() {
           }}
         />
 
-        {/* Top row: logo + meta */}
+        {/* Top row: logo + Since */}
         <div
           style={{
             display: "flex",
@@ -94,43 +92,10 @@ export default async function OgImage() {
           <img
             src={logoSrc}
             alt=""
-            width={360}
-            height={142}
+            width={400}
+            height={158}
             style={{ display: "block" }}
           />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              fontSize: 16,
-              letterSpacing: 6,
-              textTransform: "uppercase",
-              color: "#8A878D",
-            }}
-          >
-            <div
-              style={{
-                width: 56,
-                height: 2,
-                background: "#DC0D01",
-                display: "flex",
-              }}
-            />
-            <span style={{ color: "#DC0D01" }}>Since 2011</span>
-          </div>
-        </div>
-
-        {/* Headline block */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 28,
-            position: "relative",
-            maxWidth: 980,
-          }}
-        >
           <div
             style={{
               display: "flex",
@@ -144,35 +109,67 @@ export default async function OgImage() {
           >
             <div
               style={{
+                width: 56,
+                height: 2,
+                background: "#DC0D01",
+                display: "flex",
+              }}
+            />
+            <span style={{ color: "#DC0D01", fontWeight: 700 }}>Since 2011</span>
+          </div>
+        </div>
+
+        {/* Headline block — Latin only so the default font renders cleanly */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 28,
+            position: "relative",
+            maxWidth: 1040,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 18,
+              fontSize: 20,
+              letterSpacing: 6,
+              textTransform: "uppercase",
+              color: "#8A878D",
+            }}
+          >
+            <div
+              style={{
                 width: 12,
                 height: 12,
                 background: "#DC0D01",
                 display: "flex",
               }}
             />
-            <span>TOYOTA &amp; LEXUS · Жийпийн засвар үйлчилгээ</span>
+            <span>Toyota &amp; Lexus · Specialist Service</span>
           </div>
           <div
             style={{
-              fontSize: 116,
+              fontSize: 132,
               fontWeight: 900,
-              lineHeight: 0.96,
-              letterSpacing: -3,
+              lineHeight: 0.94,
+              letterSpacing: -4,
               textTransform: "uppercase",
               color: "#E7E7E7",
               display: "flex",
               flexDirection: "column",
             }}
           >
-            <span>Бид таныг</span>
             <span>
-              <span style={{ color: "#DC0D01" }}>аюулгүй </span>зорчиход
+              Drive <span style={{ color: "#DC0D01" }}>safer.</span>
             </span>
-            <span>туслана.</span>
+            <span>Drive farther.</span>
           </div>
         </div>
 
-        {/* Bottom row: address + phone */}
+        {/* Bottom row */}
         <div
           style={{
             display: "flex",
@@ -181,29 +178,19 @@ export default async function OgImage() {
             position: "relative",
             borderTop: "1px solid #353338",
             paddingTop: 28,
-            fontSize: 18,
+            fontSize: 20,
             letterSpacing: 4,
             textTransform: "uppercase",
             color: "#B8B6BB",
           }}
         >
-          <span>Улаанбаатар · Нарны зам 6/2</span>
+          <span>Ulaanbaatar · Narny Zam 6/2</span>
           <span style={{ color: "#E7E7E7", fontWeight: 700 }}>
             +976 77-200-570
           </span>
         </div>
       </div>
     ),
-    {
-      ...size,
-      fonts: [
-        {
-          name: "Montserrat",
-          data: fontBuffer,
-          weight: 700,
-          style: "normal",
-        },
-      ],
-    },
+    { ...size },
   );
 }
