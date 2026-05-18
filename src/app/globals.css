@@ -118,6 +118,46 @@
   50%      { opacity: 0.6; box-shadow: 0 0 0 6px transparent; }
 }
 
+/* Word reveal: each word climbs up behind a clipping mask. Mechanical. */
+@keyframes word-rise {
+  0%   { transform: translateY(115%); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
+/* Shimmer sweep across a CTA, every 5s */
+@keyframes cta-shimmer {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(220%)  skewX(-18deg); }
+}
+
+/* Scroll indicator dot, keeps falling down a fixed track */
+@keyframes scroll-tick {
+  0%   { transform: translateY(-110%); opacity: 0; }
+  18%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { transform: translateY(110%);  opacity: 0; }
+}
+
+/* Diagonal scan line, sweeps across the hero every ~9s */
+@keyframes lane-sweep {
+  0%   { transform: translate3d(-110%, 0, 0); opacity: 0; }
+  18%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { transform: translate3d(110%, 0, 0);  opacity: 0; }
+}
+
+/* Marquee, single direction, linear */
+@keyframes ticker-x {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* Slow rotating ring in midground */
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Inline block: font tokens that reference next/font runtime vars */
 @theme inline {
   --font-sans: var(--font-montserrat), "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
@@ -254,6 +294,105 @@
     );
     animation: glow-drift 14s ease-in-out infinite;
     filter: blur(40px);
+  }
+
+  /* ---- Hero word-stack reveal ----------------------------------- */
+  /* A row is a clipping mask. Each <span class="word"> climbs into it. */
+  .word-row {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+  }
+  .word-row .word {
+    display: inline-block;
+    transform: translateY(115%);
+    opacity: 0;
+    animation: word-rise 720ms var(--ease-mech) forwards;
+    will-change: transform, opacity;
+  }
+
+  /* ---- CTA shimmer ---------------------------------------------- */
+  .cta-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .cta-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.22) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%) skewX(-18deg);
+    animation: cta-shimmer 4.2s var(--ease-mech) 1.2s infinite;
+  }
+
+  /* ---- Continuous vertical scroll tick --------------------------- */
+  .scroll-track {
+    position: relative;
+    overflow: hidden;
+  }
+  .scroll-track::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    height: 30%;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--color-gs-red) 55%,
+      transparent
+    );
+    animation: scroll-tick 2.2s var(--ease-mech) infinite;
+    will-change: transform, opacity;
+  }
+
+  /* ---- Diagonal scan line in hero (foreground depth) ------------ */
+  .lane-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-gs-red) 50%,
+      transparent 100%
+    );
+    transform: translateX(-110%);
+    animation: lane-sweep 9s var(--ease-mech) infinite;
+    will-change: transform, opacity;
+  }
+
+  /* ---- Marquee track for announcement banner --------------------- */
+  .ticker-track {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 3rem;
+    padding-right: 3rem;
+    animation: ticker-x 38s linear infinite;
+    will-change: transform;
+  }
+  .ticker-pause:hover .ticker-track {
+    animation-play-state: paused;
+  }
+
+  /* ---- Midground rotating ring (decorative depth) ---------------- */
+  .ring-orbit {
+    animation: ring-spin 90s linear infinite;
+    transform-origin: center;
+    will-change: transform;
+  }
+
+  /* ---- Pressable feedback (Emil principle) ----------------------- */
+  .pressable {
+    transition: transform 160ms var(--ease-mech);
+  }
+  .pressable:active {
+    transform: scale(0.97);
   }
 }
 

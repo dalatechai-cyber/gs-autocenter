@@ -65,62 +65,58 @@ export default function JapanTok() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="reveal lg:col-span-7">
-            <div className="flex items-baseline gap-5">
-              <span
-                className="font-wordmark text-gs-red tabular-nums"
-                style={{
-                  fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
-                  lineHeight: 0.9,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                2019
-              </span>
-              <span className="text-[10px] font-medium uppercase tracking-[0.28em] text-graphite">
-                since
-              </span>
-            </div>
-
-            <h2
-              className="mt-8 font-sans font-black uppercase tracking-tight text-paper"
+        <div className="reveal max-w-[1100px]">
+          <div className="flex items-baseline gap-5">
+            <span
+              className="font-wordmark text-gs-red tabular-nums"
               style={{
-                fontSize: "clamp(2.5rem, 7vw, 6rem)",
-                lineHeight: 0.94,
-                letterSpacing: "-0.03em",
+                fontSize: "clamp(2.25rem, 4.5vw, 4rem)",
+                lineHeight: 0.9,
+                letterSpacing: "-0.02em",
               }}
             >
-              <span className="font-wordmark text-gs-red">JAPAN TOK</span>
-              <br />
-              Монголын
-              <br />
-              албан ёсны
-              <br />
-              <span className="text-gs-red">дистрибьютор.</span>
-            </h2>
-
-            <p className="mt-10 max-w-prose text-base leading-relaxed text-fog sm:text-lg">
-              &ldquo;Гранд Сутай&rdquo; ХХК нь 2019 онд Япон улсын JAPAN TOK
-              брэндийн албан ёсны дистрибьюторын эрхийг авч, Монголын зах
-              зээлд гарал үүсэл нь тодорхой, чанар стандартыг хангасан, бүх
-              төрлийн Япон суудлын автомашины явах эд ангийн сэлбэгийг
-              импортлон худалдаалж байна.
-            </p>
+              2019
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.28em] text-graphite">
+              since
+            </span>
           </div>
 
-          <div className="reveal reveal-delay-2 grid grid-cols-2 gap-px overflow-hidden border border-charcoal/60 bg-charcoal/60 lg:col-span-5">
-            {/* Lead stat: 70+ retail points, full width, larger numeral */}
-            <StatBlock
-              variant="lead"
-              value={70}
-              suffix="+"
-              label="борлуулалтын цэг"
-              subtitle="Улаанбаатар хот"
-            />
-            <StatBlock value={10} suffix="+" label="аймаг" subtitle="Орон нутаг" />
-            <StatBlock value={2000} suffix="+" separator label="сэлбэгийн нэр төрөл" subtitle="SKU" />
-          </div>
+          <h2
+            className="mt-8 font-sans font-black uppercase tracking-tight text-paper"
+            style={{
+              fontSize: "clamp(2rem, 5.5vw, 5rem)",
+              lineHeight: 0.96,
+              letterSpacing: "-0.03em",
+              textWrap: "balance",
+              wordBreak: "keep-all",
+              overflowWrap: "break-word",
+              hyphens: "auto",
+            }}
+          >
+            <span className="font-wordmark text-gs-red">JAPAN TOK</span>{" "}
+            Монголын албан ёсны{" "}
+            <span className="text-gs-red">дистрибьютор.</span>
+          </h2>
+
+          <p className="mt-10 max-w-prose text-base leading-relaxed text-fog sm:text-lg">
+            &ldquo;Гранд Сутай&rdquo; ХХК нь 2019 онд Япон улсын JAPAN TOK
+            брэндийн албан ёсны дистрибьюторын эрхийг авч, Монголын зах
+            зээлд гарал үүсэл нь тодорхой, чанар стандартыг хангасан, бүх
+            төрлийн Япон суудлын автомашины явах эд ангийн сэлбэгийг
+            импортлон худалдаалж байна.
+          </p>
+        </div>
+
+        <div className="reveal reveal-delay-2 mt-14 grid grid-cols-1 gap-px overflow-hidden border border-charcoal/60 bg-charcoal/60 sm:grid-cols-3">
+          <StatBlock
+            value={70}
+            suffix="+"
+            label="борлуулалтын цэг"
+            subtitle="Улаанбаатар хот"
+          />
+          <StatBlock value={10} suffix="+" label="аймаг" subtitle="Орон нутаг" />
+          <StatBlock value={2000} suffix="+" separator label="сэлбэгийн нэр төрөл" subtitle="SKU" />
         </div>
 
         <div className="reveal mt-20">

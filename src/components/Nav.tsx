@@ -47,7 +47,7 @@ export default function Nav() {
     <>
       <header
         data-scrolled={scrolled || undefined}
-        className="group/nav fixed inset-x-0 top-0 z-50 border-b border-transparent transition-[background-color,backdrop-filter,border-color] duration-300 ease-out data-[scrolled]:border-charcoal/60 data-[scrolled]:bg-ink/85 data-[scrolled]:backdrop-blur-md"
+        className="group/nav fixed inset-x-0 top-9 z-50 border-b border-transparent transition-[background-color,backdrop-filter,border-color] duration-300 ease-out data-[scrolled]:border-charcoal/60 data-[scrolled]:bg-ink/85 data-[scrolled]:backdrop-blur-md"
       >
         {/* Red hairline · wipes in on scroll */}
         <div
@@ -150,7 +150,7 @@ function MobileDrawer({
       aria-modal="true"
       aria-label="Үндсэн цэс"
       aria-hidden={!open}
-      className={`fixed inset-0 z-40 lg:hidden ${open ? "pointer-events-auto" : "pointer-events-none"}`}
+      className={`fixed inset-0 top-9 z-40 lg:hidden ${open ? "pointer-events-auto" : "pointer-events-none"}`}
     >
       {/* Backdrop */}
       <div
