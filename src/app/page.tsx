@@ -5,6 +5,8 @@ import VehicleShowcase from "@/components/VehicleShowcase";
 import VehicleExplorer from "@/components/VehicleExplorer";
 import JapanTok from "@/components/JapanTok";
 import About from "@/components/About";
+import DirectorGreeting from "@/components/DirectorGreeting";
+import Contact from "@/components/Contact";
 import Reveal from "@/components/Reveal";
 
 export default function Home() {
@@ -18,6 +20,8 @@ export default function Home() {
       <VehicleExplorer />
       <JapanTok />
       <About />
+      <DirectorGreeting />
+      <Contact />
     </main>
   );
 }

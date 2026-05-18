@@ -16,7 +16,7 @@ const LINKS = [
   { href: "#selbeg", label: "Сэлбэг" },
   { href: "#mashin", label: "Машинууд" },
   { href: "#bidnii-tuhai", label: "Бидний тухай" },
-  { href: "#holboo", label: "Холбоо барих" },
+  { href: "#holboo-barih", label: "Холбоо барих" },
 ] as const;
 
 export default function Nav() {

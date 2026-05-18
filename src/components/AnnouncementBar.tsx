@@ -1,19 +1,54 @@
 import { PhoneIcon } from "./icons";
 import { PHONE_DISPLAY, PHONE_HREF } from "@/lib/contact";
+import { getActiveBanner } from "@/lib/admin/banners";
+import type { Banner } from "@/lib/admin/types";
 
 /**
- * Slim banner above the navigation. Will be CMS-driven in a future session;
- * for now a single Mongolian message is rendered as a marquee on narrow
- * viewports and as a centered notice on desktop. The component renders
- * server-side, CSS handles the motion.
+ * Slim banner above the navigation. Reads the currently active banner from
+ * Vercel Blob (managed at /admin); falls back to a static default if no
+ * banner is scheduled so the layout above the nav stays consistent.
  */
-const ANNOUNCEMENT = {
+const DEFAULT_ANNOUNCEMENT = {
   kicker: "Шинэ",
-  body: "11-р сарын засварын үйлчилгээнд 15% хямдрал · урьдчилсан цаг захиалга нээлттэй",
+  body: "TOYOTA, LEXUS жийпийн засвар үйлчилгээ · урьдчилсан цаг захиалга нээлттэй",
   cta: "Цаг захиалах",
+  link: PHONE_HREF,
+} as const;
+
+type Resolved = {
+  kicker: string;
+  body: string;
+  cta: string;
+  link: string;
+  ariaLabel: string;
 };
 
-export default function AnnouncementBar() {
+function resolveBanner(banner: Banner | null): Resolved {
+  if (!banner) {
+    return {
+      kicker: DEFAULT_ANNOUNCEMENT.kicker,
+      body: DEFAULT_ANNOUNCEMENT.body,
+      cta: DEFAULT_ANNOUNCEMENT.cta,
+      link: DEFAULT_ANNOUNCEMENT.link,
+      ariaLabel: `${DEFAULT_ANNOUNCEMENT.cta} · ${PHONE_DISPLAY}`,
+    };
+  }
+  const link = banner.link?.trim() || PHONE_HREF;
+  const linksToPhone = link.startsWith("tel:");
+  return {
+    kicker: banner.title,
+    body: banner.body,
+    cta: linksToPhone ? "Цаг захиалах" : "Дэлгэрэнгүй",
+    link,
+    ariaLabel: linksToPhone
+      ? `Цаг захиалах · ${PHONE_DISPLAY}`
+      : `${banner.title}: ${banner.body}`,
+  };
+}
+
+export default async function AnnouncementBar() {
+  const banner = await getActiveBanner().catch(() => null);
+  const a = resolveBanner(banner);
   const repeated = Array.from({ length: 4 });
 
   return (
@@ -31,26 +66,30 @@ export default function AnnouncementBar() {
         }}
       />
 
-      {/* Desktop: static notice with kicker on the left, contact on the right */}
+      {/* Desktop · static notice */}
       <div className="relative mx-auto hidden h-9 max-w-[1440px] items-center justify-between gap-6 px-6 text-[11px] font-medium uppercase tracking-[0.18em] sm:flex lg:px-10">
         <span className="flex items-center gap-3">
           <span
             aria-hidden
             className="grid h-4 place-items-center bg-snow px-1.5 text-[9px] font-bold tracking-[0.2em] text-gs-red"
           >
-            {ANNOUNCEMENT.kicker}
+            {a.kicker}
           </span>
-          <span className="text-snow/95">{ANNOUNCEMENT.body}</span>
+          <span className="text-snow/95">{a.body}</span>
         </span>
 
         <a
-          href={PHONE_HREF}
+          href={a.link}
+          target={a.link.startsWith("http") ? "_blank" : undefined}
+          rel={a.link.startsWith("http") ? "noreferrer noopener" : undefined}
           className="group/aa inline-flex items-center gap-2 text-[10px] font-semibold tracking-[0.22em] text-snow"
-          aria-label={`${ANNOUNCEMENT.cta} · ${PHONE_DISPLAY}`}
+          aria-label={a.ariaLabel}
         >
           <PhoneIcon className="size-3" />
-          <span className="hidden md:inline">{PHONE_DISPLAY}</span>
-          <span className="md:hidden">{ANNOUNCEMENT.cta}</span>
+          <span className="hidden md:inline">
+            {a.link.startsWith("tel:") ? PHONE_DISPLAY : a.cta}
+          </span>
+          <span className="md:hidden">{a.cta}</span>
           <span
             aria-hidden
             className="ml-1 inline-block h-px w-6 origin-left scale-x-0 bg-snow transition-transform duration-300 ease-out group-hover/aa:scale-x-100"
@@ -58,7 +97,7 @@ export default function AnnouncementBar() {
         </a>
       </div>
 
-      {/* Mobile: continuous marquee */}
+      {/* Mobile · marquee */}
       <div className="ticker-pause relative flex h-9 items-center overflow-hidden sm:hidden">
         <div className="ticker-track">
           {repeated.map((_, i) => (
@@ -70,9 +109,9 @@ export default function AnnouncementBar() {
                 aria-hidden
                 className="grid h-4 place-items-center bg-snow px-1.5 text-[9px] font-bold tracking-[0.2em] text-gs-red"
               >
-                {ANNOUNCEMENT.kicker}
+                {a.kicker}
               </span>
-              <span>{ANNOUNCEMENT.body}</span>
+              <span>{a.body}</span>
               <span
                 aria-hidden
                 className="mx-2 block size-1 shrink-0 bg-snow"
