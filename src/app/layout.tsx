@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import Script from "next/script";
 import Nav from "@/components/Nav";
 import AnnouncementBar from "@/components/AnnouncementBar";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const chatbotUrl = process.env.NEXT_PUBLIC_CHATBOT_URL?.replace(/\/$/, "");
@@ -110,6 +111,7 @@ export default function RootLayout({
         <AnnouncementBar />
         <Nav />
         {children}
+        <Footer />
         {chatbotUrl ? (
           <Script
             src={`${chatbotUrl}/widget.js?v=${CHATBOT_WIDGET_VERSION}`}

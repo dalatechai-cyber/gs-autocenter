@@ -17,3 +17,12 @@ export const BRANCH_1_ADDRESS_LINE =
   "Улаанбаатар, БГД, 3-р хороо, Нарны зам 6/2";
 export const BRANCH_1_MAP_QUERY =
   "GS Auto Center, Нарны зам 6/2, Баянгол, Улаанбаатар";
+
+// Canonical short URL — single source of truth for every "directions" link
+// across the site. Resolves to the verified Google Maps listing.
+export const BRANCH_1_MAP_URL = "https://maps.app.goo.gl/UbQAvbjpgX9QJJLh9";
+export const BRANCH_1_COORDS = { lat: 47.9079841, lng: 106.9120444 } as const;
+// Place-anchored embed: pinned to the exact business coordinates.
+export const BRANCH_1_MAP_EMBED =
+  `https://www.google.com/maps?q=${BRANCH_1_COORDS.lat},${BRANCH_1_COORDS.lng}` +
+  `&ll=${BRANCH_1_COORDS.lat},${BRANCH_1_COORDS.lng}&z=17&hl=mn&output=embed`;
