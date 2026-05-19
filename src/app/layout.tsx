@@ -6,6 +6,9 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import "./globals.css";
 
 const chatbotUrl = process.env.NEXT_PUBLIC_CHATBOT_URL?.replace(/\/$/, "");
+// Bumped whenever widget.js is rewritten so visitors break out of stale browser
+// caches without waiting for the default Cache-Control window.
+const CHATBOT_WIDGET_VERSION = "3";
 
 const montserrat = localFont({
   src: [
@@ -109,7 +112,7 @@ export default function RootLayout({
         {children}
         {chatbotUrl ? (
           <Script
-            src={`${chatbotUrl}/widget.js`}
+            src={`${chatbotUrl}/widget.js?v=${CHATBOT_WIDGET_VERSION}`}
             strategy="afterInteractive"
           />
         ) : null}
