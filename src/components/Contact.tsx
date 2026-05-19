@@ -1,19 +1,17 @@
 import {
   BRANCH_1_ADDRESS,
   BRANCH_1_ADDRESS_LINE,
+  BRANCH_1_COORDS,
   BRANCH_1_HOURS,
-  BRANCH_1_MAP_QUERY,
+  BRANCH_1_MAP_EMBED,
+  BRANCH_1_MAP_URL,
   PHONE_HREF,
   PHONE_NUMBERS,
 } from "@/lib/contact";
 import { PhoneIcon } from "./icons";
 
-const MAP_SRC = `https://www.google.com/maps?q=${encodeURIComponent(
-  BRANCH_1_MAP_QUERY,
-)}&z=16&hl=mn&output=embed`;
-const MAP_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-  BRANCH_1_MAP_QUERY,
-)}`;
+const MAP_SRC = BRANCH_1_MAP_EMBED;
+const MAP_LINK = BRANCH_1_MAP_URL;
 
 const HOURS_ROWS = [
   { label: "Даваа — Баасан", value: "09:00 — 19:00" },
@@ -206,7 +204,8 @@ export default function Contact() {
                       aria-hidden
                       className="block size-1.5 animate-[bar-pulse_2.4s_ease-in-out_infinite] bg-gs-red"
                     />
-                    47.91° N · 106.88° E
+                    {BRANCH_1_COORDS.lat.toFixed(4)}° N ·{" "}
+                    {BRANCH_1_COORDS.lng.toFixed(4)}° E
                   </span>
                 </div>
 
