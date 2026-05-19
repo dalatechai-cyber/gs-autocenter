@@ -26,7 +26,7 @@ const cspDirectives = [
   "img-src 'self' data: blob: https://toyota-mongolia.mn https://*.public.blob.vercel-storage.com https://*.google.com https://*.gstatic.com https://*.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   `connect-src 'self' ${chatbotOrigin} https://*.vercel-insights.com https://*.vercel-scripts.com`,
-  "frame-src 'self' https://www.google.com https://maps.google.com",
+  `frame-src 'self' ${chatbotOrigin} https://www.google.com https://maps.google.com`,
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
