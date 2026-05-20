@@ -394,6 +394,180 @@
   .pressable:active {
     transform: scale(0.97);
   }
+
+  /* ---- Red caret motif (brand book signature) -------------------- */
+  /* Triangular ^ accent. Recurs above virtue labels and section codes. */
+  .caret-up {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 7px solid var(--color-gs-red);
+    transform-origin: center bottom;
+  }
+  .caret-up-lg {
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-bottom-width: 10px;
+  }
+  .caret-up-xs {
+    border-left-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 4px;
+  }
+
+  /* ---- Virtue chip (literal brand book transcription) ------------ */
+  .virtue-chip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 0.55rem 1rem;
+    background: linear-gradient(
+      180deg,
+      rgba(220, 13, 1, 0) 0%,
+      rgba(91, 7, 2, 0.55) 100%
+    );
+    border-bottom: 2px solid var(--color-gs-red);
+    transition: background 240ms var(--ease-mech);
+  }
+  .virtue-chip:hover {
+    background: linear-gradient(
+      180deg,
+      rgba(220, 13, 1, 0.04) 0%,
+      rgba(176, 11, 1, 0.75) 100%
+    );
+  }
+  .virtue-chip .label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--color-paper);
+  }
+
+  /* ---- Deep red horizon · the floor of the hero ------------------ */
+  .horizon-glow {
+    background: radial-gradient(
+      ellipse 100% 60% at 50% 100%,
+      rgba(220, 13, 1, 0.28) 0%,
+      rgba(91, 7, 2, 0.18) 35%,
+      transparent 70%
+    );
+  }
+
+  /* ---- Mountain ridge accent (echoes the GS mark) ---------------- */
+  .ridge-line {
+    stroke: var(--color-gs-red);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linejoin: miter;
+    opacity: 0.78;
+    filter: drop-shadow(0 0 8px rgba(220, 13, 1, 0.45));
+  }
+
+  /* ---- Manifesto headline · giant Audiowide wordmark -------------- */
+  .display-wordmark {
+    font-family: var(--font-wordmark);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 0.9;
+    color: var(--color-paper);
+  }
+
+  /* ---- Vehicle manifest grid · monospace parts-list aesthetic ---- */
+  .manifest-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 1.25rem;
+    padding-block: 0.875rem;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    transition: padding-left 240ms var(--ease-mech),
+                background 240ms var(--ease-mech);
+  }
+  .manifest-row:hover {
+    background: linear-gradient(
+      90deg,
+      rgba(220, 13, 1, 0.05) 0%,
+      transparent 70%
+    );
+    padding-left: 1rem;
+  }
+  .manifest-row .code {
+    font-family: var(--font-wordmark);
+    font-size: 0.8125rem;
+    letter-spacing: 0.18em;
+    color: var(--color-gs-red);
+  }
+  .manifest-row .name {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: clamp(1.5rem, 3.4vw, 2.625rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--color-paper);
+    text-transform: uppercase;
+  }
+  .manifest-row .name em {
+    font-style: normal;
+    color: var(--color-graphite);
+    font-weight: 500;
+    margin-left: 0.6em;
+    font-size: 0.5em;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .manifest-row .arrow {
+    color: var(--color-iron);
+    transition: color 200ms var(--ease-mech),
+                transform 200ms var(--ease-mech);
+  }
+  .manifest-row:hover .arrow {
+    color: var(--color-gs-red);
+    transform: translateX(4px);
+  }
+
+  /* ---- Hero serial / VIN block ------------------------------------ */
+  .serial-block {
+    font-family: var(--font-wordmark);
+    font-size: 0.6875rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-graphite);
+  }
+
+  /* ---- Slow marquee ticker (corporate clients) ------------------- */
+  .ticker-clients {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 4rem;
+    padding-right: 4rem;
+    animation: ticker-slow 52s linear infinite;
+    will-change: transform;
+    align-items: center;
+  }
+  .ticker-pause:hover .ticker-clients {
+    animation-play-state: paused;
+  }
+
+  .mountain-rise {
+    animation: mountain-rise 1200ms var(--ease-mech) 280ms both;
+  }
+}
+
+@keyframes ticker-slow {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes mountain-rise {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 @keyframes bar-pulse {
