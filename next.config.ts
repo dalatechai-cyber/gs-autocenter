@@ -21,11 +21,12 @@ const chatbotOrigin =
 //   frame-src + img-src (map tiles).
 const cspDirectives = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${chatbotOrigin} https://*.vercel-scripts.com https://va.vercel-scripts.com`,
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${chatbotOrigin} https://*.vercel-scripts.com https://va.vercel-scripts.com https://www.gstatic.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://toyota-mongolia.mn https://upload.wikimedia.org https://discoverlexus.com https://*.public.blob.vercel-storage.com https://*.google.com https://*.gstatic.com https://*.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  `connect-src 'self' ${chatbotOrigin} https://*.vercel-insights.com https://*.vercel-scripts.com`,
+  `connect-src 'self' blob: ${chatbotOrigin} https://*.vercel-insights.com https://*.vercel-scripts.com https://www.gstatic.com`,
+  "worker-src 'self' blob:",
   `frame-src 'self' ${chatbotOrigin} https://www.google.com https://maps.google.com`,
   "frame-ancestors 'none'",
   "object-src 'none'",
