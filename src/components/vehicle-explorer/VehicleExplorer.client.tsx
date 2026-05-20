@@ -30,19 +30,23 @@ import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 const MODEL_URL =
   process.env.NEXT_PUBLIC_LC300_MODEL_URL ?? "/models/lc300-ready.glb";
 const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
+const GROUND_Y = -1.0;
 
 export type CameraView = "exterior" | "hood" | "interior";
 
 /**
  * Camera presets in Three.js world space.
- * Car is auto-centered; geometric center sits near (0, -0.7, 0).
- * Car front is +Z, left is -X.
- * Approximate scene extents: X ±1.1, Y -1.35..−0.05, Z ±2.25
+ * Car FRONT is in -Z direction (Blender +Y → GLTF -Z with export_yup=True).
+ * Car length axis: Z. Car width axis: X. Up: Y.
+ * Wheel bottoms land at y=GROUND_Y after the LC300Scene adjusts groupY.
  */
 const CAM: Record<CameraView, { pos: [number, number, number]; look: [number, number, number]; fov: number }> = {
-  exterior: { pos: [-2.8, 1.6, 6.2], look: [0, -0.4, 0], fov: 38 },
-  hood:     { pos: [-0.3, 2.6, 2.6], look: [0, -0.1, 1.8], fov: 44 },
-  interior: { pos: [-0.6, -0.42, -0.3], look: [0, -0.2, 1.4], fov: 62 },
+  // Front-left 3/4 — classic automotive 3/4 front view (grille + left side visible)
+  exterior: { pos: [-3.2, 0.9, -5.6], look: [0, -0.55, 0], fov: 36 },
+  // Above front, tilted down ~40° looking into engine bay
+  hood:     { pos: [0.4, 2.4, -4.3], look: [0, -0.35, -1.8], fov: 50 },
+  // Inside cabin, driver-side seat, looking forward at dashboard/windshield (-Z)
+  interior: { pos: [-0.45, -0.32, 0.55], look: [0.15, -0.30, -1.5], fov: 62 },
 };
 
 /* ─── Loader ─────────────────────────────────────────────────────── */
@@ -52,7 +56,7 @@ function Loader() {
     <Html center>
       <div
         style={{
-          width: "min(260px,58vw)",
+          width: "min(220px,52vw)",
           color: "#E7E7E7",
           fontFamily: "var(--font-sans),system-ui,sans-serif",
           textAlign: "center",
@@ -73,7 +77,7 @@ function Loader() {
         <div
           style={{
             height: 1,
-            background: "rgba(255,255,255,0.10)",
+            background: "rgba(255,255,255,0.08)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -91,9 +95,9 @@ function Loader() {
         <div
           style={{
             marginTop: 10,
-            fontSize: 11,
+            fontSize: 10,
             fontVariantNumeric: "tabular-nums",
-            color: "#5A5860",
+            color: "#4A4850",
           }}
         >
           {Math.round(progress)}%
@@ -116,12 +120,9 @@ function CameraRig({ view }: { view: CameraView }) {
 
   useFrame((state, delta) => {
     const preset = CAM[view];
-    // Frame-rate independent lerp: ~2s cinematic transition
-    const α = 1 - Math.pow(0.004, delta);
-    state.camera.position.lerp(
-      new THREE.Vector3(...preset.pos),
-      α,
-    );
+    // ~2s cinematic transition, frame-rate independent
+    const α = 1 - Math.pow(0.005, delta);
+    state.camera.position.lerp(new THREE.Vector3(...preset.pos), α);
     lookAtRef.current.lerp(new THREE.Vector3(...preset.look), α);
     state.camera.lookAt(lookAtRef.current);
   });
@@ -140,7 +141,6 @@ type SceneProps = {
 
 function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) {
   const { scene } = useGLTF(MODEL_URL) as unknown as { scene: THREE.Group };
-  const groupRef = useRef<THREE.Group>(null);
 
   /* mesh → hotspot id */
   const meshToId = useMemo(() => {
@@ -157,29 +157,27 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     return m;
   }, [scene]);
 
-  /* store original emissive so we can restore on unhover */
+  /* preserve original emissives for restore */
   const origEmissive = useMemo(() => {
     const map = new Map<THREE.Mesh, { color: THREE.Color; intensity: number }>();
     scene.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.isMesh) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mats.forEach((mat) => {
-        const std = mat as THREE.MeshStandardMaterial;
-        if (!std?.emissive) return;
-        map.set(mesh, { color: std.emissive.clone(), intensity: std.emissiveIntensity ?? 0 });
-      });
+      const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as THREE.MeshStandardMaterial | undefined;
+      if (!mat?.emissive) return;
+      map.set(mesh, { color: mat.emissive.clone(), intensity: mat.emissiveIntensity ?? 0 });
     });
     return map;
   }, [scene]);
 
-  /* emissive glow on hover/pick — only when in correct camera view */
+  /* which hotspots are clickable in this view */
   const allowedIds = useMemo<Set<string>>(() => {
     if (view === "hood") return new Set(["hood", "engine", "battery", "air_filter", "radiator"]);
     if (view === "exterior") return new Set(["door_fl", "door_fr", "door_rl", "door_rr", "wheel_fl", "wheel_fr", "wheel_rl", "wheel_rr", "hood"]);
     return new Set();
   }, [view]);
 
+  /* hover/pick emissive glow */
   useEffect(() => {
     scene.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
@@ -193,8 +191,8 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
         if (!orig) return;
         const active = id && allowedIds.has(id) && (id === hoveredId || id === pickedId);
         if (active) {
-          const strength = id === pickedId ? 0.45 : 0.22;
-          std.emissive.setRGB(strength, 0.04 * strength, 0.04 * strength);
+          const strength = id === pickedId ? 0.40 : 0.18;
+          std.emissive.setRGB(strength, 0.03 * strength, 0.03 * strength);
           std.emissiveIntensity = 1;
         } else {
           std.emissive.copy(orig.color);
@@ -204,7 +202,7 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     });
   }, [hoveredId, pickedId, view, scene, meshToId, origEmissive, allowedIds]);
 
-  /* hood spring animation — opens when view === "hood" */
+  /* hood spring animation */
   const hoodPivotRef = useRef<THREE.Group | null>(null);
   const hoodAxisRef = useRef<"x" | "z">("z");
   const hoodSignRef = useRef<number>(1);
@@ -237,11 +235,11 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
 
   const [{ hoodRot }, hoodApi] = useSpring(() => ({
     hoodRot: 0,
-    config: { mass: 1.2, tension: 100, friction: 22 },
+    config: { mass: 1.2, tension: 90, friction: 22 },
   }));
 
   useEffect(() => {
-    hoodApi.start({ hoodRot: view === "hood" ? (Math.PI / 180) * 58 : 0 });
+    hoodApi.start({ hoodRot: view === "hood" ? (Math.PI / 180) * 62 : 0 });
   }, [view, hoodApi]);
 
   useFrame(() => {
@@ -252,16 +250,20 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     pivot.rotation[hoodAxisRef.current] = v;
   });
 
-  /* centering + fit */
-  const { centerOffset, fitScale } = useMemo(() => {
+  /* centering + ground placement (wheels touch ground) */
+  const { centerOffset, fitScale, groupY } = useMemo(() => {
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z) || 1;
-    return { centerOffset: center.clone().negate(), fitScale: 4.5 / maxDim };
+    const fs = 4.5 / maxDim;
+    // Put model's lowest point at world y=GROUND_Y
+    // wheel_world_y = (box.min.y - center.y) * fs + groupY  →  GROUND_Y
+    // groupY = GROUND_Y - (box.min.y - center.y) * fs
+    const gY = GROUND_Y - (box.min.y - center.y) * fs;
+    return { centerOffset: center.clone().negate(), fitScale: fs, groupY: gY };
   }, [scene]);
 
-  /* pointer events */
   const handlePointerOver = useCallback(
     (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
@@ -287,7 +289,7 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
   );
 
   return (
-    <group ref={groupRef} scale={fitScale} position={[0, -0.7, 0]}>
+    <group scale={fitScale} position={[0, groupY, 0]}>
       <primitive
         object={scene}
         position={centerOffset.toArray()}
@@ -299,27 +301,52 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
   );
 }
 
-/* ─── Lighting ───────────────────────────────────────────────────── */
+/* ─── EnvironmentIntensityController ─────────────────────────────── */
+/**
+ * Drei's <Environment> sets scene.environment for reflections, but in newer
+ * Three.js the IBL contribution can be scaled via scene.environmentIntensity.
+ * This component sets that value once the scene is ready.
+ */
+function EnvIntensity({ value }: { value: number }) {
+  const { scene } = useThree();
+  useEffect(() => {
+    (scene as THREE.Scene & { environmentIntensity?: number }).environmentIntensity = value;
+  }, [scene, value]);
+  return null;
+}
+
+/* ─── Lighting — dramatic, dominant red rim ──────────────────────── */
 function Lighting() {
   return (
     <>
-      {/* Soft ambient fill */}
-      <ambientLight intensity={0.18} color="#e8eaf0" />
-      {/* Key light — soft white from front-left above */}
+      {/* Very subtle ambient — just enough to lift shadows from pure black */}
+      <ambientLight intensity={0.04} color="#1a1820" />
+
+      {/* Sharp key light, front-left, slightly elevated */}
       <directionalLight
-        position={[-3, 4, 5]}
-        intensity={1.8}
-        color="#f5f6ff"
+        position={[-3.5, 3, -3.5]}
+        intensity={2.6}
+        color="#fff8ec"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0005}
       />
-      {/* Fill — soft blue-grey from right */}
-      <directionalLight position={[4, 2, 2]} intensity={0.55} color="#d0d8f0" />
-      {/* Rim — GS brand red from behind/below */}
-      <pointLight position={[0, -0.5, -4.5]} intensity={14} color="#DC0D01" distance={10} decay={2} />
-      {/* Top fill strip — simulates studio softbox */}
-      <directionalLight position={[0, 8, 0]} intensity={0.6} color="#ffffff" />
+
+      {/* Tight fill from right, very subtle */}
+      <directionalLight position={[3, 1.5, -2]} intensity={0.4} color="#c0c8e0" />
+
+      {/* DOMINANT red rim light from behind (car rear = +Z) */}
+      <pointLight position={[0, 0.4, 4.5]} intensity={18} color="#DC0D01" distance={11} decay={2.0} />
+
+      {/* Tight spot from above, sharpens body lines */}
+      <spotLight
+        position={[-1.5, 6, -1.5]}
+        angle={0.42}
+        penumbra={0.5}
+        intensity={2.2}
+        color="#ffffff"
+        target-position={[0, 0, 0]}
+      />
     </>
   );
 }
@@ -362,7 +389,7 @@ function HotspotLegend({
                 ? "border-gs-red bg-gs-red text-snow"
                 : isHover
                   ? "border-gs-red/60 bg-ink/70 text-paper"
-                  : "border-charcoal/50 bg-ink/55 text-paper/75 hover:border-gs-red/50 hover:text-paper"
+                  : "border-white/10 bg-black/40 text-paper/70 hover:border-gs-red/50 hover:text-paper"
             }`}
           >
             <span aria-hidden className={`block size-1 ${isActive ? "bg-snow" : "bg-gs-red"}`} />
@@ -394,7 +421,7 @@ function CameraViewButtons({
         className={`flex items-center gap-2 border px-3 py-2 text-[9.5px] font-medium uppercase tracking-[0.18em] backdrop-blur-md transition-all duration-200 ${
           view === "hood"
             ? "border-gs-red bg-gs-red text-snow"
-            : "border-charcoal/60 bg-ink/60 text-paper/80 hover:border-gs-red/60 hover:text-paper"
+            : "border-white/10 bg-black/45 text-paper/80 hover:border-gs-red/60 hover:text-paper"
         }`}
       >
         <span aria-hidden className="block size-1 bg-current opacity-70" />
@@ -403,68 +430,12 @@ function CameraViewButtons({
       <button
         type="button"
         onClick={() => onViewChange("interior")}
-        className="flex items-center gap-2 border border-charcoal/60 bg-ink/60 px-3 py-2 text-[9.5px] font-medium uppercase tracking-[0.18em] text-paper/80 backdrop-blur-md transition-all duration-200 hover:border-gs-red/60 hover:text-paper"
+        className="flex items-center gap-2 border border-white/10 bg-black/45 px-3 py-2 text-[9.5px] font-medium uppercase tracking-[0.18em] text-paper/80 backdrop-blur-md transition-all duration-200 hover:border-gs-red/60 hover:text-paper"
       >
         <span aria-hidden className="block size-1 bg-gs-red" />
         Салон
       </button>
     </div>
-  );
-}
-
-/* ─── HudCorner ──────────────────────────────────────────────────── */
-function HudCorner({ view, hoveredHotspot }: { view: CameraView; hoveredHotspot: Hotspot | null }) {
-  const viewLabel: Record<CameraView, string> = {
-    exterior: "Гадна тал",
-    hood: "Хөдөлгүүр",
-    interior: "Салон",
-  };
-  return (
-    <>
-      <div className="pointer-events-none absolute left-5 top-5 z-10 select-none sm:left-7 sm:top-7">
-        <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-gs-red">
-          03 · TOYOTA
-        </div>
-        <div className="mt-1 font-wordmark text-xl uppercase tracking-tight text-paper sm:text-2xl">
-          Land Cruiser 300
-        </div>
-        <div className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-graphite">
-          {viewLabel[view]}
-        </div>
-      </div>
-
-      <div className="pointer-events-none absolute right-5 top-5 z-10 max-w-[55%] select-none text-right sm:right-7 sm:top-7">
-        <div className="text-[9px] uppercase tracking-[0.22em] text-graphite">Хэсгийн нэр</div>
-        <div
-          className={`mt-1 font-wordmark text-sm uppercase tracking-tight transition-colors duration-150 ${
-            hoveredHotspot ? "text-gs-red" : "text-paper/30"
-          }`}
-        >
-          {hoveredHotspot?.name ?? "·"}
-        </div>
-      </div>
-
-      {/* Corner brackets */}
-      <CornerBracket position="tl" />
-      <CornerBracket position="tr" />
-      <CornerBracket position="bl" />
-      <CornerBracket position="br" />
-    </>
-  );
-}
-
-function CornerBracket({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
-  const cls: Record<typeof position, string> = {
-    tl: "left-3 top-3 border-l border-t",
-    tr: "right-3 top-3 border-r border-t",
-    bl: "left-3 bottom-3 border-l border-b",
-    br: "right-3 bottom-3 border-r border-b",
-  };
-  return (
-    <span
-      aria-hidden
-      className={`pointer-events-none absolute size-5 border-gs-red/60 ${cls[position]}`}
-    />
   );
 }
 
@@ -475,7 +446,7 @@ function BackButton({ show, onClick }: { show: boolean; onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Буцах"
-      className={`absolute left-5 top-5 z-50 flex items-center gap-2 border border-charcoal/70 bg-ink/85 px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-paper backdrop-blur-sm transition-all duration-300 hover:border-gs-red hover:text-gs-red sm:left-7 sm:top-7 ${
+      className={`absolute left-5 top-5 z-50 flex items-center gap-2 border border-white/10 bg-black/55 px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-paper backdrop-blur-sm transition-all duration-300 hover:border-gs-red hover:text-gs-red sm:left-7 sm:top-7 ${
         show
           ? "translate-x-0 opacity-100"
           : "pointer-events-none -translate-x-3 opacity-0"
@@ -497,7 +468,7 @@ function PartModal({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () 
         aria-hidden
         tabIndex={-1}
         onClick={onClose}
-        className={`fixed inset-0 z-30 bg-ink/65 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-30 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -505,28 +476,26 @@ function PartModal({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () 
         role="dialog"
         aria-modal={open}
         aria-label={hotspot?.name ?? ""}
-        className={`fixed left-1/2 top-1/2 z-40 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 border border-charcoat/70 bg-ink-raised/96 p-7 backdrop-blur-xl transition-all duration-300 ease-out sm:max-w-md sm:p-8 ${
+        className={`fixed left-1/2 top-1/2 z-40 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 border bg-[#0a0a0c]/96 p-7 backdrop-blur-xl transition-all duration-300 ease-out sm:max-w-md sm:p-8 ${
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
         style={{
-          borderColor: "rgba(255,255,255,0.08)",
+          borderColor: "rgba(255,255,255,0.06)",
           boxShadow: open ? "0 0 80px -15px rgba(220,13,1,0.30)" : "none",
         }}
       >
         {hotspot && (
           <>
-            {/* Corner brackets */}
             <span aria-hidden className="absolute left-2 top-2 size-4 border-l border-t border-gs-red/40" />
             <span aria-hidden className="absolute right-2 top-2 size-4 border-r border-t border-gs-red/40" />
             <span aria-hidden className="absolute bottom-2 left-2 size-4 border-b border-l border-gs-red/40" />
             <span aria-hidden className="absolute bottom-2 right-2 size-4 border-b border-r border-gs-red/40" />
 
-            {/* Close */}
             <button
               type="button"
               aria-label="Хаах"
               onClick={onClose}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center border border-charcoal/60 text-graphite transition-colors hover:border-gs-red hover:text-gs-red"
+              className="absolute right-4 top-4 flex size-8 items-center justify-center border border-white/10 text-paper/60 transition-colors hover:border-gs-red hover:text-gs-red"
             >
               <span aria-hidden className="absolute block h-px w-3.5 rotate-45 bg-current" />
               <span aria-hidden className="absolute block h-px w-3.5 -rotate-45 bg-current" />
@@ -544,10 +513,7 @@ function PartModal({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () 
 
             <ul className="mt-5 grid grid-cols-2 gap-2.5 border-t pt-5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
               {["Анхдагч эд анги", "Мэргэшсэн мастер", "Чанарын баталгаа", "Шуурхай үйлчилгээ"].map((label) => (
-                <li
-                  key={label}
-                  className="flex items-start gap-2 text-[10px] uppercase tracking-[0.14em] text-paper/70"
-                >
+                <li key={label} className="flex items-start gap-2 text-[10px] uppercase tracking-[0.14em] text-paper/70">
                   <span aria-hidden className="mt-0.5 block size-1 shrink-0 bg-gs-red" />
                   {label}
                 </li>
@@ -566,10 +532,7 @@ function PartModal({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () 
                   {PHONE_DISPLAY}
                 </span>
               </span>
-              <span
-                aria-hidden
-                className="block size-2.5 origin-center rotate-45 border-r border-t border-snow/80 transition-transform group-hover/cta:translate-x-1"
-              />
+              <span aria-hidden className="block size-2.5 origin-center rotate-45 border-r border-t border-snow/80 transition-transform group-hover/cta:translate-x-1" />
             </a>
           </>
         )}
@@ -578,48 +541,19 @@ function PartModal({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () 
   );
 }
 
-/* ─── InteriorOverlay ────────────────────────────────────────────── */
-function InteriorOverlay({ show }: { show: boolean }) {
-  return (
-    <div
-      className={`pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-6 transition-opacity duration-500 ${
-        show ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <div className="text-center">
-        <div className="text-[9px] uppercase tracking-[0.28em] text-gs-red">Салоны тойм</div>
-        <div className="mt-2 font-wordmark text-2xl uppercase tracking-tight text-paper/60">
-          Premium Interior
-        </div>
-        <p className="mt-3 max-w-xs text-[11px] leading-relaxed text-graphite">
-          Арьсан суудал, ойлоор бүрсэн тааз, тоон дэлгэц бүхий тансаг дотоод засал.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ─── VehicleExplorer ────────────────────────────────────────────── */
+/* ─── VehicleExplorer (section root) ─────────────────────────────── */
 export default function VehicleExplorer() {
   const [view, setView] = useState<CameraView>("exterior");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [modalHotspot, setModalHotspot] = useState<Hotspot | null>(null);
 
-  const pickedHotspot = useMemo(
-    () => LC300_HOTSPOTS.find((h) => h.id === pickedId) ?? null,
-    [pickedId],
-  );
-
   const handlePick = useCallback(
     (id: string) => {
       setPickedId(id);
       const hs = LC300_HOTSPOTS.find((h) => h.id === id);
       if (!hs) return;
-      // Hood click in exterior → go to hood camera
-      if (id === "hood" && view === "exterior") {
-        setView("hood");
-      }
+      if (id === "hood" && view === "exterior") setView("hood");
       setModalHotspot(hs);
     },
     [view],
@@ -642,17 +576,6 @@ export default function VehicleExplorer() {
       aria-label="Загварын судалгаа · 3D"
       className="relative overflow-hidden bg-ink py-20 sm:py-24 lg:py-28"
     >
-      {/* Background radial */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.20]"
-        style={{
-          backgroundImage:
-            "radial-gradient(ellipse at 50% 35%,rgba(220,13,1,0.15),transparent 58%),linear-gradient(to right,rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,0.025) 1px,transparent 1px)",
-          backgroundSize: "100% 100%,96px 96px,96px 96px",
-        }}
-      />
-
       <div className="relative mx-auto max-w-[1440px] px-5 sm:px-10 lg:px-16">
         <header className="max-w-3xl">
           <div className="mb-6 flex items-center gap-4">
@@ -673,7 +596,8 @@ export default function VehicleExplorer() {
           </p>
         </header>
 
-        <div className="relative mt-10 border border-charcoal/50 bg-[#050507]">
+        {/* Canvas wrapper — pure dark, no gradient halos */}
+        <div className="relative mt-10 overflow-hidden border border-white/5" style={{ backgroundColor: "#050507" }}>
           <div className="relative h-[560px] w-full sm:h-[640px] lg:h-[720px]">
             <Canvas
               shadows
@@ -683,17 +607,15 @@ export default function VehicleExplorer() {
                 antialias: true,
                 powerPreference: "high-performance",
                 toneMapping: THREE.ACESFilmicToneMapping,
-                toneMappingExposure: 1.2,
+                toneMappingExposure: 1.05,
               }}
               style={{ background: "transparent" }}
             >
-              {/* HDRI for environment reflections (background hidden) */}
+              {/* HDRI provides only subtle reflections — not scene illumination */}
               <Environment files={HDRI_URL} background={false} />
+              <EnvIntensity value={0.35} />
 
-              {/* Cinematic camera transitions */}
               <CameraRig view={view} />
-
-              {/* Lighting rig */}
               <Lighting />
 
               <Suspense fallback={<Loader />}>
@@ -705,31 +627,27 @@ export default function VehicleExplorer() {
                   onPick={handlePick}
                 />
                 <ContactShadows
-                  position={[0, -1.38, 0]}
-                  opacity={0.7}
-                  scale={10}
-                  blur={2.8}
-                  far={2}
+                  position={[0, GROUND_Y + 0.001, 0]}
+                  opacity={0.85}
+                  scale={11}
+                  blur={2.6}
+                  far={2.2}
                   color="#000000"
                 />
-                {/* Subtle ground reflection plane */}
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.38, 0]} receiveShadow>
-                  <planeGeometry args={[20, 20]} />
+                {/* Subtle reflective ground */}
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y, 0]} receiveShadow>
+                  <planeGeometry args={[24, 24]} />
                   <meshStandardMaterial
                     color="#050507"
-                    metalness={0.9}
-                    roughness={0.4}
-                    envMapIntensity={0.3}
+                    metalness={0.85}
+                    roughness={0.55}
+                    envMapIntensity={0.4}
                   />
                 </mesh>
               </Suspense>
             </Canvas>
 
-            {/* HUD overlays */}
-            <HudCorner
-              view={view}
-              hoveredHotspot={LC300_HOTSPOTS.find((h) => h.id === hoveredId) ?? null}
-            />
+            {/* The only UI overlays: pills, camera buttons, back button */}
             <BackButton show={view !== "exterior"} onClick={handleBack} />
             <HotspotLegend
               view={view}
@@ -738,16 +656,11 @@ export default function VehicleExplorer() {
               onSelect={handlePick}
             />
             <CameraViewButtons view={view} onViewChange={setView} />
-            <InteriorOverlay show={view === "interior"} />
           </div>
         </div>
-
-        <p className="mt-6 text-[10px] uppercase tracking-[0.18em] text-graphite/50">
-          LC300 model · interactive 3D explorer · GS Auto Center
-        </p>
       </div>
 
-      {/* Part information modal */}
+      {/* Centered modal */}
       <PartModal hotspot={modalHotspot} onClose={handleCloseModal} />
     </section>
   );
