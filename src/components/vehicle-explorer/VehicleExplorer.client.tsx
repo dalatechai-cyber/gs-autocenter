@@ -27,12 +27,14 @@ import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
 /* ─── constants ─────────────────────────────────────────────────── */
 // Optimized LC300 model from Vercel Blob: NLM plate stripped, textures
-// resized to 2048 + WebP, geometry Draco-compressed. ~11.4MB vs. 137MB
-// for the raw NLM file. Source pipeline lives in scripts/strip-nlm.mjs
-// + the gltf-transform CLI (resize / webp / dedup / prune / weld / draco).
+// resized to 2048 + WebP, mesh simplified ~50% (ratio 0.5, error 0.005),
+// geometry Draco-compressed. ~8.9MB vs. 137MB for the raw NLM file, with
+// roughly half the per-frame vertex shader work too. Source pipeline lives
+// in scripts/strip-nlm.mjs + the gltf-transform CLI (resize / webp / dedup
+// / prune / weld / simplify / draco).
 const MODEL_URL =
   process.env.NEXT_PUBLIC_LC300_MODEL_URL ??
-  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt.glb";
+  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v2.glb";
 // Draco decoder served from gstatic; the CSP connect-src already allows it.
 const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
 const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
