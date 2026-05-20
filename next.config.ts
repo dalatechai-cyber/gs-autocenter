@@ -23,7 +23,7 @@ const cspDirectives = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${chatbotOrigin} https://*.vercel-scripts.com https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "img-src 'self' data: blob: https://toyota-mongolia.mn https://*.public.blob.vercel-storage.com https://*.google.com https://*.gstatic.com https://*.googleapis.com",
+  "img-src 'self' data: blob: https://toyota-mongolia.mn https://upload.wikimedia.org https://discoverlexus.com https://*.public.blob.vercel-storage.com https://*.google.com https://*.gstatic.com https://*.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   `connect-src 'self' ${chatbotOrigin} https://*.vercel-insights.com https://*.vercel-scripts.com`,
   `frame-src 'self' ${chatbotOrigin} https://www.google.com https://maps.google.com`,
@@ -79,6 +79,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "toyota-mongolia.mn",
         pathname: "/uploaded/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+        pathname: "/wikipedia/commons/**",
+      },
+      {
+        protocol: "https",
+        hostname: "discoverlexus.com",
+        pathname: "/_nuxt/**",
       },
       {
         protocol: "https",

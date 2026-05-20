@@ -3,26 +3,118 @@
     "id": "land-cruiser-300",
     "name": "Land Cruiser 300",
     "brand": "Toyota",
-    "category": "Jeep · Flagship",
+    "code": "LC-300",
+    "category": "Jeep · Шинэ үе · Twin-Turbo",
     "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-300-front.png",
     "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-300-side.png",
     "featured": true
   },
   {
-    "id": "land-cruiser-250",
-    "name": "Land Cruiser 250",
+    "id": "land-cruiser-200",
+    "name": "Land Cruiser 200",
     "brand": "Toyota",
-    "category": "Jeep · Mid",
-    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2026/Apr/LC250.jpg",
+    "code": "LC-200",
+    "category": "Jeep · Флагман · V8",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Toyota_Land_Cruiser_200_002.JPG",
     "featured": true
   },
   {
-    "id": "land-cruiser-70",
-    "name": "Land Cruiser 70",
+    "id": "prado-150",
+    "name": "Prado 150",
     "brand": "Toyota",
-    "category": "Jeep · Heritage",
-    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-70-front.png",
-    "sideImageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-land-cruiser-70-side.png",
+    "code": "PR-150",
+    "category": "Jeep · VX · 1GD-FTV",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2022/May/Prado-1.PNG",
     "featured": true
+  },
+  {
+    "id": "prado-120",
+    "name": "Prado 120",
+    "brand": "Toyota",
+    "code": "PR-120",
+    "category": "Jeep · GX · 1KD-FTV",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2a/2003-2007_Toyota_Land_Cruiser_Prado_%28GRJ120R%29_01.jpg",
+    "featured": true
+  },
+  {
+    "id": "hilux",
+    "name": "Hilux",
+    "brand": "Toyota",
+    "code": "HI-100",
+    "category": "Pickup · 1GD-FTV",
+    "imageUrl": "https://toyota-mongolia.mn/uploaded/images/2025/Aug/vehicle-hilux-new-front.png",
+    "featured": false
+  },
+  {
+    "id": "4runner",
+    "name": "4Runner",
+    "brand": "Toyota",
+    "code": "4R-200",
+    "category": "Body-on-frame SUV",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/06/Toyota_4Runner_2.4T_SR5_2025.jpg",
+    "featured": false
+  },
+  {
+    "id": "highlander",
+    "name": "Highlander",
+    "brand": "Toyota",
+    "code": "HL-100",
+    "category": "Hybrid Crossover",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/54/2020_Toyota_Highlander_XLE_AWD%2C_front.jpg",
+    "featured": false
+  },
+  {
+    "id": "harrier",
+    "name": "Harrier",
+    "brand": "Toyota",
+    "code": "HA-100",
+    "category": "Premium Crossover",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/35/Toyota_HARRIER_G_2WD_%286BA-MXUA80-ANXGB%29_front.jpg",
+    "featured": false
+  },
+  {
+    "id": "lexus-lx-570",
+    "name": "Lexus LX 570",
+    "brand": "Lexus",
+    "code": "LX-570",
+    "category": "V8 · 3UR-FE",
+    "imageUrl": "https://discoverlexus.com/_nuxt/assets/LX04-1643858989-56ca99.png",
+    "featured": false
+  },
+  {
+    "id": "lexus-lx-600",
+    "name": "Lexus LX 600",
+    "brand": "Lexus",
+    "code": "LX-600",
+    "category": "V35A-FTS",
+    "imageUrl": "https://discoverlexus.com/_nuxt/assets/LX04-1643858989-56ca99.png",
+    "featured": false
+  },
+  {
+    "id": "lexus-lx-700h",
+    "name": "Lexus LX 700h",
+    "brand": "Lexus",
+    "code": "LX-700",
+    "category": "Hybrid Flagship",
+    "imageUrl": "https://discoverlexus.com/_nuxt/assets/LX04-1643858989-56ca99.png",
+    "featured": false
+  },
+  {
+    "id": "lexus-rx",
+    "name": "Lexus RX",
+    "brand": "Lexus",
+    "code": "RX",
+    "category": "Premium SUV",
+    "imageUrl": "https://discoverlexus.com/_nuxt/assets/rx_320_221114n-ac68b8.png",
+    "featured": false
+  },
+  {
+    "id": "lexus-nx",
+    "name": "Lexus NX",
+    "brand": "Lexus",
+    "code": "NX",
+    "category": "Compact Lux SUV",
+    "imageUrl": "https://discoverlexus.com/_nuxt/assets/nx2022_40-6801e9.png",
+    "featured": false
   }
 ]

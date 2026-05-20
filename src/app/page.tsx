@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import TrustStrip from "@/components/TrustStrip";
+import Manifesto from "@/components/Manifesto";
 import Services from "@/components/Services";
 import VehicleShowcase from "@/components/VehicleShowcase";
 import VehicleExplorer from "@/components/VehicleExplorer";
@@ -128,6 +129,7 @@ export default function Home() {
       <Reveal />
       <Hero />
       <TrustStrip />
+      <Manifesto />
       <Services />
       <VehicleShowcase />
       <VehicleExplorer />

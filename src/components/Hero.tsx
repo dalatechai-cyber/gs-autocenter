@@ -4,11 +4,11 @@ import ParticleField from "./ParticleField";
 import MagneticButton from "./MagneticButton";
 
 /* ---------------------------------------------------------------------------
-   Hero: three layers of depth
-   - background : engraved grid + drifting red glow + huge GS AUTO CENTER mark
-   - midground  : rotating orbit ring + diagonal hairlines + scan-line sweeps
-   - foreground : eyebrow / word-stack headline / meta strip / CTAs / scroll tick
-   Animation is CSS-driven and server-rendered.
+   Hero · asymmetric editorial
+   - LEFT  : eyebrow / massive word-stack headline / meta / CTAs
+   - RIGHT : vertical virtue column (literal brand-book transcription)
+   - BACK  : engraved grid + red horizon glow + GS watermark + mountain ridge
+   - FORE  : tagline strip + corporate client ticker pinned to the bottom
 --------------------------------------------------------------------------- */
 
 type Word = { text: string; tone?: "default" | "red"; delay: number };
@@ -21,23 +21,36 @@ const LINE_TWO: Word[] = [
   { text: "аюулгүй",  tone: "red", delay: 430 },
   { text: "зорчиход", delay: 540 },
 ];
-const LINE_THREE: Word[] = [
-  { text: "туслана.", delay: 660 },
-];
+const LINE_THREE: Word[] = [{ text: "тусална.", delay: 660 }];
+
+const VIRTUES = [
+  { code: "01", label: "хүчирхэг" },
+  { code: "02", label: "Мэргэжлийн" },
+  { code: "03", label: "тогтвортой" },
+  { code: "04", label: "чанартай" },
+] as const;
+
+const CLIENTS = [
+  "Алтан тариа",
+  "Монгол Даатгал",
+  "Шунхлай",
+  "Түмэн шувуут",
+  "Бевэртек Монголиа",
+  "+30 байгууллага",
+] as const;
 
 function HeadlineRow({ words }: { words: Word[] }) {
   return (
     <span className="word-row">
       {words.map((w, i) => (
-        <span
-          key={`${w.text}-${i}`}
-          className="word"
-          style={{ animationDelay: `${w.delay}ms` }}
-        >
-          <span className={w.tone === "red" ? "text-gs-red" : ""}>
+        <span key={`${w.text}-${i}`} className="word-slot">
+          <span
+            className={`word${w.tone === "red" ? " text-gs-red" : ""}`}
+            style={{ animationDelay: `${w.delay}ms` }}
+          >
             {w.text}
           </span>
-          {i < words.length - 1 && <span aria-hidden>{" "}</span>}
+          {i < words.length - 1 ? " " : null}
         </span>
       ))}
     </span>
@@ -49,7 +62,7 @@ export default function Hero() {
     <section
       id="hero"
       aria-label="GS Auto Center · Toyota & Lexus засвар үйлчилгээ"
-      className="relative isolate flex min-h-[calc(100svh-2.25rem)] flex-col overflow-clip bg-ink pt-32 sm:pt-44"
+      className="relative isolate flex min-h-[calc(100svh-2.25rem)] flex-col overflow-clip bg-ink pt-28 sm:pt-36"
     >
       {/* ===== BACKGROUND LAYER ============================================ */}
       <div
@@ -58,22 +71,40 @@ export default function Hero() {
       />
       <div
         aria-hidden
-        className="ambient-glow pointer-events-none absolute -left-1/4 top-1/3 h-[80vh] w-[90vw]"
+        className="horizon-glow pointer-events-none absolute inset-x-0 bottom-0 h-[60vh]"
       />
       <div
         aria-hidden
         className="vignette pointer-events-none absolute inset-0"
       />
 
-      {/* Giant watermark, fits within viewport at every breakpoint */}
+      {/* Distant mountain ridge — echoes the GS mountain mark. */}
+      <svg
+        aria-hidden
+        viewBox="0 0 1600 220"
+        preserveAspectRatio="none"
+        className="mountain-rise pointer-events-none absolute inset-x-0 bottom-[24%] hidden h-[18vh] w-full md:block"
+      >
+        <polyline
+          className="ridge-line"
+          points="0,200 120,140 220,170 340,90 460,150 560,80 680,140 800,40 940,120 1060,70 1180,150 1300,90 1420,160 1540,110 1600,140"
+        />
+        <polyline
+          className="ridge-line"
+          style={{ opacity: 0.25 }}
+          points="0,210 100,170 220,190 360,130 480,180 600,130 740,180 880,110 1020,170 1160,140 1300,180 1420,150 1540,180 1600,170"
+        />
+      </svg>
+
+      {/* Giant watermark behind everything */}
       <div
         aria-hidden
-        className="hero-watermark pointer-events-none absolute inset-0 select-none overflow-clip"
+        className="pointer-events-none absolute inset-0 select-none overflow-clip"
       >
         <span
-          className="absolute -bottom-[4%] left-[-2%] block whitespace-nowrap font-wordmark uppercase text-paper/[0.045]"
+          className="absolute -bottom-[10%] left-[-2%] block whitespace-nowrap font-wordmark uppercase text-paper/[0.04]"
           style={{
-            fontSize: "clamp(8rem, 28vw, 26rem)",
+            fontSize: "clamp(8rem, 26vw, 24rem)",
             lineHeight: 0.82,
             letterSpacing: "-0.045em",
           }}
@@ -82,32 +113,15 @@ export default function Hero() {
         </span>
       </div>
 
-      {/* Particle field, decorative ambient dots */}
       <ParticleField />
 
       {/* ===== MIDGROUND LAYER ============================================= */}
 
-      {/* Slowly rotating orbit ring, anchored to the right shoulder */}
-      <svg
+      {/* Lane scan lines, staggered drift */}
+      <div
         aria-hidden
-        viewBox="0 0 800 800"
-        className="ring-orbit pointer-events-none absolute -right-[28%] top-1/2 hidden h-[140vh] -translate-y-1/2 opacity-[0.13] lg:block"
+        className="pointer-events-none absolute inset-0 overflow-clip"
       >
-        <defs>
-          <linearGradient id="gsRingGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"  stopColor="#DC0D01" stopOpacity="0" />
-            <stop offset="50%" stopColor="#DC0D01" stopOpacity="1" />
-            <stop offset="100%" stopColor="#DC0D01" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <circle cx="400" cy="400" r="395" fill="none" stroke="url(#gsRingGrad)" strokeWidth="1" />
-        <circle cx="400" cy="400" r="340" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="2 14" />
-        <circle cx="400" cy="400" r="260" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-        <line x1="400" y1="5" x2="400" y2="60" stroke="#DC0D01" strokeWidth="2" />
-      </svg>
-
-      {/* Three scan lines drifting across at staggered intervals */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-clip">
         <span
           className="lane-line left-0 top-[34%] w-[55%]"
           style={{ animationDelay: "0.4s", animationDuration: "8s" }}
@@ -122,122 +136,161 @@ export default function Hero() {
         />
       </div>
 
-      {/* Initial diagonal red wipe (runs once on load) */}
+      {/* Initial diagonal red wipe */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-[-10%] top-[64%] h-px w-[120%] origin-left -rotate-[12deg] bg-gs-red/45"
         style={{ animation: "wipe-right 900ms var(--ease-blade) 520ms both" }}
       />
 
-      {/* Right side rail, desktop */}
-      <div className="pointer-events-none absolute right-7 top-1/2 hidden -translate-y-1/2 flex-col items-center gap-4 lg:flex">
-        <span aria-hidden className="block h-12 w-px bg-charcoal/80" />
-        <span className="origin-center -rotate-90 whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.32em] text-graphite">
-          EST. 2011 · ULAANBAATAR
-        </span>
-        <span aria-hidden className="block h-12 w-px bg-charcoal/80" />
-      </div>
-
-      {/* Top-right VIN-style meta block, desktop only */}
-      <div
-        className="absolute right-16 top-32 hidden text-right font-wordmark text-[10px] uppercase tracking-[0.28em] text-graphite lg:block"
-        style={{ animation: "var(--animate-rise)", animationDelay: "80ms" }}
-      >
-        <div className="flex items-center justify-end gap-3">
-          <span className="block h-px w-6 bg-gs-red" />
-          <span className="text-gs-red">N°01</span>
-        </div>
-        <div className="mt-2 text-paper/70">TOYOTA · LEXUS</div>
-        <div className="mt-1 text-graphite">SERVICE / PARTS</div>
-        <div className="mt-1 tabular-nums text-paper/50">UB · 2011 →</div>
-      </div>
-
       {/* ===== FOREGROUND LAYER ============================================ */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col justify-center px-5 pb-24 sm:px-10 sm:pb-28 lg:px-16 lg:pr-28">
-        {/* Eyebrow */}
-        <div
-          className="mb-7 flex items-center gap-4 sm:mb-9"
-          style={{ animation: "var(--animate-rise)", animationDelay: "120ms" }}
-        >
-          <span aria-hidden className="block size-1.5 bg-gs-red animate-pulse-red" />
-          <span aria-hidden className="block h-px w-10 bg-gs-red sm:w-14" />
-          <span className="eyebrow">2011 оноос хойш · 13+ жилийн туршлага</span>
-        </div>
-
-        {/* Headline - word-stack reveal */}
-        <h1
-          className="font-sans font-black uppercase tracking-tight text-paper"
-          style={{
-            fontSize: "clamp(2.25rem, 9vw, 7rem)",
-            lineHeight: 0.96,
-            letterSpacing: "-0.03em",
-            textWrap: "balance",
-          }}
-        >
-          <HeadlineRow words={LINE_ONE} />
-          <HeadlineRow words={LINE_TWO} />
-          <HeadlineRow words={LINE_THREE} />
-        </h1>
-
-        {/* Meta strip — structured grid, no collision at any breakpoint */}
-        <div
-          className="mt-9 grid max-w-[60ch] grid-cols-1 gap-x-6 gap-y-3 sm:mt-12 sm:grid-cols-[auto_1px_auto_1px_auto] sm:items-center"
-          style={{ animation: "var(--animate-rise)", animationDelay: "880ms" }}
-        >
-          <span className="inline-flex items-center gap-3 text-base font-semibold tracking-wide text-paper">
-            <span aria-hidden className="block size-1.5 bg-gs-red sm:hidden" />
-            TOYOTA &amp; LEXUS
-          </span>
-          <span aria-hidden className="hidden h-5 w-px bg-charcoal sm:block" />
-          <span className="inline-flex items-center gap-3 text-sm text-graphite">
-            <span aria-hidden className="block size-1.5 bg-gs-red sm:hidden" />
-            Мэргэшсэн засвар үйлчилгээ
-          </span>
-          <span aria-hidden className="hidden h-5 w-px bg-charcoal sm:block" />
-          <span className="inline-flex items-center gap-3 text-sm text-graphite">
-            <span aria-hidden className="block size-1.5 bg-gs-red sm:hidden" />
-            Оригинал сэлбэг
-          </span>
-        </div>
-
-        {/* CTAs - primary shimmers, secondary translates */}
-        <div
-          className="mt-10 flex flex-col gap-3 sm:mt-14 sm:flex-row sm:gap-4"
-          style={{ animation: "var(--animate-rise)", animationDelay: "1000ms" }}
-        >
-          <MagneticButton
-            href={PHONE_HREF}
-            className="cta-shine pressable group/cta inline-flex items-center justify-center gap-3 bg-gs-red px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-snow transition-colors duration-150 ease-out hover:bg-gs-red-600 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-snow"
+      <div className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-5 pb-16 sm:px-10 sm:pb-20 lg:flex-row lg:items-center lg:gap-12 lg:px-16 lg:pb-24">
+        {/* LEFT · headline column */}
+        <div className="flex w-full max-w-[920px] flex-col lg:flex-1">
+          <div
+            className="mb-7 flex flex-wrap items-center gap-x-4 gap-y-2 sm:mb-9"
+            style={{ animation: "var(--animate-rise)", animationDelay: "120ms" }}
           >
-            <PhoneIcon className="size-4" />
-            Цаг захиалах
-          </MagneticButton>
-          <a
-            href="#uilchilgee"
-            className="pressable group/cta inline-flex items-center justify-center gap-3 border border-charcoal px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-150 ease-out hover:border-paper"
+            <span aria-hidden className="block size-1.5 bg-gs-red animate-pulse-red" />
+            <span aria-hidden className="block h-px w-10 bg-gs-red sm:w-14" />
+            <span className="eyebrow">N°01 · Гранд Сутай Авто Төв</span>
+            <span aria-hidden className="hidden h-3 w-px bg-charcoal sm:block" />
+            <span className="serial-block hidden sm:block">UB · 2011 →</span>
+          </div>
+
+          <h1
+            className="font-sans font-black uppercase tracking-tight text-paper"
+            style={{
+              fontSize: "clamp(2.25rem, 9vw, 6.75rem)",
+              lineHeight: 0.96,
+              letterSpacing: "-0.03em",
+              textWrap: "balance",
+            }}
           >
-            Үйлчилгээ үзэх
-            <ArrowRight className="size-4 text-gs-red transition-transform duration-150 ease-out group-hover/cta:translate-x-1" />
-          </a>
+            <HeadlineRow words={LINE_ONE} />
+            <HeadlineRow words={LINE_TWO} />
+            <HeadlineRow words={LINE_THREE} />
+          </h1>
+
+          <div
+            className="mt-9 grid max-w-[60ch] grid-cols-1 gap-x-6 gap-y-3 sm:mt-12 sm:grid-cols-[auto_1px_auto_1px_auto] sm:items-center"
+            style={{ animation: "var(--animate-rise)", animationDelay: "880ms" }}
+          >
+            <span className="inline-flex items-center gap-3 text-base font-semibold tracking-wide text-paper">
+              <span aria-hidden className="block size-1.5 bg-gs-red sm:hidden" />
+              TOYOTA &amp; LEXUS
+            </span>
+            <span aria-hidden className="hidden h-5 w-px bg-charcoal sm:block" />
+            <span className="inline-flex items-center gap-3 text-sm text-graphite">
+              <span aria-hidden className="block size-1.5 bg-gs-red sm:hidden" />
+              Жийпийн дагнасан төв
+            </span>
+            <span aria-hidden className="hidden h-5 w-px bg-charcoal sm:block" />
+            <span className="inline-flex items-center gap-3 text-sm text-graphite">
+              <span aria-hidden className="block size-1.5 bg-gs-red sm:hidden" />
+              MNS 5025:2010
+            </span>
+          </div>
+
+          <div
+            className="mt-10 flex flex-col gap-3 sm:mt-14 sm:flex-row sm:gap-4"
+            style={{ animation: "var(--animate-rise)", animationDelay: "1000ms" }}
+          >
+            <MagneticButton
+              href={PHONE_HREF}
+              className="cta-shine pressable group/cta inline-flex items-center justify-center gap-3 bg-gs-red px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-snow transition-colors duration-150 ease-out hover:bg-gs-red-600 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-snow"
+            >
+              <PhoneIcon className="size-4" />
+              77-200-570
+            </MagneticButton>
+            <a
+              href="#uilchilgee"
+              className="pressable group/cta inline-flex items-center justify-center gap-3 border border-charcoal px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-150 ease-out hover:border-paper"
+            >
+              Үйлчилгээ үзэх
+              <ArrowRight className="size-4 text-gs-red transition-transform duration-150 ease-out group-hover/cta:translate-x-1" />
+            </a>
+          </div>
         </div>
+
+        {/* RIGHT · 4 brand virtues from the brand book */}
+        <aside
+          aria-label="Бидний үнэт зүйлс"
+          className="mt-14 flex w-full items-stretch gap-2 lg:mt-0 lg:w-auto lg:flex-shrink-0 lg:flex-col lg:gap-3"
+          style={{ animation: "var(--animate-rise)", animationDelay: "1100ms" }}
+        >
+          {/* Desktop · vertical strip */}
+          <div className="hidden flex-col gap-3 lg:flex">
+            <span className="serial-block flex items-center justify-end gap-2 text-right">
+              <span className="text-gs-red">→</span> үнэт зүйлс
+            </span>
+            <div className="flex h-[280px] gap-1.5 xl:h-[320px]">
+              {VIRTUES.map((v) => (
+                <div key={v.code} className="flex flex-col items-center">
+                  <span aria-hidden className="caret-up mb-1" />
+                  <span className="serial-block text-[9px] text-gs-red">{v.code}</span>
+                  <div className="virtue-chip mt-1.5 flex-1">
+                    <span className="label">{v.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile / tablet · vertical strips (mirrors brand book) */}
+          <div className="grid w-full grid-cols-4 gap-1.5 lg:hidden">
+            {VIRTUES.map((v) => (
+              <div key={v.code} className="flex flex-col items-center">
+                <span aria-hidden className="caret-up caret-up-xs mb-1" />
+                <span className="serial-block text-[9px] text-gs-red">{v.code}</span>
+                <div className="virtue-chip mt-1.5 h-32 w-full">
+                  <span className="label">{v.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </aside>
       </div>
 
-      {/* Scroll indicator - bottom right, continuous tick */}
-      <div
-        className="pointer-events-none absolute bottom-8 right-6 hidden flex-col items-center gap-3 lg:flex"
-        style={{ animation: "var(--animate-rise)", animationDelay: "1200ms" }}
-      >
-        <span
-          className="text-[9px] font-medium uppercase tracking-[0.4em] text-graphite"
-          style={{ writingMode: "vertical-rl" }}
-        >
-          Скролл
-        </span>
-        <span aria-hidden className="scroll-track block h-16 w-px bg-charcoal/60" />
-      </div>
+      {/* ===== BOTTOM STRIP · tagline + clients ticker ====================== */}
+      <div className="relative z-10 mt-auto">
+        <div className="border-y border-charcoal/70 bg-ink/85 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-5 py-3 sm:px-10 lg:px-16">
+            <div className="flex items-center gap-3">
+              <span aria-hidden className="caret-up caret-up-xs" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.28em] text-paper sm:text-[11px]">
+                Бид таныг аюулгүй зорчиход тусална
+              </span>
+            </div>
+            <span
+              aria-hidden
+              className="hidden font-wordmark text-[10px] uppercase tracking-[0.32em] text-graphite sm:block"
+            >
+              GS · auto center
+            </span>
+          </div>
+        </div>
 
-      {/* Bottom hairline */}
-      <span aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-charcoal/60" />
+        <div className="ticker-pause relative overflow-hidden bg-ink py-3">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-ink to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-ink to-transparent" />
+          <div className="flex">
+            {[0, 1].map((dup) => (
+              <div key={dup} className="ticker-clients" aria-hidden={dup === 1}>
+                {CLIENTS.map((c) => (
+                  <span
+                    key={`${c}-${dup}`}
+                    className="inline-flex items-center gap-3 whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.28em] text-graphite"
+                  >
+                    <span aria-hidden className="block size-1 bg-gs-red" />
+                    {c}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
