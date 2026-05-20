@@ -53,3 +53,4 @@ public/models/*.gltf
 public/models/lc300-raw/
 # Scratch dir used by scripts/strip-nlm.mjs + gltf-transform pipeline
 tmp-glb/
+.env*.local

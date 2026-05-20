@@ -26,16 +26,19 @@ import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
 /* ─── constants ─────────────────────────────────────────────────── */
-// LC300 model re-exported from Blender with the Hood Mirror+Bevel+Subdiv
-// modifiers baked, duplicated and renamed "Bonnet_Full" with its origin
-// moved to the rear-bottom hinge edge — so the runtime can rotate the
-// hood directly without any pivot calculation. Optimized through
-// scripts/strip-nlm.mjs + gltf-transform (resize 2048, webp q85, dedup,
-// prune, weld, simplify ratio=0.5 error=0.005, draco). ~1.6MB vs. 137MB
-// raw, ~597k render-vertices vs. 10M.
+// LC300 model: Blender export with the hood mirror+bevel+subdiv modifiers
+// baked into "Bonnet_Full" (origin at the rear-bottom hinge so we rotate
+// the object directly). Pipeline:
+//   strip-nlm → weld → per-mesh simplify (scripts/selective-simplify.mjs)
+//   → prune → dedup → texture-compress (webp q85 @ 2048) → draco edgebreaker.
+// Per-mesh ratios spend the vert budget on what the camera sees: body /
+// bonnet / doors at 0.85, wheels at 0.70, lights at 0.35–0.55, engine at
+// 0.45, interior at 0.50, suspension/supports/hidden at 0.15. Result:
+// 1.6MB / 274k render-verts — body silhouette close to the un-simplified
+// 11.4MB source, file size effectively the same as the flat-ratio v3.
 const MODEL_URL =
   process.env.NEXT_PUBLIC_LC300_MODEL_URL ??
-  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v3.glb";
+  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v4.glb";
 // Draco decoder served from gstatic; the CSP connect-src already allows it.
 const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
 const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
