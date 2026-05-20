@@ -25,7 +25,7 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://toyota-mongolia.mn https://upload.wikimedia.org https://discoverlexus.com https://*.public.blob.vercel-storage.com https://*.google.com https://*.gstatic.com https://*.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  `connect-src 'self' blob: ${chatbotOrigin} https://*.vercel-insights.com https://*.vercel-scripts.com https://www.gstatic.com`,
+  `connect-src 'self' blob: ${chatbotOrigin} https://*.vercel-insights.com https://*.vercel-scripts.com https://www.gstatic.com https://*.public.blob.vercel-storage.com`,
   "worker-src 'self' blob:",
   `frame-src 'self' ${chatbotOrigin} https://www.google.com https://maps.google.com`,
   "frame-ancestors 'none'",

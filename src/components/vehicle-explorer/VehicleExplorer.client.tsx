@@ -8,7 +8,6 @@ import {
 } from "@react-three/fiber";
 import {
   useGLTF,
-  Html,
   useProgress,
   ContactShadows,
   Environment,
@@ -27,8 +26,10 @@ import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
 /* ─── constants ─────────────────────────────────────────────────── */
+// Full original NLM Land Cruiser 300 model, served from Vercel Blob.
 const MODEL_URL =
-  process.env.NEXT_PUBLIC_LC300_MODEL_URL ?? "/models/lc300-ready.glb";
+  process.env.NEXT_PUBLIC_LC300_MODEL_URL ??
+  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-full.glb";
 const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
 const GROUND_Y = -1.0;
 
@@ -49,61 +50,103 @@ const CAM: Record<CameraView, { pos: [number, number, number]; look: [number, nu
   interior: { pos: [-0.45, -0.32, 0.55], look: [0.15, -0.30, -1.5], fov: 62 },
 };
 
-/* ─── Loader ─────────────────────────────────────────────────────── */
-function Loader() {
+/* ─── CinematicLoader ────────────────────────────────────────────── */
+/**
+ * Fullscreen overlay shown while the 130MB GLB streams in. Sits OUTSIDE the
+ * Canvas so it covers the entire explorer viewport with real DOM. Reads
+ * progress from drei's global LoadingManager (works outside the Canvas).
+ */
+function CinematicLoader() {
   const { progress, active } = useProgress();
+  // Keep the overlay mounted briefly after `active` flips false so the first
+  // rendered frame of the scene has time to settle — avoids a black flash.
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (active) {
+      setVisible(true);
+      return;
+    }
+    const t = window.setTimeout(() => setVisible(false), 450);
+    return () => window.clearTimeout(t);
+  }, [active]);
+
+  const pct = Math.min(100, Math.max(0, Math.round(progress)));
+
   return (
-    <Html center>
+    <div
+      aria-hidden={!active}
+      className={`pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden transition-opacity duration-500 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 45%, #0e0d12 0%, #050507 55%, #000 100%)",
+      }}
+    >
+      {/* faint scanlines for cinematic texture */}
       <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
-          width: "min(220px,52vw)",
-          color: "#E7E7E7",
-          fontFamily: "var(--font-sans),system-ui,sans-serif",
-          textAlign: "center",
-          userSelect: "none",
+          backgroundImage:
+            "repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px)",
         }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            color: "#DC0D01",
-            marginBottom: 12,
-          }}
-        >
-          {active ? "Загварчилж байна" : "Бэлэн"}
+      />
+
+      {/* corner ticks */}
+      <span aria-hidden className="absolute left-6 top-6 size-5 border-l border-t border-gs-red/50" />
+      <span aria-hidden className="absolute right-6 top-6 size-5 border-r border-t border-gs-red/50" />
+      <span aria-hidden className="absolute bottom-6 left-6 size-5 border-b border-l border-gs-red/50" />
+      <span aria-hidden className="absolute bottom-6 right-6 size-5 border-b border-r border-gs-red/50" />
+
+      {/* logo block */}
+      <div className="relative z-10 flex flex-col items-center px-8 text-center">
+        <div className="mb-4 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.32em] text-gs-red">
+          <span aria-hidden className="block h-px w-8 bg-gs-red" />
+          Land Cruiser 300
+          <span aria-hidden className="block h-px w-8 bg-gs-red" />
         </div>
+
+        <div className="font-wordmark text-[clamp(2.4rem,7vw,4.2rem)] uppercase leading-[0.95] tracking-tight text-paper">
+          GS AUTO
+          <span className="text-gs-red">.</span>
+          <br />
+          CENTER
+        </div>
+
+        <div className="mt-3 text-[10px] uppercase tracking-[0.3em] text-paper/40">
+          Global Solutions
+        </div>
+
+        <div className="mt-10 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-paper/70">
+          <span
+            aria-hidden
+            className="inline-block size-1.5 animate-pulse bg-gs-red"
+          />
+          Загварчилж байна
+          <span className="font-mono text-paper/55" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {pct.toString().padStart(3, "0")}%
+          </span>
+        </div>
+      </div>
+
+      {/* progress rail — pinned to the bottom */}
+      <div className="absolute inset-x-0 bottom-0 z-10">
         <div
-          style={{
-            height: 1,
-            background: "rgba(255,255,255,0.08)",
-            position: "relative",
-            overflow: "hidden",
-          }}
+          className="relative h-[3px] w-full overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.04)" }}
         >
           <div
+            className="absolute inset-y-0 left-0 bg-gs-red"
             style={{
-              position: "absolute",
-              inset: 0,
-              width: `${progress}%`,
-              background: "#DC0D01",
-              transition: "width 100ms linear",
+              width: `${pct}%`,
+              transition: "width 220ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+              boxShadow: "0 0 24px 0 rgba(220,13,1,0.55)",
             }}
           />
         </div>
-        <div
-          style={{
-            marginTop: 10,
-            fontSize: 10,
-            fontVariantNumeric: "tabular-nums",
-            color: "#4A4850",
-          }}
-        >
-          {Math.round(progress)}%
-        </div>
       </div>
-    </Html>
+    </div>
   );
 }
 
@@ -208,7 +251,8 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
   const hoodSignRef = useRef<number>(1);
 
   useEffect(() => {
-    const hood = scene.getObjectByName("Hood");
+    // NLM model names the hood "Bonnet".
+    const hood = scene.getObjectByName("Bonnet");
     if (!hood || hood.userData.__repivoted) return;
     const sceneBox = new THREE.Box3().setFromObject(scene);
     const sceneCenter = sceneBox.getCenter(new THREE.Vector3());
@@ -618,7 +662,7 @@ export default function VehicleExplorer() {
               <CameraRig view={view} />
               <Lighting />
 
-              <Suspense fallback={<Loader />}>
+              <Suspense fallback={null}>
                 <LC300Scene
                   view={view}
                   hoveredId={hoveredId}
@@ -646,6 +690,10 @@ export default function VehicleExplorer() {
                 </mesh>
               </Suspense>
             </Canvas>
+
+            {/* Cinematic loading overlay — sits above the canvas until the
+                full GLB streams in, then fades out. */}
+            <CinematicLoader />
 
             {/* The only UI overlays: pills, camera buttons, back button */}
             <BackButton show={view !== "exterior"} onClick={handleBack} />

@@ -1,0 +1,11 @@
+# Raw / source 3D assets — the production app loads the LC300 GLB from
+# Vercel Blob, not from /public, so there's no need to ship the 500MB raw
+# folder (Blender source, original NLM GLB, texture archives) on every deploy.
+public/models/lc300-raw/
+
+# Local-only Vercel scratch
+.vercel/
+.env.vercel.local
+
+# Worktrees and skill scratch dirs
+.claude/worktrees/
