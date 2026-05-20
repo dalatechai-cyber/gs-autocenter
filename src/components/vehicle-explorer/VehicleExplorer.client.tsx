@@ -26,10 +26,15 @@ import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
 /* ─── constants ─────────────────────────────────────────────────── */
-// Full original NLM Land Cruiser 300 model, served from Vercel Blob.
+// Optimized LC300 model from Vercel Blob: NLM plate stripped, textures
+// resized to 2048 + WebP, geometry Draco-compressed. ~11.4MB vs. 137MB
+// for the raw NLM file. Source pipeline lives in scripts/strip-nlm.mjs
+// + the gltf-transform CLI (resize / webp / dedup / prune / weld / draco).
 const MODEL_URL =
   process.env.NEXT_PUBLIC_LC300_MODEL_URL ??
-  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-full.glb";
+  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt.glb";
+// Draco decoder served from gstatic; the CSP connect-src already allows it.
+const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
 const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
 const GROUND_Y = -1.0;
 
@@ -183,7 +188,23 @@ type SceneProps = {
 };
 
 function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) {
-  const { scene } = useGLTF(MODEL_URL) as unknown as { scene: THREE.Group };
+  const { scene } = useGLTF(MODEL_URL, DRACO_DECODER_URL) as unknown as { scene: THREE.Group };
+
+  /* Defensive hide: the optimized GLB has the NLM-branded "Car plates"
+     node stripped, but guard against future model revisions reintroducing
+     anything that uses the NLM material/texture. */
+  useEffect(() => {
+    const plates = scene.getObjectByName("Car plates");
+    if (plates) plates.visible = false;
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats) {
+        const name = (m as THREE.Material | undefined)?.name ?? "";
+        if (name === "NLM GROUP" || name === "NLM") mesh.visible = false;
+      }
+    });
+  }, [scene]);
 
   /* mesh → hotspot id */
   const meshToId = useMemo(() => {
@@ -261,10 +282,14 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     const hoodCenter = hoodBox.getCenter(new THREE.Vector3());
     const fwdAxis: "x" | "z" = sceneSize.x > sceneSize.z ? "x" : "z";
     const fwdSign = Math.sign(hoodCenter[fwdAxis] - sceneCenter[fwdAxis]) || 1;
+    // The hood hinges at the TRAILING edge (the side closest to the
+    // windscreen — opposite to the car's forward direction). If forward
+    // is -Z (fwdSign=-1), the trailing edge is hoodBox.max.z; if forward
+    // is +Z (fwdSign=+1), it's hoodBox.min.z. Mirror logic for the X axis.
     const pivotWorld = new THREE.Vector3(
-      fwdAxis === "x" ? (fwdSign > 0 ? hoodBox.max.x : hoodBox.min.x) : hoodCenter.x,
+      fwdAxis === "x" ? (fwdSign > 0 ? hoodBox.min.x : hoodBox.max.x) : hoodCenter.x,
       hoodCenter.y,
-      fwdAxis === "z" ? (fwdSign > 0 ? hoodBox.max.z : hoodBox.min.z) : hoodCenter.z,
+      fwdAxis === "z" ? (fwdSign > 0 ? hoodBox.min.z : hoodBox.max.z) : hoodCenter.z,
     );
     const pivot = new THREE.Group();
     pivot.name = "__hoodPivot";
@@ -273,6 +298,9 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     pivot.attach(hood);
     hoodPivotRef.current = pivot;
     hoodAxisRef.current = fwdAxis === "x" ? "z" : "x";
+    // With pivot at the trailing edge, the leading edge is offset along
+    // -forward. For forward=-Z (fwdSign=-1) we want +θ around X (leading
+    // edge rises); for forward=+Z (fwdSign=+1) we want -θ — hence -fwdSign.
     hoodSignRef.current = -fwdSign;
     hood.userData.__repivoted = true;
   }, [scene]);
@@ -714,4 +742,4 @@ export default function VehicleExplorer() {
   );
 }
 
-useGLTF.preload(MODEL_URL);
+useGLTF.preload(MODEL_URL, DRACO_DECODER_URL);

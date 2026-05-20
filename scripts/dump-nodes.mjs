@@ -1,11 +1,18 @@
 // Dump node hierarchy from a GLB so we can map hotspot ids to mesh/node names.
 // Usage: node scripts/dump-nodes.mjs <path-to-glb>
 import { NodeIO } from "@gltf-transform/core";
+import { ALL_EXTENSIONS, KHRDracoMeshCompression } from "@gltf-transform/extensions";
+import draco3d from "draco3dgltf";
 
 const path = process.argv[2];
 if (!path) { console.error("usage: node dump-nodes.mjs <glb>"); process.exit(1); }
 
-const io = new NodeIO();
+const io = new NodeIO()
+  .registerExtensions(ALL_EXTENSIONS)
+  .registerDependencies({
+    "draco3d.decoder": await draco3d.createDecoderModule(),
+    "draco3d.encoder": await draco3d.createEncoderModule(),
+  });
 const doc = await io.read(path);
 const root = doc.getRoot();
 

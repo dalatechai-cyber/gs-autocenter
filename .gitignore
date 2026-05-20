@@ -51,3 +51,5 @@ public/models/lx570.glb
 public/models/*.gltf
 # Raw source assets — never commit (too large, not needed by build)
 public/models/lc300-raw/
+# Scratch dir used by scripts/strip-nlm.mjs + gltf-transform pipeline
+tmp-glb/
