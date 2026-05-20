@@ -534,7 +534,7 @@ function BackButton({
       type="button"
       onClick={onClick}
       aria-label="Буцах"
-      className={`absolute left-5 top-5 z-20 flex items-center gap-2 border border-charcoal/70 bg-ink/80 px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-paper backdrop-blur-sm transition-all duration-300 hover:border-gs-red hover:text-gs-red sm:left-7 sm:top-7 ${
+      className={`absolute left-5 top-5 z-50 flex items-center gap-2 border border-charcoal/70 bg-ink/80 px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-paper backdrop-blur-sm transition-all duration-300 hover:border-gs-red hover:text-gs-red sm:left-7 sm:top-7 ${
         visible
           ? "translate-x-0 opacity-100"
           : "pointer-events-none -translate-x-4 opacity-0"
