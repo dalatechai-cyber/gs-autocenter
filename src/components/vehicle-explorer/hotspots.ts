@@ -3,6 +3,8 @@ export type Hotspot = {
   prefixes: string[];
   name: string;
   desc: string;
+  /** The exact Three.js object name to detach for part-isolation. Defaults to prefixes[0]. */
+  isolate?: string;
 };
 
 export const LC200_HOTSPOTS: Hotspot[] = [
@@ -98,6 +100,79 @@ export const LX570_HOTSPOTS: Hotspot[] = [
     prefixes: ["Interior_Trim", "Plastic_Matte", "Plastic_Gloss"],
     name: "Салон",
     desc: "Салоны эд анги, пластикын засвар, өнгөлгөө, цэвэрлэгээ.",
+  },
+];
+
+export const LC300_HOTSPOTS: Hotspot[] = [
+  {
+    id: "hood",
+    prefixes: ["Hood"],
+    name: "Хөдөлгүүр & Капот",
+    desc: "Хөдөлгүүрийн оношилгоо, тосны солилт, цагийн бүс солилт. Капот нээгдэж дотор эд анги харагдана.",
+    isolate: "Hood",
+  },
+  {
+    id: "engine",
+    prefixes: ["Engine_Block"],
+    name: "Хөдөлгүүрийн блок",
+    desc: "V6 хөдөлгүүрийн бүрэн оношилгоо, их засвар, цилиндр блокийн засвар, масны солилт.",
+    isolate: "Engine_Block",
+  },
+  {
+    id: "door_fl",
+    prefixes: ["Door_FL", "IntFL_Door"],
+    name: "Жолоочийн хаалга",
+    desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
+    isolate: "Door_FL",
+  },
+  {
+    id: "door_fr",
+    prefixes: ["Door_FR", "IntFR_Door"],
+    name: "Урд хажуугийн хаалга",
+    desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
+    isolate: "Door_FR",
+  },
+  {
+    id: "door_rl",
+    prefixes: ["Door_RL", "IntRL_Door"],
+    name: "Арын зүүн хаалга",
+    desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
+    isolate: "Door_RL",
+  },
+  {
+    id: "door_rr",
+    prefixes: ["Door_RR", "IntRR_Door"],
+    name: "Арын баруун хаалга",
+    desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
+    isolate: "Door_RR",
+  },
+  {
+    id: "wheel_fl",
+    prefixes: ["Wheel_FL", "Suspension_FL"],
+    name: "Урд зүүн дугуй",
+    desc: "JAPAN TOK түдгэлзүүрийн эд анги, дугуй солилт, балансжуулалт, тэнхлэгийн тохиргоо, амортизаторын шалгалт.",
+    isolate: "Wheel_FL",
+  },
+  {
+    id: "wheel_fr",
+    prefixes: ["Wheel_FR"],
+    name: "Урд баруун дугуй",
+    desc: "JAPAN TOK түдгэлзүүрийн эд анги, дугуй солилт, балансжуулалт, тэнхлэгийн тохиргоо, амортизаторын шалгалт.",
+    isolate: "Wheel_FR",
+  },
+  {
+    id: "wheel_rl",
+    prefixes: ["Wheel_RL"],
+    name: "Арын зүүн дугуй",
+    desc: "Дугуй солилт, балансжуулалт, амортизаторын шалгалт, гальмуурын системийн үзлэг.",
+    isolate: "Wheel_RL",
+  },
+  {
+    id: "wheel_rr",
+    prefixes: ["Wheel_RR"],
+    name: "Арын баруун дугуй",
+    desc: "Дугуй солилт, балансжуулалт, амортизаторын шалгалт, гальмуурын системийн үзлэг.",
+    isolate: "Wheel_RR",
   },
 ];
 

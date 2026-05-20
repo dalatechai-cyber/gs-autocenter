@@ -49,3 +49,5 @@ public/brand/05_Фонт/_inspect/
 public/models/lc200.glb
 public/models/lx570.glb
 public/models/*.gltf
+# Raw source assets — never commit (too large, not needed by build)
+public/models/lc300-raw/
