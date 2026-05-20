@@ -26,15 +26,16 @@ import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
 /* ─── constants ─────────────────────────────────────────────────── */
-// Optimized LC300 model from Vercel Blob: NLM plate stripped, textures
-// resized to 2048 + WebP, mesh simplified ~50% (ratio 0.5, error 0.005),
-// geometry Draco-compressed. ~8.9MB vs. 137MB for the raw NLM file, with
-// roughly half the per-frame vertex shader work too. Source pipeline lives
-// in scripts/strip-nlm.mjs + the gltf-transform CLI (resize / webp / dedup
-// / prune / weld / simplify / draco).
+// LC300 model re-exported from Blender with the Hood Mirror+Bevel+Subdiv
+// modifiers baked, duplicated and renamed "Bonnet_Full" with its origin
+// moved to the rear-bottom hinge edge — so the runtime can rotate the
+// hood directly without any pivot calculation. Optimized through
+// scripts/strip-nlm.mjs + gltf-transform (resize 2048, webp q85, dedup,
+// prune, weld, simplify ratio=0.5 error=0.005, draco). ~1.6MB vs. 137MB
+// raw, ~597k render-vertices vs. 10M.
 const MODEL_URL =
   process.env.NEXT_PUBLIC_LC300_MODEL_URL ??
-  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v2.glb";
+  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v3.glb";
 // Draco decoder served from gstatic; the CSP connect-src already allows it.
 const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
 const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
@@ -268,60 +269,30 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     });
   }, [hoveredId, pickedId, view, scene, meshToId, origEmissive, allowedIds]);
 
-  /* hood spring animation */
-  const hoodPivotRef = useRef<THREE.Group | null>(null);
-  const hoodAxisRef = useRef<"x" | "z">("z");
-  const hoodSignRef = useRef<number>(1);
-
+  /* Hood animation — Bonnet_Full has its origin baked at the rear-bottom
+     hinge in Blender, so we rotate the object directly (no pivot Group,
+     no axis/sign math). +60° around local X swings the front edge up like
+     a real hood opening. Cubic ease-in-out over 1.2s for cinematic feel. */
+  const bonnetRef = useRef<THREE.Object3D | null>(null);
   useEffect(() => {
-    // NLM model names the hood "Bonnet".
-    const hood = scene.getObjectByName("Bonnet");
-    if (!hood || hood.userData.__repivoted) return;
-    const sceneBox = new THREE.Box3().setFromObject(scene);
-    const sceneCenter = sceneBox.getCenter(new THREE.Vector3());
-    const sceneSize = sceneBox.getSize(new THREE.Vector3());
-    const hoodBox = new THREE.Box3().setFromObject(hood);
-    const hoodCenter = hoodBox.getCenter(new THREE.Vector3());
-    const fwdAxis: "x" | "z" = sceneSize.x > sceneSize.z ? "x" : "z";
-    const fwdSign = Math.sign(hoodCenter[fwdAxis] - sceneCenter[fwdAxis]) || 1;
-    // The hood hinges at the TRAILING edge (the side closest to the
-    // windscreen — opposite to the car's forward direction). If forward
-    // is -Z (fwdSign=-1), the trailing edge is hoodBox.max.z; if forward
-    // is +Z (fwdSign=+1), it's hoodBox.min.z. Mirror logic for the X axis.
-    const pivotWorld = new THREE.Vector3(
-      fwdAxis === "x" ? (fwdSign > 0 ? hoodBox.min.x : hoodBox.max.x) : hoodCenter.x,
-      hoodCenter.y,
-      fwdAxis === "z" ? (fwdSign > 0 ? hoodBox.min.z : hoodBox.max.z) : hoodCenter.z,
-    );
-    const pivot = new THREE.Group();
-    pivot.name = "__hoodPivot";
-    pivot.position.copy(pivotWorld);
-    hood.parent?.add(pivot);
-    pivot.attach(hood);
-    hoodPivotRef.current = pivot;
-    hoodAxisRef.current = fwdAxis === "x" ? "z" : "x";
-    // With pivot at the trailing edge, the leading edge is offset along
-    // -forward. For forward=-Z (fwdSign=-1) we want +θ around X (leading
-    // edge rises); for forward=+Z (fwdSign=+1) we want -θ — hence -fwdSign.
-    hoodSignRef.current = -fwdSign;
-    hood.userData.__repivoted = true;
+    bonnetRef.current = scene.getObjectByName("Bonnet_Full") ?? null;
   }, [scene]);
 
   const [{ hoodRot }, hoodApi] = useSpring(() => ({
     hoodRot: 0,
-    config: { mass: 1.2, tension: 90, friction: 22 },
+    config: {
+      duration: 1200,
+      easing: (t: number) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+    },
   }));
 
   useEffect(() => {
-    hoodApi.start({ hoodRot: view === "hood" ? (Math.PI / 180) * 62 : 0 });
+    hoodApi.start({ hoodRot: view === "hood" ? Math.PI / 3 : 0 });
   }, [view, hoodApi]);
 
   useFrame(() => {
-    const pivot = hoodPivotRef.current;
-    if (!pivot) return;
-    const v = hoodRot.get() * hoodSignRef.current;
-    pivot.rotation.set(0, 0, 0);
-    pivot.rotation[hoodAxisRef.current] = v;
+    if (bonnetRef.current) bonnetRef.current.rotation.x = hoodRot.get();
   });
 
   /* centering + ground placement (wheels touch ground) */

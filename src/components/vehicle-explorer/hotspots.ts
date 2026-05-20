@@ -104,80 +104,84 @@ export const LX570_HOTSPOTS: Hotspot[] = [
 ];
 
 /**
- * NLM "Toyota Land Cruiser 300" GLB node names (verified via gltf-transform).
- * Top-level nodes used here: Bonnet, Engine, FL_Door+IntFL_Door, FR_Door+IntFR_Door,
- * RL_Door+IntRL_Door, RR_Door+IntRR_Door, FL_Wheel, FR_Wheel, RL_Wheel, RR_Wheel.
+ * LC300 GLB node names — re-exported from the LC300 .blend file with:
+ *  - Hood Mirror+Bevel+Subdiv modifiers baked, duplicated and renamed
+ *    "Bonnet_Full" with its origin moved to the rear-bottom hinge edge so
+ *    Three.js can rotate it directly (no pivot calculation needed).
+ *  - Engine_Block, Door_FL/FR/RL/RR (+ Int*_Door interiors), Wheel_FL/FR/RL/RR
+ *    preserved with their Blender object names.
+ *  - "Car plates" / NLM material stripped during gltf-transform optimization.
  */
 export const LC300_HOTSPOTS: Hotspot[] = [
   {
     id: "hood",
-    prefixes: ["Bonnet"],
+    prefixes: ["Bonnet_Full"],
     name: "Хөдөлгүүр & Капот",
     desc: "Хөдөлгүүрийн оношилгоо, тосны солилт, цагийн бүс солилт. Капот нээгдэж дотор эд анги харагдана.",
-    isolate: "Bonnet",
+    isolate: "Bonnet_Full",
   },
   {
     id: "engine",
-    prefixes: ["Engine"],
+    prefixes: ["Engine_Block"],
     name: "Хөдөлгүүрийн блок",
     desc: "V6 хөдөлгүүрийн бүрэн оношилгоо, их засвар, цилиндр блокийн засвар, масны солилт.",
-    isolate: "Engine",
+    isolate: "Engine_Block",
   },
   {
     id: "door_fl",
-    prefixes: ["FL_Door", "IntFL_Door"],
+    prefixes: ["Door_FL", "IntFL_Door"],
     name: "Жолоочийн хаалга",
     desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
-    isolate: "FL_Door",
+    isolate: "Door_FL",
   },
   {
     id: "door_fr",
-    prefixes: ["FR_Door", "IntFR_Door"],
+    prefixes: ["Door_FR", "IntFR_Door"],
     name: "Урд хажуугийн хаалга",
     desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
-    isolate: "FR_Door",
+    isolate: "Door_FR",
   },
   {
     id: "door_rl",
-    prefixes: ["RL_Door", "IntRL_Door"],
+    prefixes: ["Door_RL", "IntRL_Door"],
     name: "Арын зүүн хаалга",
     desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
-    isolate: "RL_Door",
+    isolate: "Door_RL",
   },
   {
     id: "door_rr",
-    prefixes: ["RR_Door", "IntRR_Door"],
+    prefixes: ["Door_RR", "IntRR_Door"],
     name: "Арын баруун хаалга",
     desc: "Биеийн засвар, хаалганы механизм, дотор резин, шилний солилт, бэхэлгээний засвар.",
-    isolate: "RR_Door",
+    isolate: "Door_RR",
   },
   {
     id: "wheel_fl",
-    prefixes: ["FL_Wheel"],
+    prefixes: ["Wheel_FL"],
     name: "Урд зүүн дугуй",
     desc: "JAPAN TOK түдгэлзүүрийн эд анги, дугуй солилт, балансжуулалт, тэнхлэгийн тохиргоо, амортизаторын шалгалт.",
-    isolate: "FL_Wheel",
+    isolate: "Wheel_FL",
   },
   {
     id: "wheel_fr",
-    prefixes: ["FR_Wheel"],
+    prefixes: ["Wheel_FR"],
     name: "Урд баруун дугуй",
     desc: "JAPAN TOK түдгэлзүүрийн эд анги, дугуй солилт, балансжуулалт, тэнхлэгийн тохиргоо, амортизаторын шалгалт.",
-    isolate: "FR_Wheel",
+    isolate: "Wheel_FR",
   },
   {
     id: "wheel_rl",
-    prefixes: ["RL_Wheel"],
+    prefixes: ["Wheel_RL"],
     name: "Арын зүүн дугуй",
     desc: "Дугуй солилт, балансжуулалт, амортизаторын шалгалт, гальмуурын системийн үзлэг.",
-    isolate: "RL_Wheel",
+    isolate: "Wheel_RL",
   },
   {
     id: "wheel_rr",
-    prefixes: ["RR_Wheel"],
+    prefixes: ["Wheel_RR"],
     name: "Арын баруун дугуй",
     desc: "Дугуй солилт, балансжуулалт, амортизаторын шалгалт, гальмуурын системийн үзлэг.",
-    isolate: "RR_Wheel",
+    isolate: "Wheel_RR",
   },
 ];
 
