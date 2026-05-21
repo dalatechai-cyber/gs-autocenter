@@ -50,14 +50,30 @@ export type CameraView = "exterior" | "hood" | "interior";
  * Car FRONT is in -Z direction (Blender +Y → GLTF -Z with export_yup=True).
  * Car length axis: Z. Car width axis: X. Up: Y.
  * Wheel bottoms land at y=GROUND_Y after the LC300Scene adjusts groupY.
+ *
+ * Hood + interior values below are derived from the source .blend, converted
+ * through the same transform the React component applies at runtime:
+ *   axis swap → subtract bbox center → multiply by fitScale (4.5 / maxDim)
+ *   → add groupY (lands wheels on GROUND_Y).
+ *
+ * Key landmarks (three.js final-world):
+ *   Engine_Block center:       ( 0.000,  0.008, -1.580)   (x range ±0.85, z range -2.19 to -0.97)
+ *   Bonnet front edge open:    ( 0.000,  1.140, -1.398)   (rotated +60° at hinge -0.972)
+ *   Driver headrest top:       (-0.353,  0.479,  0.100)
+ *   Steering wheel center:     (-0.390,  0.073, -0.508)
+ *   Dashboard top-front:       (-0.070,  0.156, -0.628)
  */
 const CAM: Record<CameraView, { pos: [number, number, number]; look: [number, number, number]; fov: number }> = {
   // Front-left 3/4 — classic automotive 3/4 front view (grille + left side visible)
   exterior: { pos: [-3.2, 0.9, -5.6], look: [0, -0.55, 0], fov: 36 },
-  // Above front, tilted down ~40° looking into engine bay
-  hood:     { pos: [0.4, 2.4, -4.3], look: [0, -0.35, -1.8], fov: 50 },
-  // Inside cabin, driver-side seat, looking forward at dashboard/windshield (-Z)
-  interior: { pos: [-0.45, -0.32, 0.55], look: [0.15, -0.30, -1.5], fov: 62 },
+  // High in front of the bumper (z=-2.25), looking back-down into engine bay at ~46°.
+  // Clears grille (ray ≈ y=0.68 at z=-2.25) and passes under the open hood
+  // (front edge at y=1.14, z=-1.40), so the open bonnet frames the top of the shot.
+  hood:     { pos: [0, 2.3, -3.8], look: [0, 0.0, -1.6], fov: 50 },
+  // Driver headrest top (-0.35, 0.48, 0.10) used as eye origin. Look-at slightly
+  // right of center and 17° below horizontal — frames steering wheel (lower-left)
+  // and dashboard (lower-middle) with windshield headroom above.
+  interior: { pos: [-0.35, 0.48, 0.10], look: [-0.1, 0.2, -1.0], fov: 65 },
 };
 
 /* ─── CinematicLoader ────────────────────────────────────────────── */
