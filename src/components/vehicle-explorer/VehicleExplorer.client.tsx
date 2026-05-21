@@ -393,6 +393,82 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     });
   }, [scene]);
 
+  /* PBR material pass — the NLM Superhive source ships untextured metal /
+     mirror / chrome / rim materials that rely on HDRI reflections for their
+     look. Without per-material metalness/roughness tuning the renderer
+     treats them all like generic painted plastic. Here we mutate the
+     existing materials in place — no MeshPhysicalMaterial upgrades, no
+     forced transmission values — to avoid creating extra shader variants
+     or per-material screen-sized transmission passes that can exhaust GPU
+     memory and cause WebGL context loss. A WeakSet of touched materials
+     prevents re-tuning when the cached scene is remounted. */
+  useEffect(() => {
+    const tuned = new WeakSet<THREE.Material>();
+
+    const tune = (mat: THREE.Material) => {
+      if (tuned.has(mat)) return;
+      tuned.add(mat);
+      if (!(mat instanceof THREE.MeshStandardMaterial)) return;
+
+      const name = (mat.name ?? "").toLowerCase();
+
+      // Glass is already MeshPhysicalMaterial (loader honors KHR_materials_
+      // transmission). Trust the GLB's transmission/ior; just polish.
+      if (mat instanceof THREE.MeshPhysicalMaterial && name.includes("glass")) {
+        mat.roughness = name.includes("dark") ? 0.08 : 0.03;
+        mat.envMapIntensity = 1.3;
+        return;
+      }
+
+      if (name === "carpaint") {
+        // Metallic white paint. Higher metalness + lower roughness lets the
+        // HDRI carry the body highlights instead of reading as matte plastic.
+        mat.metalness = 0.85;
+        mat.roughness = 0.30;
+        mat.envMapIntensity = 1.5;
+      } else if (name === "mirror" || name === "white op") {
+        mat.metalness = 1.0;
+        mat.roughness = 0.08;
+        mat.envMapIntensity = 1.7;
+      } else if (name === "metal") {
+        mat.metalness = 1.0;
+        mat.roughness = 0.16;
+        mat.envMapIntensity = 1.5;
+      } else if (name === "white") {
+        mat.metalness = 0.9;
+        mat.roughness = 0.18;
+        mat.envMapIntensity = 1.4;
+      } else if (name.startsWith("dark metal") || name === "metal gray.001") {
+        mat.metalness = 1.0;
+        mat.roughness = 0.30;
+        mat.envMapIntensity = 1.3;
+      } else if (name === "rims") {
+        mat.metalness = 1.0;
+        mat.roughness = 0.24;
+        mat.envMapIntensity = 1.4;
+      } else if (name === "tire") {
+        mat.metalness = 0;
+        mat.roughness = 0.92;
+      } else if (name === "black" || name === "plastic" || name.startsWith("black rough")) {
+        mat.metalness = 0;
+        mat.roughness = 0.74;
+      } else if (name.startsWith("leather")) {
+        mat.metalness = 0;
+        mat.roughness = 0.82;
+      } else if (name === "suspension") {
+        mat.metalness = 0.7;
+        mat.roughness = 0.55;
+      }
+    };
+
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.material) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach(tune);
+    });
+  }, [scene]);
+
   /* mesh → hotspot id */
   const meshToId = useMemo(() => {
     const m = new Map<THREE.Mesh, string>();
@@ -544,45 +620,35 @@ function EnvIntensity({ value }: { value: number }) {
   return null;
 }
 
-/* ─── Lighting — dramatic, dominant red rim ──────────────────────── */
+/* ─── Lighting — HDRI carries the PBR, lights are accents ─────────── */
+/**
+ * The NLM Superhive materials are untextured chrome / metal / mirror /
+ * rims — they rely on the HDRI environment for their reflections to
+ * read correctly. Previously, heavy directional + spot + rim lights
+ * (intensity 2.6 / 2.2 / 12+6) washed the body so flat that metalness
+ * couldn't show. The fix: let the HDRI do the work (env intensity ~1.4
+ * + ACES tone mapping on the renderer), and keep only small accents
+ * here — a soft key for shape definition + a dialled-down red rim for
+ * brand identity.
+ */
 function Lighting() {
   return (
     <>
-      {/* Very subtle ambient — pulled down (0.04 -> 0.02) to deepen
-          shadow regions and give the body more sculpting. */}
-      <ambientLight intensity={0.02} color="#1a1820" />
-
-      {/* Sharp key light, front-left, slightly elevated */}
+      {/* Soft key light front-left for shape definition + shadow casting.
+          Dialled WAY down from 2.6 so HDRI reflections can show. */}
       <directionalLight
         position={[-3.5, 3, -3.5]}
-        intensity={2.6}
+        intensity={0.7}
         color="#fff8ec"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0005}
       />
 
-      {/* Soft fill from right — dialled back (0.4 -> 0.2) so the car
-          doesn't read as overlit from above. */}
-      <directionalLight position={[3, 1.5, -2]} intensity={0.2} color="#c0c8e0" />
-
-      {/* Red rim light from behind (car rear = +Z). Dialled back from
-          the bouncier 26/13 — the previous setting was washing the wheel
-          arches in unrealistic red glow. 12/8 reads as a real photographic
-          rim, not a fake emissive. Secondary low-forward fill kept to
-          carry warmth onto the lower body. */}
-      <pointLight position={[0, 0.5, 4.8]} intensity={12} color="#DC0D01" distance={8} decay={2.0} />
-      <pointLight position={[0, -0.4, 3.6]} intensity={6} color="#DC0D01" distance={6} decay={2.0} />
-
-      {/* Tight spot from above, sharpens body lines */}
-      <spotLight
-        position={[-1.5, 6, -1.5]}
-        angle={0.42}
-        penumbra={0.5}
-        intensity={2.2}
-        color="#ffffff"
-        target-position={[0, 0, 0]}
-      />
+      {/* Brand-red rim from rear, accent only. Reduced 12/6 → 3.5/2
+          so the wheel arches don't read as glowing. */}
+      <pointLight position={[0, 0.5, 4.8]} intensity={3.5} color="#DC0D01" distance={8} decay={2.0} />
+      <pointLight position={[0, -0.4, 3.6]} intensity={2} color="#DC0D01" distance={6} decay={2.0} />
     </>
   );
 }
@@ -857,12 +923,20 @@ export default function VehicleExplorer() {
               shadows
               dpr={[1, 1.8]}
               camera={{ position: CAM.exterior.pos, fov: CAM.exterior.fov }}
-              gl={{ alpha: true, antialias: true }}
+              gl={{
+                alpha: true,
+                antialias: true,
+                toneMapping: THREE.ACESFilmicToneMapping,
+                toneMappingExposure: 1.05,
+                outputColorSpace: THREE.SRGBColorSpace,
+              }}
               style={{ background: "transparent" }}
             >
-              {/* HDRI provides only subtle reflections — not scene illumination */}
+              {/* HDRI is the primary light source — drives reflections on
+                  the untextured chrome, mirror, rim, and paint materials.
+                  Without this, PBR metals read as flat plastic. */}
               <Environment files={HDRI_URL} background={false} />
-              <EnvIntensity value={0.35} />
+              <EnvIntensity value={1.4} />
 
               <CameraRig view={view} />
               <Lighting />
