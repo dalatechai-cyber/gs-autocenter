@@ -366,8 +366,9 @@ function EnvIntensity({ value }: { value: number }) {
 function Lighting() {
   return (
     <>
-      {/* Very subtle ambient — just enough to lift shadows from pure black */}
-      <ambientLight intensity={0.04} color="#1a1820" />
+      {/* Very subtle ambient — pulled down (0.04 -> 0.02) to deepen
+          shadow regions and give the body more sculpting. */}
+      <ambientLight intensity={0.02} color="#1a1820" />
 
       {/* Sharp key light, front-left, slightly elevated */}
       <directionalLight
@@ -379,13 +380,16 @@ function Lighting() {
         shadow-bias={-0.0005}
       />
 
-      {/* Tight fill from right, very subtle */}
-      <directionalLight position={[3, 1.5, -2]} intensity={0.4} color="#c0c8e0" />
+      {/* Soft fill from right — dialled back (0.4 -> 0.2) so the car
+          doesn't read as overlit from above. */}
+      <directionalLight position={[3, 1.5, -2]} intensity={0.2} color="#c0c8e0" />
 
-      {/* DOMINANT red rim light from behind (car rear = +Z). Bumped up
-          slightly now that there's no ground plane bouncing it back —
-          gives the car real presence against the page. */}
-      <pointLight position={[0, 0.5, 4.8]} intensity={26} color="#DC0D01" distance={13} decay={2.0} />
+      {/* Red rim light from behind (car rear = +Z). Dialled back from
+          the bouncier 26/13 — the previous setting was washing the wheel
+          arches in unrealistic red glow. 12/8 reads as a real photographic
+          rim, not a fake emissive. Secondary low-forward fill kept to
+          carry warmth onto the lower body. */}
+      <pointLight position={[0, 0.5, 4.8]} intensity={12} color="#DC0D01" distance={8} decay={2.0} />
       <pointLight position={[0, -0.4, 3.6]} intensity={6} color="#DC0D01" distance={6} decay={2.0} />
 
       {/* Tight spot from above, sharpens body lines */}
@@ -674,13 +678,9 @@ export default function VehicleExplorer() {
               gl={{ alpha: true, antialias: true }}
               style={{ background: "transparent" }}
             >
-              {/* DIAGNOSTIC: HDRI Environment temporarily disabled while
-                  investigating "WebGLRenderer: Context Lost". PMREM expansion
-                  of the 1K HDR into a cube render target consumes ~50-100MB
-                  VRAM and is the most likely culprit for context revocation
-                  on memory-pressured GPUs. Restore once root cause confirmed. */}
-              {/* <Environment files={HDRI_URL} background={false} /> */}
-              {/* <EnvIntensity value={0.35} /> */}
+              {/* HDRI provides only subtle reflections — not scene illumination */}
+              <Environment files={HDRI_URL} background={false} />
+              <EnvIntensity value={0.35} />
 
               <CameraRig view={view} />
               <Lighting />
