@@ -66,10 +66,11 @@ export type CameraView = "exterior" | "hood" | "interior";
 const CAM: Record<CameraView, { pos: [number, number, number]; look: [number, number, number]; fov: number }> = {
   // Front-left 3/4 — classic automotive 3/4 front view (grille + left side visible)
   exterior: { pos: [-3.2, 0.9, -5.6], look: [0, -0.55, 0], fov: 36 },
-  // High in front of the bumper (z=-2.25), looking back-down into engine bay at ~46°.
-  // Clears grille (ray ≈ y=0.68 at z=-2.25) and passes under the open hood
-  // (front edge at y=1.14, z=-1.40), so the open bonnet frames the top of the shot.
-  hood:     { pos: [0, 2.3, -3.8], look: [0, 0.0, -1.6], fov: 50 },
+  // High in front of the bumper (z=-2.25), looking back-down into engine bay at ~48°.
+  // Tightened from [0, 2.3, -3.8]: closer & lower so the engine fills ~75% of frame.
+  // Still clears the grille (ray ≈ y=0.73 at z=-2.25) and passes well under the open
+  // hood (front edge at y=1.14, z=-1.40), so the open bonnet frames the top of the shot.
+  hood:     { pos: [0, 1.8, -3.2], look: [0, 0.0, -1.6], fov: 50 },
   // Driver headrest top (-0.35, 0.48, 0.10) used as eye origin. Look-at slightly
   // right of center and 17° below horizontal — frames steering wheel (lower-left)
   // and dashboard (lower-middle) with windshield headroom above.
@@ -177,23 +178,188 @@ function CinematicLoader() {
 }
 
 /* ─── CameraRig — smooth cinematic transitions ───────────────────── */
+/**
+ * Exterior ↔ Interior takes a 3-waypoint path through the driver window
+ * (≈ [-1.2, 0.6, -0.5], level with the glass on the left side of the cabin)
+ * over 2.5s. Position uses split easing — quadratic ease-in into the window,
+ * quadratic ease-out out the other side — so the camera passes exactly
+ * through the waypoint at t=0.5 with continuous velocity. The driver-door
+ * glass material ("Glass.001") fades 1 → 0 → 1 along a sin curve so the
+ * camera never visibly clips it.
+ *
+ * All other view changes (exterior ↔ hood, hood ↔ exterior, etc.) use a
+ * direct 2-waypoint ease-in-out over 2.0s — no glass fade, no window detour.
+ *
+ * FOV interpolates linearly across the same duration regardless of path.
+ */
+type Anim = {
+  elapsed: number;
+  duration: number;
+  type: "waypoint" | "lerp";
+  startPos: THREE.Vector3;
+  midPos: THREE.Vector3 | null;
+  endPos: THREE.Vector3;
+  startLook: THREE.Vector3;
+  endLook: THREE.Vector3;
+  startFov: number;
+  endFov: number;
+};
+
+type GlassEntry = {
+  material: THREE.MeshStandardMaterial;
+  origOpacity: number;
+  origTransparent: boolean;
+};
+
+// Window waypoint — level with driver-door glass, just outside the cabin.
+// Picked by the user; coordinates are in three.js final-world space (post
+// scene-centering + fitScale + groupY).
+const WINDOW_WAYPOINT = new THREE.Vector3(-1.2, 0.6, -0.5);
+
+// Quadratic ease-in-out, equivalent to the split halves used for the
+// 3-waypoint path but expressed as a single function. Used for FOV and
+// for look-at on every transition.
+function easeInOut(t: number): number {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
 function CameraRig({ view }: { view: CameraView }) {
-  const { camera } = useThree();
-  const lookAtRef = useRef(new THREE.Vector3(...CAM.exterior.look));
+  const { camera, scene } = useThree();
+  const prevViewRef = useRef<CameraView>(view);
+  const lookAtRef = useRef(new THREE.Vector3(...CAM[view].look));
+  const animRef = useRef<Anim | null>(null);
+  const glassRef = useRef<GlassEntry[]>([]);
 
   useEffect(() => {
-    const cam = camera as THREE.PerspectiveCamera;
-    cam.fov = CAM[view].fov;
-    cam.updateProjectionMatrix();
-  }, [view, camera]);
+    const prev = prevViewRef.current;
+    if (prev === view) return;
 
-  useFrame((state, delta) => {
-    const preset = CAM[view];
-    // ~2s cinematic transition, frame-rate independent
-    const α = 1 - Math.pow(0.005, delta);
-    state.camera.position.lerp(new THREE.Vector3(...preset.pos), α);
-    lookAtRef.current.lerp(new THREE.Vector3(...preset.look), α);
-    state.camera.lookAt(lookAtRef.current);
+    const cam = camera as THREE.PerspectiveCamera;
+    const isCinematic = (prev === "interior") !== (view === "interior");
+
+    const startPos = camera.position.clone();
+    const startLook = lookAtRef.current.clone();
+    const endPos = new THREE.Vector3(...CAM[view].pos);
+    const endLook = new THREE.Vector3(...CAM[view].look);
+
+    if (isCinematic) {
+      animRef.current = {
+        elapsed: 0,
+        duration: 2.5,
+        type: "waypoint",
+        startPos,
+        midPos: WINDOW_WAYPOINT.clone(),
+        endPos,
+        startLook,
+        endLook,
+        startFov: cam.fov,
+        endFov: CAM[view].fov,
+      };
+      // Snapshot the driver-door glass materials so we can fade them
+      // during the window passage and fully restore them afterward.
+      // Glass.001 = front-door glass (FL=driver, FR=passenger). The
+      // passenger glass shares the material; fading both is harmless
+      // since it's never in frame during this transition.
+      const collected: GlassEntry[] = [];
+      const seen = new Set<THREE.Material>();
+      scene.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((m) => {
+          if (!m || seen.has(m)) return;
+          if (m.name === "Glass.001") {
+            seen.add(m);
+            const std = m as THREE.MeshStandardMaterial;
+            collected.push({
+              material: std,
+              origOpacity: std.opacity,
+              origTransparent: std.transparent,
+            });
+          }
+        });
+      });
+      glassRef.current = collected;
+    } else {
+      animRef.current = {
+        elapsed: 0,
+        duration: 2.0,
+        type: "lerp",
+        startPos,
+        midPos: null,
+        endPos,
+        startLook,
+        endLook,
+        startFov: cam.fov,
+        endFov: CAM[view].fov,
+      };
+    }
+
+    prevViewRef.current = view;
+  }, [view, camera, scene]);
+
+  useFrame((_, delta) => {
+    const a = animRef.current;
+    if (!a) return;
+
+    a.elapsed = Math.min(a.duration, a.elapsed + delta);
+    const t = a.elapsed / a.duration;
+    const cam = camera as THREE.PerspectiveCamera;
+
+    const posTarget = new THREE.Vector3();
+
+    if (a.type === "waypoint" && a.midPos) {
+      // Split-easing through the window waypoint: quadratic in to the
+      // midpoint, quadratic out to the end. Velocities match at t=0.5
+      // (both equal 2 in normalized units), so motion is continuous.
+      if (t < 0.5) {
+        const lt = t * 2;
+        posTarget.lerpVectors(a.startPos, a.midPos, lt * lt);
+      } else {
+        const lt = (t - 0.5) * 2;
+        posTarget.lerpVectors(a.midPos, a.endPos, 1 - (1 - lt) * (1 - lt));
+      }
+
+      // Sin curve: 0 at t=0, 1 at t=0.5, 0 at t=1 — perfect for a one-shot
+      // fade-out-and-restore as the camera crosses the glass.
+      const hide = Math.sin(t * Math.PI);
+      glassRef.current.forEach((g) => {
+        g.material.transparent = true;
+        g.material.opacity = g.origOpacity * (1 - hide);
+        g.material.needsUpdate = true;
+      });
+    } else {
+      posTarget.lerpVectors(a.startPos, a.endPos, easeInOut(t));
+    }
+
+    // Look-at always uses smooth ease-in-out — orientation never needs
+    // the window detour, only position does.
+    const lookTarget = new THREE.Vector3().lerpVectors(
+      a.startLook,
+      a.endLook,
+      easeInOut(t),
+    );
+
+    cam.fov = a.startFov + (a.endFov - a.startFov) * t;
+    cam.updateProjectionMatrix();
+
+    camera.position.copy(posTarget);
+    lookAtRef.current.copy(lookTarget);
+    camera.lookAt(lookAtRef.current);
+
+    if (t >= 1) {
+      // Restore glass to its original opacity/transparent settings so
+      // later renders don't leave the driver window subtly translucent.
+      if (a.type === "waypoint") {
+        glassRef.current.forEach((g) => {
+          g.material.opacity = g.origOpacity;
+          g.material.transparent = g.origTransparent;
+          g.material.needsUpdate = true;
+        });
+        glassRef.current = [];
+      }
+      animRef.current = null;
+    }
   });
 
   return null;
