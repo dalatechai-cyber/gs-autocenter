@@ -11,7 +11,6 @@ import {
   useProgress,
   Environment,
 } from "@react-three/drei";
-import { useSpring } from "@react-spring/three";
 import {
   Suspense,
   useCallback,
@@ -562,24 +561,29 @@ function LC300Scene({
   /* Hood animation — Bonnet_Full has its origin baked at the rear-bottom
      hinge in Blender, so we rotate the object directly (no pivot Group,
      no axis/sign math). +60° around local X swings the front edge up like
-     a real hood opening. Cubic ease-in-out over 1.2s for cinematic feel. */
+     a real hood opening. Cubic ease-in-out over 1.2s for cinematic feel.
+
+     The animation is driven by a useFrame loop reading refs, NOT react-
+     spring — the SpringValue.get() approach was leaving rotation.x stuck
+     at 0 on the deployed build, so we keep state in plain refs and lerp
+     in the render loop. */
   const bonnetRef = useRef<THREE.Object3D | null>(null);
+  const hoodTargetRef = useRef(0);
+  const hoodCurrentRef = useRef(0);
+  const hoodAnimStartRef = useRef<number | null>(null);
+  const hoodAnimFromRef = useRef(0);
+
   useEffect(() => {
     bonnetRef.current = scene.getObjectByName("Bonnet_Full") ?? null;
   }, [scene]);
 
-  const [{ hoodRot }, hoodApi] = useSpring(() => ({
-    hoodRot: 0,
-    config: {
-      duration: 1200,
-      easing: (t: number) =>
-        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
-    },
-  }));
-
   useEffect(() => {
-    hoodApi.start({ hoodRot: view === "hood" ? Math.PI / 3 : 0 });
-  }, [view, hoodApi]);
+    const target = view === "hood" ? Math.PI / 3 : 0;
+    if (target === hoodTargetRef.current) return;
+    hoodTargetRef.current = target;
+    hoodAnimFromRef.current = hoodCurrentRef.current;
+    hoodAnimStartRef.current = performance.now();
+  }, [view]);
 
   /* Part-isolation animation. When `isolatedHotspot` is set the named mesh is
      reparented from inside the GLB tree onto the canvas root scene (so its
@@ -595,6 +599,14 @@ function LC300Scene({
     localPos: THREE.Vector3;
     localRot: THREE.Euler;
     localScale: THREE.Vector3;
+    // World-space offset from the mesh's node origin to the geometry's bbox
+    // centre. The optimized GLB keeps each mesh's node origin at (0,0,0) in
+    // local-parent space while the geometry lives several units away — e.g.
+    // Engine_Block geometry sits around z=-6 in node-local space. Animating
+    // mesh.position alone would put the *origin* at ISOLATION_TARGET while
+    // the visible mesh stays metres behind the camera, so we subtract this
+    // offset from the target position to land the geometry centre on it.
+    centreOffsetWorld: THREE.Vector3;
   };
   type IsoAnim = {
     phase: "out" | "isolated" | "in";
@@ -616,8 +628,17 @@ function LC300Scene({
       const mesh = scene.getObjectByName(name);
       if (!mesh || !mesh.parent) return;
 
+      // Ensure world matrices are current before reading positions.
+      mesh.parent.updateMatrixWorld(true);
+
       const startWorldPos = mesh.getWorldPosition(new THREE.Vector3());
       const startWorldScale = mesh.getWorldScale(new THREE.Vector3());
+
+      // World bbox centre — gives us the actual visible centre of the mesh,
+      // which we want to land on ISOLATION_TARGET.
+      const bbox = new THREE.Box3().setFromObject(mesh);
+      const centreWorld = bbox.getCenter(new THREE.Vector3());
+      const centreOffsetWorld = centreWorld.clone().sub(startWorldPos);
 
       isoRef.current = {
         mesh,
@@ -625,6 +646,7 @@ function LC300Scene({
         localPos: mesh.position.clone(),
         localRot: mesh.rotation.clone(),
         localScale: mesh.scale.clone(),
+        centreOffsetWorld,
       };
 
       // Reparent to canvas root preserving world transform.
@@ -637,7 +659,12 @@ function LC300Scene({
         startPos: startWorldPos,
         startScale: startWorldScale.clone(),
         startRotY: mesh.rotation.y,
-        targetPos: ISOLATION_TARGET.clone(),
+        // Target the geometry centre at ISOLATION_TARGET — subtract the
+        // offset (scaled by the scale-up multiplier, since the offset
+        // grows with mesh.scale).
+        targetPos: ISOLATION_TARGET.clone().sub(
+          centreOffsetWorld.clone().multiplyScalar(ISOLATION_SCALE_MULT),
+        ),
         targetScale: startWorldScale.clone().multiplyScalar(ISOLATION_SCALE_MULT),
       };
       return;
@@ -726,7 +753,21 @@ function LC300Scene({
   }, []);
 
   useFrame((_, delta) => {
-    if (bonnetRef.current) bonnetRef.current.rotation.x = hoodRot.get();
+    // Hood lerp — driven by performance.now() so it is independent of the
+    // useFrame delta clamp and of React render scheduling.
+    const startMs = hoodAnimStartRef.current;
+    if (startMs !== null) {
+      const t = Math.min(1, (performance.now() - startMs) / 1200);
+      const eased =
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      hoodCurrentRef.current =
+        hoodAnimFromRef.current +
+        (hoodTargetRef.current - hoodAnimFromRef.current) * eased;
+      if (t >= 1) hoodAnimStartRef.current = null;
+    }
+    if (bonnetRef.current) {
+      bonnetRef.current.rotation.x = hoodCurrentRef.current;
+    }
 
     const anim = isoAnimRef.current;
     const iso = isoRef.current;
