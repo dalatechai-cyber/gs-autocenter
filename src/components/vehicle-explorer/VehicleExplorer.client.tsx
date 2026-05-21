@@ -11,7 +11,6 @@ import {
   useProgress,
   Environment,
   ContactShadows,
-  MeshReflectorMaterial,
 } from "@react-three/drei";
 import {
   Suspense,
@@ -1508,51 +1507,23 @@ export default function VehicleExplorer() {
               <CameraRig view={view} />
               <Lighting />
 
-              {/* Real-time contact shadow — tight, dark, hugs the
-                  wheels so the chassis reads as planted. The reflective
-                  floor below picks up the broader silhouette gradient. */}
+              {/* Real-time contact shadow — tight dark cast under the
+                  wheels that anchors the chassis without rendering a
+                  visible floor plane. We had a reflective concrete
+                  floor here briefly, but it broke the original
+                  transparent-canvas aesthetic where the section bg
+                  shows directly through; ContactShadows alone keeps
+                  the car planted without that "stage" feel. */}
               <ContactShadows
                 position={[0, GROUND_Y + 0.01, 0]}
-                opacity={0.88}
-                scale={9}
-                blur={1.8}
+                opacity={0.85}
+                scale={10}
+                blur={2.2}
                 far={2.0}
                 resolution={1024}
                 color="#000000"
                 frames={1}
               />
-
-              {/* Polished-concrete floor — a circular reflective plane
-                  one centimetre below the contact shadow. The mirror
-                  reflection picks up the underside of the chassis and
-                  the brand-red rim light, giving the car a real ground
-                  anchor (the previous setup floated on a CSS oval).
-                  Heavy blur + low resolution keeps the reflection
-                  abstract (mood, not detail) and the per-frame cost
-                  small enough that mobile won't tank. */}
-              <mesh
-                position={[0, GROUND_Y, 0]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                receiveShadow
-              >
-                <circleGeometry args={[5.5, 64]} />
-                <MeshReflectorMaterial
-                  blur={[300, 100]}
-                  resolution={512}
-                  mixBlur={1}
-                  mixStrength={55}
-                  roughness={0.78}
-                  depthScale={1.1}
-                  minDepthThreshold={0.4}
-                  maxDepthThreshold={1.4}
-                  // Slightly lighter than the page bg so the black body's
-                  // silhouette has contrast against the floor — with
-                  // floor #0a0a0c and body #0a0a0c they merged together.
-                  color="#1a1a1d"
-                  metalness={0.6}
-                  mirror={0}
-                />
-              </mesh>
 
               <Suspense fallback={null}>
                 <LC300Scene
