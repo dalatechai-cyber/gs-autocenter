@@ -11,6 +11,7 @@ import {
   useProgress,
   Environment,
   ContactShadows,
+  MeshReflectorMaterial,
 } from "@react-three/drei";
 import {
   Suspense,
@@ -1462,20 +1463,48 @@ export default function VehicleExplorer() {
               <CameraRig view={view} />
               <Lighting />
 
-              {/* Real-time contact shadow under the wheels — anchors the
-                  car to the ground without rendering a full floor plane.
-                  Lives at GROUND_Y so it tracks the auto-computed
-                  wheel-bottom placement done by LC300Scene. */}
+              {/* Real-time contact shadow — tight, dark, hugs the
+                  wheels so the chassis reads as planted. The reflective
+                  floor below picks up the broader silhouette gradient. */}
               <ContactShadows
                 position={[0, GROUND_Y + 0.01, 0]}
-                opacity={0.75}
-                scale={11}
-                blur={2.4}
-                far={2.4}
+                opacity={0.88}
+                scale={9}
+                blur={1.8}
+                far={2.0}
                 resolution={1024}
                 color="#000000"
                 frames={1}
               />
+
+              {/* Polished-concrete floor — a circular reflective plane
+                  one centimetre below the contact shadow. The mirror
+                  reflection picks up the underside of the chassis and
+                  the brand-red rim light, giving the car a real ground
+                  anchor (the previous setup floated on a CSS oval).
+                  Heavy blur + low resolution keeps the reflection
+                  abstract (mood, not detail) and the per-frame cost
+                  small enough that mobile won't tank. */}
+              <mesh
+                position={[0, GROUND_Y, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                receiveShadow
+              >
+                <circleGeometry args={[5.5, 64]} />
+                <MeshReflectorMaterial
+                  blur={[300, 100]}
+                  resolution={512}
+                  mixBlur={1}
+                  mixStrength={45}
+                  roughness={0.85}
+                  depthScale={1.1}
+                  minDepthThreshold={0.4}
+                  maxDepthThreshold={1.4}
+                  color="#0a0a0c"
+                  metalness={0.6}
+                  mirror={0}
+                />
+              </mesh>
 
               <Suspense fallback={null}>
                 <LC300Scene
