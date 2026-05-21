@@ -449,25 +449,39 @@ function LC300Scene({
     const upgradeToPaint = (src: THREE.MeshStandardMaterial): THREE.MeshPhysicalMaterial => {
       const phys = new THREE.MeshPhysicalMaterial({
         name: src.name,
-        color: src.color.clone(),
-        // White automotive paint is dielectric — keep metalness 0 and let
-        // the clearcoat layer drive the gloss.
+        // Deep automotive black with a very subtle cool undertone — what
+        // real luxury black pearl paint reads as in shadow. Matches the
+        // Superhive NLM Cycles reference colour. Pure #000 reads flat;
+        // #0a0a0c keeps a fraction of base luminance so the body has
+        // sub-shadow detail when the clearcoat highlight rolls off.
+        color: new THREE.Color("#0a0a0c"),
+        // Black automotive paint is still dielectric — metalness 0; the
+        // clearcoat layer drives the gloss.
         metalness: 0.0,
         // Higher roughness on the *base* coat makes the *clearcoat*
         // highlights the dominant specular signal — exactly how real
         // 2-coat automotive paint reads under studio softboxes.
-        roughness: 0.45,
+        roughness: 0.42,
         clearcoat: 1.0,
         // 0.07 is the realistic clearcoat micro-roughness for showroom
-        // paint — 0.03 was so mirror-smooth that reflections punched
-        // through too hard against the dark page background, causing
-        // hot-edge clipping on the body.
+        // paint — sharp enough to project the overhead area-light streak
+        // but rough enough that reflections don't punch through to
+        // 100% white clipping on the body crown.
         clearcoatRoughness: 0.07,
-        // Default reflectance — going above this on a dielectric paint
+        // Default dielectric reflectance — going above this on paint
         // makes the body read as plastic; the dominant gloss comes
         // from the clearcoat, not the base layer.
         reflectivity: 0.5,
         envMapIntensity: 1.0,
+        // Push the painted body fractionally back in depth. Chrome trim,
+        // badge backing and door handles sit at the same geometric
+        // position as the body in the source mesh, so without polygon
+        // offset they z-fight the paint and produce flickering bright
+        // slivers along seams — exactly the "something overlapping the
+        // wheel arch" artefact reported on the front-left fender.
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1,
       });
       return phys;
     };
@@ -493,30 +507,31 @@ function LC300Scene({
         replacements.set(mat, upgraded);
         tuned.add(upgraded);
       } else if (name === "mirror" || name === "white op") {
-        // Bright polished chrome (mirrors, trim).
+        // Bright polished chrome (mirrors, trim) — boosted envMap so the
+        // grille slats and window trim stand out as crisp metallic lines
+        // against the black body. Previous 1.9 was tuned against the
+        // white paint where contrast came free.
         mat.metalness = 1.0;
         mat.roughness = 0.04;
-        mat.envMapIntensity = 1.9;
+        mat.envMapIntensity = 2.4;
       } else if (name === "metal") {
         mat.metalness = 1.0;
-        mat.roughness = 0.14;
-        mat.envMapIntensity = 1.7;
+        mat.roughness = 0.12;
+        mat.envMapIntensity = 2.0;
       } else if (name === "white") {
-        // Smaller white trim / badge backing — keep metalness high so it
-        // catches studio reflections like chrome accents.
         mat.metalness = 0.92;
-        mat.roughness = 0.14;
-        mat.envMapIntensity = 1.5;
+        mat.roughness = 0.12;
+        mat.envMapIntensity = 1.8;
       } else if (name.startsWith("dark metal") || name === "metal gray.001") {
         mat.metalness = 1.0;
-        mat.roughness = 0.26;
-        mat.envMapIntensity = 1.5;
+        mat.roughness = 0.24;
+        mat.envMapIntensity = 1.7;
       } else if (name === "rims") {
-        // Polished aluminium wheel — bright enough to read against the
-        // dark page bg. Previous 0.24 was too dull.
+        // Polished aluminium wheel — kept slightly brighter against the
+        // dark body so the wheel design reads from across the section.
         mat.metalness = 1.0;
-        mat.roughness = 0.16;
-        mat.envMapIntensity = 1.6;
+        mat.roughness = 0.14;
+        mat.envMapIntensity = 1.8;
       } else if (name === "tire") {
         mat.metalness = 0;
         mat.roughness = 0.92;
@@ -553,6 +568,36 @@ function LC300Scene({
         }
       });
     }
+
+    // Smooth vertex normals on body, chrome trim, and engine panels.
+    // The selective-simplify pipeline (ratios 0.85 → 0.15) preserved the
+    // GLB vertex normals from before decimation; the post-decimate normals
+    // ended up with hard angle-breaks across what should be continuous
+    // panels, which read as faceted / sharp under the clearcoat highlight.
+    // Recomputing averages normals across shared positions and gives the
+    // body a smooth gradient again. Only applied to materials that should
+    // be smooth — leaves seats, leather, tires alone where hard edges
+    // are correct by design.
+    const SMOOTH_MATS = new Set([
+      "carpaint",
+      "mirror",
+      "white op",
+      "metal",
+      "white",
+      "metal gray.001",
+      "rims",
+    ]);
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.geometry || !mesh.material) return;
+      const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as
+        | THREE.Material
+        | undefined;
+      const matName = (mat?.name ?? "").toLowerCase();
+      if (SMOOTH_MATS.has(matName) || matName.startsWith("dark metal")) {
+        mesh.geometry.computeVertexNormals();
+      }
+    });
   }, [scene]);
 
   /* Publish the set of object names in the loaded GLB so the legend can
@@ -1495,12 +1540,15 @@ export default function VehicleExplorer() {
                   blur={[300, 100]}
                   resolution={512}
                   mixBlur={1}
-                  mixStrength={45}
-                  roughness={0.85}
+                  mixStrength={55}
+                  roughness={0.78}
                   depthScale={1.1}
                   minDepthThreshold={0.4}
                   maxDepthThreshold={1.4}
-                  color="#0a0a0c"
+                  // Slightly lighter than the page bg so the black body's
+                  // silhouette has contrast against the floor — with
+                  // floor #0a0a0c and body #0a0a0c they merged together.
+                  color="#1a1a1d"
                   metalness={0.6}
                   mirror={0}
                 />
