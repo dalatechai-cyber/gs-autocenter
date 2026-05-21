@@ -370,12 +370,30 @@ type SceneProps = {
   view: CameraView;
   hoveredId: string | null;
   pickedId: string | null;
+  isolatedHotspot: Hotspot | null;
   onHover: (id: string | null) => void;
   onPick: (id: string) => void;
+  onMeshesReady: (names: Set<string>) => void;
 };
 
-function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) {
+// World-space target where an isolated part floats to (in front of the
+// hood camera, slightly above the look-at point so it spins in clear view).
+const ISOLATION_TARGET = new THREE.Vector3(0, 0.6, -2.3);
+const ISOLATION_DURATION = 1.5;
+const ISOLATION_SCALE_MULT = 1.4;
+const ISOLATION_ROTATION_SPEED = 0.4; // rad/s, applied during the "isolated" hold
+
+function LC300Scene({
+  view,
+  hoveredId,
+  pickedId,
+  isolatedHotspot,
+  onHover,
+  onPick,
+  onMeshesReady,
+}: SceneProps) {
   const { scene } = useGLTF(MODEL_URL, DRACO_DECODER_URL) as unknown as { scene: THREE.Group };
+  const { scene: rootScene } = useThree();
 
   /* Defensive hide: the optimized GLB has the NLM-branded "Car plates"
      node stripped, but guard against future model revisions reintroducing
@@ -470,6 +488,17 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     });
   }, [scene]);
 
+  /* Publish the set of object names in the loaded GLB so the legend can
+     hide pills whose isolate target doesn't exist yet (e.g. Battery /
+     Air_Filter / Radiator pending the V6 import). */
+  useEffect(() => {
+    const names = new Set<string>();
+    scene.traverse((obj) => {
+      if (obj.name) names.add(obj.name);
+    });
+    onMeshesReady(names);
+  }, [scene, onMeshesReady]);
+
   /* mesh → hotspot id */
   const meshToId = useMemo(() => {
     const m = new Map<THREE.Mesh, string>();
@@ -552,8 +581,185 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
     hoodApi.start({ hoodRot: view === "hood" ? Math.PI / 3 : 0 });
   }, [view, hoodApi]);
 
-  useFrame(() => {
+  /* Part-isolation animation. When `isolatedHotspot` is set the named mesh is
+     reparented from inside the GLB tree onto the canvas root scene (so its
+     transforms are independent of the wrapping fit/group transforms), then
+     animated to ISOLATION_TARGET over 1.5s with a 1.4x scale-up. While
+     isolated it rotates 0.4 rad/s on Y. When `isolatedHotspot` becomes null
+     the animation reverses; on completion the mesh is reattached to its
+     original parent with its captured local transform — restoring it pixel-
+     accurate to where it started. */
+  type IsoCapture = {
+    mesh: THREE.Object3D;
+    parent: THREE.Object3D;
+    localPos: THREE.Vector3;
+    localRot: THREE.Euler;
+    localScale: THREE.Vector3;
+  };
+  type IsoAnim = {
+    phase: "out" | "isolated" | "in";
+    elapsed: number;
+    duration: number;
+    startPos: THREE.Vector3;
+    startScale: THREE.Vector3;
+    startRotY: number;
+    targetPos: THREE.Vector3;
+    targetScale: THREE.Vector3;
+  };
+  const isoRef = useRef<IsoCapture | null>(null);
+  const isoAnimRef = useRef<IsoAnim | null>(null);
+
+  useEffect(() => {
+    if (isolatedHotspot && !isoRef.current) {
+      const name = isolatedHotspot.isolate;
+      if (!name) return;
+      const mesh = scene.getObjectByName(name);
+      if (!mesh || !mesh.parent) return;
+
+      const startWorldPos = mesh.getWorldPosition(new THREE.Vector3());
+      const startWorldScale = mesh.getWorldScale(new THREE.Vector3());
+
+      isoRef.current = {
+        mesh,
+        parent: mesh.parent,
+        localPos: mesh.position.clone(),
+        localRot: mesh.rotation.clone(),
+        localScale: mesh.scale.clone(),
+      };
+
+      // Reparent to canvas root preserving world transform.
+      rootScene.attach(mesh);
+
+      isoAnimRef.current = {
+        phase: "out",
+        elapsed: 0,
+        duration: ISOLATION_DURATION,
+        startPos: startWorldPos,
+        startScale: startWorldScale.clone(),
+        startRotY: mesh.rotation.y,
+        targetPos: ISOLATION_TARGET.clone(),
+        targetScale: startWorldScale.clone().multiplyScalar(ISOLATION_SCALE_MULT),
+      };
+      return;
+    }
+
+    if (!isolatedHotspot && isoRef.current && isoAnimRef.current?.phase !== "in") {
+      // Begin return animation from current world transform back to where the
+      // mesh would sit if reattached to its original parent with the captured
+      // local transform.
+      const iso = isoRef.current;
+      const mesh = iso.mesh;
+      const curWorldPos = mesh.getWorldPosition(new THREE.Vector3());
+      const curWorldScale = mesh.getWorldScale(new THREE.Vector3());
+
+      // Compute the target world transform by placing a proxy in the original
+      // parent with the captured local transform and reading its world.
+      const proxy = new THREE.Object3D();
+      proxy.position.copy(iso.localPos);
+      proxy.rotation.copy(iso.localRot);
+      proxy.scale.copy(iso.localScale);
+      iso.parent.add(proxy);
+      iso.parent.updateMatrixWorld(true);
+      const targetWorldPos = proxy.getWorldPosition(new THREE.Vector3());
+      const targetWorldScale = proxy.getWorldScale(new THREE.Vector3());
+      iso.parent.remove(proxy);
+
+      isoAnimRef.current = {
+        phase: "in",
+        elapsed: 0,
+        duration: ISOLATION_DURATION,
+        startPos: curWorldPos,
+        startScale: curWorldScale,
+        startRotY: mesh.rotation.y,
+        targetPos: targetWorldPos,
+        targetScale: targetWorldScale,
+      };
+    }
+  }, [isolatedHotspot, scene, rootScene]);
+
+  /* Fade the rest of the car to 8% opacity while a part is isolated. Walks
+     the GLB tree, fades every mesh that isn't part of the isolated subtree,
+     and restores original opacity/transparent on close. */
+  useEffect(() => {
+    const isolateName = isolatedHotspot?.isolate;
+    const inSubtree = new Set<THREE.Object3D>();
+    if (isolateName) {
+      const root = scene.getObjectByName(isolateName);
+      if (root) root.traverse((o) => inSubtree.add(o));
+    }
+    type MatMemo = THREE.Material & { __isoOrig?: { o: number; t: boolean } };
+    scene.traverse((obj) => {
+      const m = obj as THREE.Mesh;
+      if (!m.isMesh || !m.material) return;
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      const fade = isolateName && !inSubtree.has(m);
+      mats.forEach((mat) => {
+        if (!mat) return;
+        const memo = mat as MatMemo;
+        if (fade) {
+          if (!memo.__isoOrig) {
+            memo.__isoOrig = { o: mat.opacity, t: mat.transparent };
+          }
+          mat.transparent = true;
+          mat.opacity = 0.08;
+        } else if (memo.__isoOrig) {
+          mat.opacity = memo.__isoOrig.o;
+          mat.transparent = memo.__isoOrig.t;
+          delete memo.__isoOrig;
+        }
+      });
+    });
+  }, [isolatedHotspot, scene]);
+
+  /* Restore on unmount in case the explorer is removed mid-isolation. */
+  useEffect(() => {
+    return () => {
+      const iso = isoRef.current;
+      if (!iso) return;
+      iso.parent.attach(iso.mesh);
+      iso.mesh.position.copy(iso.localPos);
+      iso.mesh.rotation.copy(iso.localRot);
+      iso.mesh.scale.copy(iso.localScale);
+      isoRef.current = null;
+      isoAnimRef.current = null;
+    };
+  }, []);
+
+  useFrame((_, delta) => {
     if (bonnetRef.current) bonnetRef.current.rotation.x = hoodRot.get();
+
+    const anim = isoAnimRef.current;
+    const iso = isoRef.current;
+    if (!anim || !iso) return;
+
+    if (anim.phase === "isolated") {
+      iso.mesh.rotation.y += ISOLATION_ROTATION_SPEED * delta;
+      return;
+    }
+
+    anim.elapsed = Math.min(anim.duration, anim.elapsed + delta);
+    const t = anim.elapsed / anim.duration;
+    const eased = 1 - Math.pow(1 - t, 4); // ease-out quart
+
+    iso.mesh.position.lerpVectors(anim.startPos, anim.targetPos, eased);
+    iso.mesh.scale.lerpVectors(anim.startScale, anim.targetScale, eased);
+
+    if (anim.phase === "in") {
+      iso.mesh.rotation.y = anim.startRotY * (1 - eased);
+    }
+
+    if (t >= 1) {
+      if (anim.phase === "out") {
+        isoAnimRef.current = { ...anim, phase: "isolated", elapsed: 0, duration: Infinity };
+      } else if (anim.phase === "in") {
+        iso.parent.attach(iso.mesh);
+        iso.mesh.position.copy(iso.localPos);
+        iso.mesh.rotation.copy(iso.localRot);
+        iso.mesh.scale.copy(iso.localScale);
+        isoRef.current = null;
+        isoAnimRef.current = null;
+      }
+    }
   });
 
   /* centering + ground placement (wheels touch ground) */
@@ -588,10 +794,11 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
+      if (isolatedHotspot) return; // ignore mesh clicks while isolated
       const id = meshToId.get(e.object as THREE.Mesh);
       if (id && allowedIds.has(id)) onPick(id);
     },
-    [meshToId, onPick, allowedIds],
+    [meshToId, onPick, allowedIds, isolatedHotspot],
   );
 
   return (
@@ -659,18 +866,30 @@ function HotspotLegend({
   view,
   hoveredId,
   activeId,
+  availableMeshes,
   onSelect,
 }: {
   view: CameraView;
   hoveredId: string | null;
   activeId: string | null;
+  availableMeshes: Set<string>;
   onSelect: (id: string) => void;
 }) {
   const visible = view !== "interior";
   const visibleHotspots = LC300_HOTSPOTS.filter((h) => {
-    if (view === "exterior") return ["hood", "door_fl", "door_fr", "door_rl", "door_rr", "wheel_fl", "wheel_fr"].includes(h.id);
-    if (view === "hood") return ["hood", "engine", "battery", "air_filter", "radiator"].includes(h.id);
-    return false;
+    const inView = view === "exterior"
+      ? ["hood", "door_fl", "door_fr", "door_rl", "door_rr", "wheel_fl", "wheel_fr"].includes(h.id)
+      : view === "hood"
+        ? ["hood", "engine", "battery", "air_filter", "radiator"].includes(h.id)
+        : false;
+    if (!inView) return false;
+    // Engine-part hotspots are gated on the isolate target existing in the
+    // current GLB. The Battery / Air_Filter / Radiator meshes ship with the
+    // V6 import; until then their pills stay hidden.
+    if (h.isolate && availableMeshes.size > 0 && !availableMeshes.has(h.isolate)) {
+      return false;
+    }
+    return true;
   });
 
   return (
@@ -844,22 +1063,140 @@ function PartModal({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () 
   );
 }
 
+/* ─── SidePanel — right-aligned part-info panel for isolation flow ─ */
+function SidePanel({ hotspot, onClose }: { hotspot: Hotspot | null; onClose: () => void }) {
+  const open = !!hotspot;
+  return (
+    <>
+      {/* Edge-only blur vignette behind the floating part — concentrates the
+          eye on the centre while still hinting at the dimmed car around it.
+          A radial mask cuts the blur out of the centre 55% so the part stays
+          sharp. */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 z-20 transition-opacity duration-500 ${
+          open ? "opacity-100" : "opacity-0"
+        }`}
+        style={{
+          backdropFilter: "blur(2px)",
+          WebkitBackdropFilter: "blur(2px)",
+          maskImage:
+            "radial-gradient(ellipse at center, transparent 0%, transparent 55%, black 85%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse at center, transparent 0%, transparent 55%, black 85%)",
+        }}
+      />
+
+      <aside
+        role="dialog"
+        aria-modal="false"
+        aria-label={hotspot?.name ?? ""}
+        className={`absolute inset-y-0 right-0 z-30 flex w-full flex-col bg-ink/90 p-7 backdrop-blur-xl transition-transform duration-300 ease-out sm:w-[320px] sm:p-8 ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+        style={{
+          borderLeft: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: open ? "-24px 0 60px -20px rgba(0,0,0,0.6)" : "none",
+        }}
+      >
+        {hotspot && (
+          <>
+            <button
+              type="button"
+              aria-label="Хаах"
+              onClick={onClose}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center border border-white/10 text-paper/60 transition-colors hover:border-gs-red hover:text-gs-red"
+            >
+              <span aria-hidden className="absolute block h-px w-3.5 rotate-45 bg-current" />
+              <span aria-hidden className="absolute block h-px w-3.5 -rotate-45 bg-current" />
+            </button>
+
+            <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-gs-red">
+              LC 300 · ЭД АНГИ
+            </div>
+
+            <h3 className="mt-3 font-wordmark text-3xl uppercase leading-tight tracking-tight text-paper">
+              {hotspot.name}
+            </h3>
+
+            <p className="mt-5 text-sm leading-relaxed text-paper/75">
+              {hotspot.desc}
+            </p>
+
+            <div
+              aria-hidden
+              className="my-6 h-px w-full"
+              style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+            />
+
+            <ul className="grid grid-cols-1 gap-2.5">
+              {["Анхдагч эд анги", "Мэргэшсэн мастер", "Чанарын баталгаа", "Шуурхай үйлчилгээ"].map((label) => (
+                <li key={label} className="flex items-start gap-2 text-[10px] uppercase tracking-[0.14em] text-paper/70">
+                  <span aria-hidden className="mt-0.5 block size-1 shrink-0 bg-gs-red" />
+                  {label}
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href={PHONE_HREF}
+              className="group/cta mt-auto flex items-center justify-between gap-3 bg-gs-red px-5 py-4 text-snow transition-colors hover:bg-gs-red/90"
+            >
+              <span className="flex flex-col items-start">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.22em] opacity-70">
+                  Цаг захиалах
+                </span>
+                <span className="font-wordmark text-lg uppercase tracking-tight">
+                  {PHONE_DISPLAY}
+                </span>
+              </span>
+              <span aria-hidden className="block size-2.5 origin-center rotate-45 border-r border-t border-snow/80 transition-transform group-hover/cta:translate-x-1" />
+            </a>
+          </>
+        )}
+      </aside>
+    </>
+  );
+}
+
 /* ─── VehicleExplorer (section root) ─────────────────────────────── */
 export default function VehicleExplorer() {
   const [view, setView] = useState<CameraView>("exterior");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [modalHotspot, setModalHotspot] = useState<Hotspot | null>(null);
+  // Engine-part isolation state: the hotspot whose mesh is currently detached
+  // and floating in the centre of the canvas with the side panel open.
+  const [isolatedHotspot, setIsolatedHotspot] = useState<Hotspot | null>(null);
+  // Set of object names present in the loaded GLB. Used to gate which engine
+  // pills appear in the legend — pills whose `isolate` target doesn't exist
+  // in the current model stay hidden until the asset upgrade lands.
+  const [availableMeshes, setAvailableMeshes] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
 
   const handlePick = useCallback(
     (id: string) => {
-      setPickedId(id);
       const hs = LC300_HOTSPOTS.find((h) => h.id === id);
       if (!hs) return;
-      if (id === "hood" && view === "exterior") setView("hood");
+      if (id === "hood" && view === "exterior") {
+        setView("hood");
+        setPickedId(null);
+        return;
+      }
+      // In hood view, engine parts with an isolate target trigger the
+      // detach + float + side-panel interaction instead of the modal.
+      if (view === "hood" && hs.isolate && availableMeshes.has(hs.isolate)) {
+        setPickedId(id);
+        setIsolatedHotspot(hs);
+        setModalHotspot(null);
+        return;
+      }
+      // Fallback: existing centred modal flow.
+      setPickedId(id);
       setModalHotspot(hs);
     },
-    [view],
+    [view, availableMeshes],
   );
 
   const handleCloseModal = useCallback(() => {
@@ -867,11 +1204,23 @@ export default function VehicleExplorer() {
     setPickedId(null);
   }, []);
 
+  const handleCloseIsolation = useCallback(() => {
+    setIsolatedHotspot(null);
+    setPickedId(null);
+  }, []);
+
   const handleBack = useCallback(() => {
+    // If a part is isolated, just close the isolation; the camera stays
+    // in hood view so the user can pick another part.
+    if (isolatedHotspot) {
+      setIsolatedHotspot(null);
+      setPickedId(null);
+      return;
+    }
     setView("exterior");
     setPickedId(null);
     setModalHotspot(null);
-  }, []);
+  }, [isolatedHotspot]);
 
   return (
     <section
@@ -947,8 +1296,10 @@ export default function VehicleExplorer() {
                   view={view}
                   hoveredId={hoveredId}
                   pickedId={pickedId}
+                  isolatedHotspot={isolatedHotspot}
                   onHover={setHoveredId}
                   onPick={handlePick}
+                  onMeshesReady={setAvailableMeshes}
                 />
               </Suspense>
             </Canvas>
@@ -957,12 +1308,20 @@ export default function VehicleExplorer() {
                 full GLB streams in, then fades out. */}
             <CinematicLoader />
 
-            {/* The only UI overlays: pills, camera buttons, back button */}
-            <BackButton show={view !== "exterior"} onClick={handleBack} />
+            {/* Right-aligned side panel for engine-part isolation. Sits above
+                the canvas pills but below the BackButton. */}
+            <SidePanel hotspot={isolatedHotspot} onClose={handleCloseIsolation} />
+
+            {/* The only UI overlays: pills, camera buttons, back button. */}
+            <BackButton
+              show={view !== "exterior" || !!isolatedHotspot}
+              onClick={handleBack}
+            />
             <HotspotLegend
               view={view}
               hoveredId={hoveredId}
               activeId={pickedId}
+              availableMeshes={availableMeshes}
               onSelect={handlePick}
             />
             <CameraViewButtons view={view} onViewChange={setView} />
@@ -970,7 +1329,7 @@ export default function VehicleExplorer() {
         </div>
       </div>
 
-      {/* Centered modal */}
+      {/* Centered modal (used for non-engine hotspots only) */}
       <PartModal hotspot={modalHotspot} onClose={handleCloseModal} />
     </section>
   );
