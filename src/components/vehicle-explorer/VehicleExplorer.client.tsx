@@ -39,7 +39,12 @@ const MODEL_URL =
   "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v4.glb";
 // Draco decoder served from gstatic; the CSP connect-src already allows it.
 const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
-const HDRI_URL = "/hdri/studio_small_01_1k.hdr";
+// Polyhaven studio_small_09 at 2K — the 1K studio_small_01 was too low-res to
+// project the sharp softbox bars that make white paint read as a polished
+// lacquer. The new HDRI has bright top/side softbox panels against dark walls,
+// so it gives the body the long-streak highlights of a real photo studio
+// shoot without spilling environment colour onto the dark page background.
+const HDRI_URL = "/hdri/studio_small_09_2k.hdr";
 const GROUND_Y = -1.0;
 
 export type CameraView = "exterior" | "hood" | "interior";
@@ -410,60 +415,92 @@ function LC300Scene({
     });
   }, [scene]);
 
-  /* PBR material pass — the NLM Superhive source ships untextured metal /
-     mirror / chrome / rim materials that rely on HDRI reflections for their
-     look. Without per-material metalness/roughness tuning the renderer
-     treats them all like generic painted plastic. Here we mutate the
-     existing materials in place — no MeshPhysicalMaterial upgrades, no
-     forced transmission values — to avoid creating extra shader variants
-     or per-material screen-sized transmission passes that can exhaust GPU
-     memory and cause WebGL context loss. A WeakSet of touched materials
-     prevents re-tuning when the cached scene is remounted. */
+  /* PBR material pass — automotive-paint formula.
+     The NLM Superhive source ships untextured carpaint / metal / mirror /
+     rim materials that depend on HDRI reflections for their look. The
+     previous pass kept everything as MeshStandardMaterial, which can't
+     express the two-layer clearcoat structure of real automotive lacquer
+     — the result was a chalky-plastic look on the white body.
+
+     For Carpaint we now PROMOTE the material to MeshPhysicalMaterial and
+     enable a full clearcoat layer (clearcoat=1, clearcoatRoughness=0.03).
+     The base layer keeps a higher roughness (0.45) so the smooth top
+     coat is what produces the sharp highlight rails. envMapIntensity 1.0
+     lets the HDRI drive the reflections without blowing out.
+
+     We swap the material reference on every mesh that uses the original
+     to avoid Three.js shader-program duplication. A WeakSet of touched
+     materials prevents re-tuning when the cached scene remounts. */
   useEffect(() => {
     const tuned = new WeakSet<THREE.Material>();
+    const replacements = new Map<THREE.Material, THREE.Material>();
+
+    const upgradeToPaint = (src: THREE.MeshStandardMaterial): THREE.MeshPhysicalMaterial => {
+      const phys = new THREE.MeshPhysicalMaterial({
+        name: src.name,
+        color: src.color.clone(),
+        // White automotive paint is dielectric — keep metalness 0 and let
+        // the clearcoat layer drive the gloss.
+        metalness: 0.0,
+        // Higher roughness on the *base* coat makes the *clearcoat*
+        // highlights the dominant specular signal — exactly how real
+        // 2-coat automotive paint reads under studio softboxes.
+        roughness: 0.45,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.03,
+        // Slightly warm reflectance gives the white panel a subtle pearl
+        // hint instead of looking like dead chalk.
+        reflectivity: 0.55,
+        envMapIntensity: 1.0,
+      });
+      return phys;
+    };
 
     const tune = (mat: THREE.Material) => {
       if (tuned.has(mat)) return;
       tuned.add(mat);
-      if (!(mat instanceof THREE.MeshStandardMaterial)) return;
 
       const name = (mat.name ?? "").toLowerCase();
 
-      // Glass is already MeshPhysicalMaterial (loader honors KHR_materials_
-      // transmission). Trust the GLB's transmission/ior; just polish.
+      // Glass: GLB ships MeshPhysicalMaterial via KHR_materials_transmission.
       if (mat instanceof THREE.MeshPhysicalMaterial && name.includes("glass")) {
-        mat.roughness = name.includes("dark") ? 0.08 : 0.03;
-        mat.envMapIntensity = 1.3;
+        mat.roughness = name.includes("dark") ? 0.06 : 0.02;
+        mat.envMapIntensity = 1.5;
         return;
       }
 
+      if (!(mat instanceof THREE.MeshStandardMaterial)) return;
+
       if (name === "carpaint") {
-        // White automotive paint is dielectric (NOT metallic) with a smooth
-        // clearcoat shine — high metalness reads as silver chrome. Roughness
-        // is low so the HDRI still gives the body a polished sheen.
-        mat.metalness = 0.0;
-        mat.roughness = 0.15;
-        mat.envMapIntensity = 1.5;
+        // Defer the swap — we record old→new and walk the scene again.
+        const upgraded = upgradeToPaint(mat);
+        replacements.set(mat, upgraded);
+        tuned.add(upgraded);
       } else if (name === "mirror" || name === "white op") {
+        // Bright polished chrome (mirrors, trim).
         mat.metalness = 1.0;
-        mat.roughness = 0.08;
-        mat.envMapIntensity = 1.7;
+        mat.roughness = 0.04;
+        mat.envMapIntensity = 1.9;
       } else if (name === "metal") {
         mat.metalness = 1.0;
-        mat.roughness = 0.16;
-        mat.envMapIntensity = 1.5;
+        mat.roughness = 0.14;
+        mat.envMapIntensity = 1.7;
       } else if (name === "white") {
-        mat.metalness = 0.9;
-        mat.roughness = 0.18;
-        mat.envMapIntensity = 1.4;
+        // Smaller white trim / badge backing — keep metalness high so it
+        // catches studio reflections like chrome accents.
+        mat.metalness = 0.92;
+        mat.roughness = 0.14;
+        mat.envMapIntensity = 1.5;
       } else if (name.startsWith("dark metal") || name === "metal gray.001") {
         mat.metalness = 1.0;
-        mat.roughness = 0.30;
-        mat.envMapIntensity = 1.3;
+        mat.roughness = 0.26;
+        mat.envMapIntensity = 1.5;
       } else if (name === "rims") {
+        // Polished aluminium wheel — bright enough to read against the
+        // dark page bg. Previous 0.24 was too dull.
         mat.metalness = 1.0;
-        mat.roughness = 0.24;
-        mat.envMapIntensity = 1.4;
+        mat.roughness = 0.16;
+        mat.envMapIntensity = 1.6;
       } else if (name === "tire") {
         mat.metalness = 0;
         mat.roughness = 0.92;
@@ -485,6 +522,21 @@ function LC300Scene({
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       mats.forEach(tune);
     });
+
+    // Swap any Carpaint material refs after the traversal so meshes share
+    // the new MeshPhysicalMaterial instance.
+    if (replacements.size > 0) {
+      scene.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+        if (!mesh.isMesh || !mesh.material) return;
+        if (Array.isArray(mesh.material)) {
+          mesh.material = mesh.material.map((m) => replacements.get(m) ?? m);
+        } else {
+          const swap = replacements.get(mesh.material);
+          if (swap) mesh.material = swap;
+        }
+      });
+    }
   }, [scene]);
 
   /* Publish the set of object names in the loaded GLB so the legend can
@@ -869,35 +921,66 @@ function EnvIntensity({ value }: { value: number }) {
   return null;
 }
 
-/* ─── Lighting — HDRI carries the PBR, lights are accents ─────────── */
+/* ─── Lighting — Studio softbox three-point rig ──────────────────── */
 /**
- * The NLM Superhive materials are untextured chrome / metal / mirror /
- * rims — they rely on the HDRI environment for their reflections to
- * read correctly. Previously, heavy directional + spot + rim lights
- * (intensity 2.6 / 2.2 / 12+6) washed the body so flat that metalness
- * couldn't show. The fix: let the HDRI do the work (env intensity ~1.4
- * + ACES tone mapping on the renderer), and keep only small accents
- * here — a soft key for shape definition + a dialled-down red rim for
- * brand identity.
+ * Photo-studio geometry, sized for a car shoot. The HDRI alone wasn't
+ * giving the white panels the sharp highlight rails you'd see from real
+ * softboxes overhead — those long bright strips along the roof rail,
+ * hood crown and fender peak that make a car look "premium" in product
+ * photography. So we add explicit directional sources:
+ *
+ *  - Top key (large soft white from above-left, intensity 1.4) →
+ *    draws the dominant highlight along the upper body curves.
+ *  - Front-right fill (warm white, intensity 0.45) → opens up the
+ *    shadow side so the car doesn't read as half-lit.
+ *  - Rear rim (brand red, intensity 1.8) → separates the silhouette
+ *    from the dark page background; subtle, no wheel-arch glow.
+ *  - Bottom bounce (cool white, intensity 0.2) → simulates a soft
+ *    floor bounce so the underside of bumpers and side skirts is
+ *    not jet-black.
  */
 function Lighting() {
   return (
     <>
-      {/* Soft key light front-left for shape definition + shadow casting.
-          Dialled WAY down from 2.6 so HDRI reflections can show. */}
+      {/* Top key — placed high and slightly to the left, like a 4'×4'
+          softbox over the car. Casts the primary shadow. */}
       <directionalLight
-        position={[-3.5, 3, -3.5]}
-        intensity={0.7}
-        color="#fff8ec"
+        position={[-2.5, 6.5, -2.0]}
+        intensity={1.4}
+        color="#ffffff"
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
+        shadow-normalBias={0.02}
+        shadow-camera-near={0.1}
+        shadow-camera-far={20}
+        shadow-camera-left={-6}
+        shadow-camera-right={6}
+        shadow-camera-top={6}
+        shadow-camera-bottom={-6}
       />
 
-      {/* Brand-red rim from rear, accent only. Reduced 12/6 → 3.5/2
-          so the wheel arches don't read as glowing. */}
-      <pointLight position={[0, 0.5, 4.8]} intensity={3.5} color="#DC0D01" distance={8} decay={2.0} />
-      <pointLight position={[0, -0.4, 3.6]} intensity={2} color="#DC0D01" distance={6} decay={2.0} />
+      {/* Front-right fill — opens up the shadow side of the body so the
+          car doesn't read as half-lit. Slight warmth to balance the
+          neutral top key. */}
+      <directionalLight
+        position={[3.5, 2.5, -4.0]}
+        intensity={0.45}
+        color="#fff2db"
+      />
+
+      {/* Cool floor bounce — simulates a white floor reflecting up onto
+          the bumpers and side skirts so the underside doesn't drop to
+          pitch black. */}
+      <directionalLight
+        position={[0, -3, -2]}
+        intensity={0.2}
+        color="#c8d4e6"
+      />
+
+      {/* Brand-red rim from behind — separates the silhouette from the
+          dark page bg without lighting the wheel arches. */}
+      <pointLight position={[0, 1.0, 4.8]} intensity={1.8} color="#DC0D01" distance={9} decay={2.2} />
     </>
   );
 }
@@ -1314,30 +1397,49 @@ export default function VehicleExplorer() {
             the section's dark page color. */}
         <div className="relative mt-10">
           <div className="relative h-[560px] w-full sm:h-[640px] lg:h-[720px]">
-            {/* Pure CSS contact shadow — soft oval behind the (transparent)
-                canvas, giving the car visual weight without a floor. */}
+            {/* Two-layer CSS contact shadow — a tight dark core directly
+                under the chassis (anchors the wheels) and a softer
+                ambient-occlusion halo bleeding outward (gives the car
+                visual weight on the dark page). Replaces the previous
+                single-oval gradient which floated too low. */}
             <div
               aria-hidden
               className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2"
               style={{
-                bottom: "14%",
-                width: "58%",
-                height: "110px",
+                bottom: "21%",
+                width: "44%",
+                height: "60px",
                 background:
-                  "radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 22%, rgba(0,0,0,0.22) 52%, rgba(0,0,0,0) 78%)",
-                filter: "blur(8px)",
+                  "radial-gradient(ellipse at center, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.65) 38%, rgba(0,0,0,0.22) 70%, rgba(0,0,0,0) 92%)",
+                filter: "blur(6px)",
+              }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2"
+              style={{
+                bottom: "17%",
+                width: "70%",
+                height: "150px",
+                background:
+                  "radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.08) 65%, rgba(0,0,0,0) 88%)",
+                filter: "blur(18px)",
               }}
             />
 
             <Canvas
               shadows
-              dpr={[1, 1.8]}
+              dpr={[1, 2]}
               camera={{ position: CAM.exterior.pos, fov: CAM.exterior.fov }}
               gl={{
                 alpha: true,
                 antialias: true,
                 toneMapping: THREE.ACESFilmicToneMapping,
-                toneMappingExposure: 1.05,
+                // Bumped 1.05 -> 1.35 so the studio softbox highlights on
+                // the white paint actually push past clipping into the
+                // bright specular range. Lower exposure made the metals
+                // read as matte grey rather than polished.
+                toneMappingExposure: 1.35,
                 outputColorSpace: THREE.SRGBColorSpace,
               }}
               style={{ background: "transparent" }}
@@ -1346,7 +1448,7 @@ export default function VehicleExplorer() {
                   the untextured chrome, mirror, rim, and paint materials.
                   Without this, PBR metals read as flat plastic. */}
               <Environment files={HDRI_URL} background={false} />
-              <EnvIntensity value={0.9} />
+              <EnvIntensity value={1.15} />
 
               <CameraRig view={view} />
               <Lighting />
