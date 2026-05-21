@@ -9,7 +9,6 @@ import {
 import {
   useGLTF,
   useProgress,
-  ContactShadows,
   Environment,
 } from "@react-three/drei";
 import { useSpring } from "@react-spring/three";
@@ -383,8 +382,11 @@ function Lighting() {
       {/* Tight fill from right, very subtle */}
       <directionalLight position={[3, 1.5, -2]} intensity={0.4} color="#c0c8e0" />
 
-      {/* DOMINANT red rim light from behind (car rear = +Z) */}
-      <pointLight position={[0, 0.4, 4.5]} intensity={18} color="#DC0D01" distance={11} decay={2.0} />
+      {/* DOMINANT red rim light from behind (car rear = +Z). Bumped up
+          slightly now that there's no ground plane bouncing it back —
+          gives the car real presence against the page. */}
+      <pointLight position={[0, 0.5, 4.8]} intensity={26} color="#DC0D01" distance={13} decay={2.0} />
+      <pointLight position={[0, -0.4, 3.6]} intensity={6} color="#DC0D01" distance={6} decay={2.0} />
 
       {/* Tight spot from above, sharpens body lines */}
       <spotLight
@@ -622,7 +624,8 @@ export default function VehicleExplorer() {
     <section
       id="explorer"
       aria-label="Загварын судалгаа · 3D"
-      className="relative overflow-hidden bg-ink py-20 sm:py-24 lg:py-28"
+      className="relative overflow-hidden py-20 sm:py-24 lg:py-28"
+      style={{ backgroundColor: "#0d0d0d" }}
     >
       <div className="relative mx-auto max-w-[1440px] px-5 sm:px-10 lg:px-16">
         <header className="max-w-3xl">
@@ -644,24 +647,40 @@ export default function VehicleExplorer() {
           </p>
         </header>
 
-        {/* Canvas wrapper — pure dark, no gradient halos */}
-        <div className="relative mt-10 overflow-hidden border border-white/5" style={{ backgroundColor: "#050507" }}>
+        {/* Canvas wrapper — no box, no border, no inner background.
+            The Canvas renders with alpha so the car sits directly on
+            the section's dark page color. */}
+        <div className="relative mt-10">
           <div className="relative h-[560px] w-full sm:h-[640px] lg:h-[720px]">
+            {/* Pure CSS contact shadow — soft oval behind the (transparent)
+                canvas, giving the car visual weight without a floor. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2"
+              style={{
+                bottom: "14%",
+                width: "58%",
+                height: "110px",
+                background:
+                  "radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 22%, rgba(0,0,0,0.22) 52%, rgba(0,0,0,0) 78%)",
+                filter: "blur(8px)",
+              }}
+            />
+
             <Canvas
               shadows
               dpr={[1, 1.8]}
               camera={{ position: CAM.exterior.pos, fov: CAM.exterior.fov }}
-              gl={{
-                antialias: true,
-                powerPreference: "high-performance",
-                toneMapping: THREE.ACESFilmicToneMapping,
-                toneMappingExposure: 1.05,
-              }}
+              gl={{ alpha: true, antialias: true }}
               style={{ background: "transparent" }}
             >
-              {/* HDRI provides only subtle reflections — not scene illumination */}
-              <Environment files={HDRI_URL} background={false} />
-              <EnvIntensity value={0.35} />
+              {/* DIAGNOSTIC: HDRI Environment temporarily disabled while
+                  investigating "WebGLRenderer: Context Lost". PMREM expansion
+                  of the 1K HDR into a cube render target consumes ~50-100MB
+                  VRAM and is the most likely culprit for context revocation
+                  on memory-pressured GPUs. Restore once root cause confirmed. */}
+              {/* <Environment files={HDRI_URL} background={false} /> */}
+              {/* <EnvIntensity value={0.35} /> */}
 
               <CameraRig view={view} />
               <Lighting />
@@ -674,24 +693,6 @@ export default function VehicleExplorer() {
                   onHover={setHoveredId}
                   onPick={handlePick}
                 />
-                <ContactShadows
-                  position={[0, GROUND_Y + 0.001, 0]}
-                  opacity={0.85}
-                  scale={11}
-                  blur={2.6}
-                  far={2.2}
-                  color="#000000"
-                />
-                {/* Subtle reflective ground */}
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y, 0]} receiveShadow>
-                  <planeGeometry args={[24, 24]} />
-                  <meshStandardMaterial
-                    color="#050507"
-                    metalness={0.85}
-                    roughness={0.55}
-                    envMapIntensity={0.4}
-                  />
-                </mesh>
               </Suspense>
             </Canvas>
 
