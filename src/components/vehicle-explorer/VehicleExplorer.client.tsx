@@ -447,10 +447,15 @@ function LC300Scene({
         // 2-coat automotive paint reads under studio softboxes.
         roughness: 0.45,
         clearcoat: 1.0,
-        clearcoatRoughness: 0.03,
-        // Slightly warm reflectance gives the white panel a subtle pearl
-        // hint instead of looking like dead chalk.
-        reflectivity: 0.55,
+        // 0.07 is the realistic clearcoat micro-roughness for showroom
+        // paint — 0.03 was so mirror-smooth that reflections punched
+        // through too hard against the dark page background, causing
+        // hot-edge clipping on the body.
+        clearcoatRoughness: 0.07,
+        // Default reflectance — going above this on a dielectric paint
+        // makes the body read as plastic; the dominant gloss comes
+        // from the clearcoat, not the base layer.
+        reflectivity: 0.5,
         envMapIntensity: 1.0,
       });
       return phys;
@@ -942,11 +947,14 @@ function EnvIntensity({ value }: { value: number }) {
 function Lighting() {
   return (
     <>
-      {/* Top key — placed high and slightly to the left, like a 4'×4'
-          softbox over the car. Casts the primary shadow. */}
+      {/* Top key — soft directional from above-left, like a 4'×4' softbox
+          slightly off-axis. Provides shadow casting and shape definition,
+          but kept *low* so the clearcoat HDRI reflections remain the
+          dominant specular signal on the white paint. The previous 1.4
+          intensity over-washed the body into uniform blowout. */}
       <directionalLight
         position={[-2.5, 6.5, -2.0]}
-        intensity={1.4}
+        intensity={0.55}
         color="#ffffff"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -960,27 +968,9 @@ function Lighting() {
         shadow-camera-bottom={-6}
       />
 
-      {/* Front-right fill — opens up the shadow side of the body so the
-          car doesn't read as half-lit. Slight warmth to balance the
-          neutral top key. */}
-      <directionalLight
-        position={[3.5, 2.5, -4.0]}
-        intensity={0.45}
-        color="#fff2db"
-      />
-
-      {/* Cool floor bounce — simulates a white floor reflecting up onto
-          the bumpers and side skirts so the underside doesn't drop to
-          pitch black. */}
-      <directionalLight
-        position={[0, -3, -2]}
-        intensity={0.2}
-        color="#c8d4e6"
-      />
-
       {/* Brand-red rim from behind — separates the silhouette from the
-          dark page bg without lighting the wheel arches. */}
-      <pointLight position={[0, 1.0, 4.8]} intensity={1.8} color="#DC0D01" distance={9} decay={2.2} />
+          dark page bg. Doesn't touch the body highlights. */}
+      <pointLight position={[0, 1.0, 4.8]} intensity={1.4} color="#DC0D01" distance={9} decay={2.2} />
     </>
   );
 }
@@ -1435,11 +1425,13 @@ export default function VehicleExplorer() {
                 alpha: true,
                 antialias: true,
                 toneMapping: THREE.ACESFilmicToneMapping,
-                // Bumped 1.05 -> 1.35 so the studio softbox highlights on
-                // the white paint actually push past clipping into the
-                // bright specular range. Lower exposure made the metals
-                // read as matte grey rather than polished.
-                toneMappingExposure: 1.35,
+                // White paint with a real clearcoat layer responds *very*
+                // strongly to even subtle exposure changes — the previous
+                // 1.35 push blew the whole body into uniform white. With
+                // clearcoat=1 the HDRI does most of the work; keep
+                // exposure conservative so the panel creases and crown
+                // highlights stay differentiated.
+                toneMappingExposure: 1.0,
                 outputColorSpace: THREE.SRGBColorSpace,
               }}
               style={{ background: "transparent" }}
@@ -1448,7 +1440,7 @@ export default function VehicleExplorer() {
                   the untextured chrome, mirror, rim, and paint materials.
                   Without this, PBR metals read as flat plastic. */}
               <Environment files={HDRI_URL} background={false} />
-              <EnvIntensity value={1.15} />
+              <EnvIntensity value={0.75} />
 
               <CameraRig view={view} />
               <Lighting />
