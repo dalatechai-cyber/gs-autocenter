@@ -526,11 +526,12 @@ function LC300Scene({
         mat.roughness = 0.24;
         mat.envMapIntensity = 1.7;
       } else if (name === "rims") {
-        // Polished aluminium wheel — kept slightly brighter against the
-        // dark body so the wheel design reads from across the section.
+        // Polished aluminium wheel — extra envMap boost so the silver
+        // wheel design pops against the black body even at oblique 3/4
+        // camera angles where most reflection bounces away from the lens.
         mat.metalness = 1.0;
-        mat.roughness = 0.14;
-        mat.envMapIntensity = 1.8;
+        mat.roughness = 0.12;
+        mat.envMapIntensity = 2.2;
       } else if (name === "tail light" || name === "tail light 2" || name.startsWith("tail")) {
         // Rear tail-light lens — GLB ships emissiveFactor=(1,0.04,0.02)
         // but emissiveIntensity=1 only tints the surface red, it
@@ -549,11 +550,12 @@ function LC300Scene({
       } else if (name === "glass light") {
         // Light-housing lens — promote to semi-transparent so the LED
         // panel behind shows through as a true lit headlight, instead
-        // of being hidden behind opaque dark plastic.
+        // of being hidden behind opaque dark plastic. opacity 0.4 lets
+        // the LED matrix actually broadcast through.
         mat.roughness = 0.06;
         mat.envMapIntensity = 1.3;
         mat.transparent = true;
-        mat.opacity = 0.55;
+        mat.opacity = 0.4;
       } else if (name === "dinterior" || name === "dinterior screen" || name.startsWith("dinterior")) {
         // Dashboard / infotainment glow — visible during interior view.
         mat.emissiveIntensity = name.includes("screen") ? 1.5 : 1.8;
