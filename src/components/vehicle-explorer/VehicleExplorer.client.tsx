@@ -547,25 +547,99 @@ function LC300Scene({
         mat.roughness = 0.18;
         mat.envMapIntensity = 1.1;
       } else if (name === "glass light") {
-        // Light-housing lens (sits over the emissive panel). Keep its
-        // dielectric look but smooth so the emissive shows through.
+        // Light-housing lens — promote to semi-transparent so the LED
+        // panel behind shows through as a true lit headlight, instead
+        // of being hidden behind opaque dark plastic.
         mat.roughness = 0.06;
         mat.envMapIntensity = 1.3;
+        mat.transparent = true;
+        mat.opacity = 0.55;
       } else if (name === "dinterior" || name === "dinterior screen" || name.startsWith("dinterior")) {
         // Dashboard / infotainment glow — visible during interior view.
         mat.emissiveIntensity = name.includes("screen") ? 1.5 : 1.8;
+      } else if (name === "red glass") {
+        // Translucent red lens on the rear tail-light assembly — the GLB
+        // ships it as opaque dark grey which kills the iconic red glow.
+        // Promote to red emissive + slight transparency so the actual
+        // Tail Light surface behind shines through cleanly.
+        mat.color.setHex(0x8a0000);
+        mat.emissive.setHex(0xd80000);
+        mat.emissiveIntensity = 2.2;
+        mat.metalness = 0;
+        mat.roughness = 0.18;
+        mat.envMapIntensity = 1.3;
+        mat.transparent = true;
+        mat.opacity = 0.7;
+      } else if (name === "wood b/w") {
+        // Wood interior trim — visible through clear windows. Warm tone
+        // with subtle gloss, distinct from the dark leather around it.
+        mat.color.setHex(0x3a2614);
+        mat.metalness = 0.1;
+        mat.roughness = 0.42;
+        mat.envMapIntensity = 1.1;
+      } else if (name === "dark metal.002" || name === "dark metal") {
+        // The "Dark metal" family covers the matte-plastic wheel-arch
+        // flares + a few other lower-body trim pieces. Treat as a matte
+        // textured plastic so it sits distinct from the glossy paint.
+        mat.metalness = 0.4;
+        mat.roughness = 0.55;
+        mat.envMapIntensity = 0.8;
+      } else if (name === "metal gray.001") {
+        mat.metalness = 1.0;
+        mat.roughness = 0.34;
+        mat.envMapIntensity = 1.5;
       } else if (name === "tire") {
         mat.metalness = 0;
         mat.roughness = 0.92;
       } else if (name === "black" || name === "plastic" || name.startsWith("black rough")) {
+        // Lower-body plastic / mirror housings / B-pillar trim. Lift the
+        // base color slightly (#080809 vs the GLB's #050505) and keep a
+        // matte finish so it visibly differs from the glossy black paint
+        // — the previous unified darkness was the "all metallic colour"
+        // complaint, where paint and plastic merged into one tone.
+        mat.color.setHex(0x121214);
         mat.metalness = 0;
-        mat.roughness = 0.74;
+        mat.roughness = 0.70;
+        mat.envMapIntensity = 0.6;
+      } else if (name === "leather airbag") {
+        // Steering-wheel centre / airbag cover — slightly grippier than
+        // the seat leather so it reads as a distinct material.
+        mat.color.setHex(0x161412);
+        mat.metalness = 0;
+        mat.roughness = 0.88;
       } else if (name.startsWith("leather")) {
+        // Seat leather — warm brown undertone gives the interior visible
+        // colour variation through the clear glass instead of a black
+        // interior void.
+        mat.color.setHex(0x2a1d10);
         mat.metalness = 0;
-        mat.roughness = 0.82;
+        mat.roughness = 0.76;
+        mat.envMapIntensity = 0.9;
       } else if (name === "suspension") {
-        mat.metalness = 0.7;
-        mat.roughness = 0.55;
+        mat.metalness = 0.85;
+        mat.roughness = 0.42;
+        mat.envMapIntensity = 1.2;
+      } else if (name === "steering wheel logo.001") {
+        // Toyota emblem on the wheel — keep crisp chrome so the brand
+        // detail catches the eye during interior view.
+        mat.metalness = 1.0;
+        mat.roughness = 0.08;
+        mat.envMapIntensity = 2.2;
+      } else if (name === "white op") {
+        // Opaque white badge backing / number-plate area — kept bright
+        // so the small white emblems read against the black body.
+        mat.color.setHex(0xeaeaea);
+        mat.metalness = 0;
+        mat.roughness = 0.4;
+        mat.envMapIntensity = 1.0;
+      } else if (name === "plastic") {
+        mat.metalness = 0;
+        mat.roughness = 0.62;
+        mat.envMapIntensity = 0.7;
+      } else if (name === "1") {
+        // Default-export catch-all material — generic dark plastic.
+        mat.metalness = 0;
+        mat.roughness = 0.6;
       }
     };
 
