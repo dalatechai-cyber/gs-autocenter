@@ -20,6 +20,14 @@ import {
   useState,
 } from "react";
 import * as THREE from "three";
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
+
+// RectAreaLight needs its precomputed BRDF lookup tables uploaded once. The
+// JSM helper hot-path early-returns on subsequent calls, so init at module
+// scope is safe even in dev with HMR.
+if (typeof window !== "undefined") {
+  RectAreaLightUniformsLib.init();
+}
 import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
@@ -39,12 +47,13 @@ const MODEL_URL =
   "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v4.glb";
 // Draco decoder served from gstatic; the CSP connect-src already allows it.
 const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
-// Polyhaven studio_small_09 at 2K — the 1K studio_small_01 was too low-res to
-// project the sharp softbox bars that make white paint read as a polished
-// lacquer. The new HDRI has bright top/side softbox panels against dark walls,
-// so it gives the body the long-streak highlights of a real photo studio
-// shoot without spilling environment colour onto the dark page background.
-const HDRI_URL = "/hdri/studio_small_09_2k.hdr";
+// Polyhaven brown_photostudio_02 — the classic car-render HDRI. Dark studio
+// walls + four large bright softbox panels at top/sides. The softbox panels
+// project as long bright streaks on the body's clearcoat reflections, which
+// is exactly the iconic "premium product shot" highlight signature. The
+// earlier studio_small_09 had a uniformly soft envmap without strong bars
+// so the white paint read as waxy plastic instead of glossy lacquer.
+const HDRI_URL = "/hdri/brown_photostudio_02_2k.hdr";
 const GROUND_Y = -1.0;
 
 export type CameraView = "exterior" | "hood" | "interior";
@@ -945,16 +954,37 @@ function EnvIntensity({ value }: { value: number }) {
  *    not jet-black.
  */
 function Lighting() {
+  // Orient the area light to face downward at the car.
+  const overheadRef = useRef<THREE.RectAreaLight>(null);
+  useEffect(() => {
+    overheadRef.current?.lookAt(0, 0, 0);
+  }, []);
+
   return (
     <>
-      {/* Top key — soft directional from above-left, like a 4'×4' softbox
-          slightly off-axis. Provides shadow casting and shape definition,
-          but kept *low* so the clearcoat HDRI reflections remain the
-          dominant specular signal on the white paint. The previous 1.4
-          intensity over-washed the body into uniform blowout. */}
+      {/* Overhead RectAreaLight — this is the single biggest factor in
+          making the body read as "automotive paint" instead of waxy
+          plastic. It's a 5m×1.5m horizontal panel directly above the
+          car that creates the long *streak* highlight running across
+          the hood, roof and rear deck — the canonical specular tell
+          of a real studio softbox. The HDRI alone projects the
+          softbox shape into the clearcoat reflections but its
+          intensity gets attenuated; an explicit area light adds the
+          extra punch needed to push the streak into white-clipping. */}
+      <rectAreaLight
+        ref={overheadRef}
+        position={[0, 4.2, -1.8]}
+        width={5}
+        height={1.5}
+        intensity={9}
+        color="#ffffff"
+      />
+
+      {/* Top key — still useful for the shadow it casts on the floor.
+          Low intensity so it doesn't compete with the area light. */}
       <directionalLight
         position={[-2.5, 6.5, -2.0]}
-        intensity={0.55}
+        intensity={0.45}
         color="#ffffff"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -969,7 +999,7 @@ function Lighting() {
       />
 
       {/* Brand-red rim from behind — separates the silhouette from the
-          dark page bg. Doesn't touch the body highlights. */}
+          dark page bg. */}
       <pointLight position={[0, 1.0, 4.8]} intensity={1.4} color="#DC0D01" distance={9} decay={2.2} />
     </>
   );
@@ -1440,7 +1470,7 @@ export default function VehicleExplorer() {
                   the untextured chrome, mirror, rim, and paint materials.
                   Without this, PBR metals read as flat plastic. */}
               <Environment files={HDRI_URL} background={false} />
-              <EnvIntensity value={0.75} />
+              <EnvIntensity value={0.9} />
 
               <CameraRig view={view} />
               <Lighting />
