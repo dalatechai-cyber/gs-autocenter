@@ -10,6 +10,7 @@ import {
   useGLTF,
   useProgress,
   Environment,
+  ContactShadows,
 } from "@react-three/drei";
 import {
   Suspense,
@@ -1417,33 +1418,20 @@ export default function VehicleExplorer() {
             the section's dark page color. */}
         <div className="relative mt-10">
           <div className="relative h-[560px] w-full sm:h-[640px] lg:h-[720px]">
-            {/* Two-layer CSS contact shadow — a tight dark core directly
-                under the chassis (anchors the wheels) and a softer
-                ambient-occlusion halo bleeding outward (gives the car
-                visual weight on the dark page). Replaces the previous
-                single-oval gradient which floated too low. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2"
-              style={{
-                bottom: "21%",
-                width: "44%",
-                height: "60px",
-                background:
-                  "radial-gradient(ellipse at center, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.65) 38%, rgba(0,0,0,0.22) 70%, rgba(0,0,0,0) 92%)",
-                filter: "blur(6px)",
-              }}
-            />
+            {/* Faint ambient-occlusion CSS halo only — the real shadow
+                now comes from the <ContactShadows /> inside the Canvas
+                so it tracks the wheels in 3D space. Keep this halo as
+                a subtle "lift" against the dark page background. */}
             <div
               aria-hidden
               className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2"
               style={{
                 bottom: "17%",
                 width: "70%",
-                height: "150px",
+                height: "120px",
                 background:
-                  "radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.08) 65%, rgba(0,0,0,0) 88%)",
-                filter: "blur(18px)",
+                  "radial-gradient(ellipse at center, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.16) 40%, rgba(0,0,0,0) 88%)",
+                filter: "blur(22px)",
               }}
             />
 
@@ -1455,13 +1443,12 @@ export default function VehicleExplorer() {
                 alpha: true,
                 antialias: true,
                 toneMapping: THREE.ACESFilmicToneMapping,
-                // White paint with a real clearcoat layer responds *very*
-                // strongly to even subtle exposure changes — the previous
-                // 1.35 push blew the whole body into uniform white. With
-                // clearcoat=1 the HDRI does most of the work; keep
-                // exposure conservative so the panel creases and crown
-                // highlights stay differentiated.
-                toneMappingExposure: 1.0,
+                // With the overhead RectAreaLight + brown_photostudio
+                // HDRI doing the highlight work, we can safely push
+                // exposure a touch above neutral so the chrome / rims /
+                // grille bars reach the bright specular range without
+                // washing out the body crown.
+                toneMappingExposure: 1.1,
                 outputColorSpace: THREE.SRGBColorSpace,
               }}
               style={{ background: "transparent" }}
@@ -1474,6 +1461,21 @@ export default function VehicleExplorer() {
 
               <CameraRig view={view} />
               <Lighting />
+
+              {/* Real-time contact shadow under the wheels — anchors the
+                  car to the ground without rendering a full floor plane.
+                  Lives at GROUND_Y so it tracks the auto-computed
+                  wheel-bottom placement done by LC300Scene. */}
+              <ContactShadows
+                position={[0, GROUND_Y + 0.01, 0]}
+                opacity={0.75}
+                scale={11}
+                blur={2.4}
+                far={2.4}
+                resolution={1024}
+                color="#000000"
+                frames={1}
+              />
 
               <Suspense fallback={null}>
                 <LC300Scene
