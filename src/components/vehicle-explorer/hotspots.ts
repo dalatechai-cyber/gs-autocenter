@@ -114,11 +114,14 @@ export const LX570_HOTSPOTS: Hotspot[] = [
  */
 export const LC300_HOTSPOTS: Hotspot[] = [
   {
+    // Hood pill opens the bay; never isolates. The mesh itself is animated
+    // via the spring (not detached), so we intentionally omit `isolate` so
+    // that clicking the bonnet mesh in hood view falls through to a no-op
+    // instead of triggering part-isolation on the hood.
     id: "hood",
     prefixes: ["Bonnet_Full"],
     name: "Хөдөлгүүр & Капот",
     desc: "Хөдөлгүүрийн оношилгоо, тосны солилт, цагийн бүс солилт. Капот нээгдэж дотор эд анги харагдана.",
-    isolate: "Bonnet_Full",
   },
   {
     id: "engine",

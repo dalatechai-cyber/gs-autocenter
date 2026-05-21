@@ -867,15 +867,20 @@ function HotspotLegend({
   hoveredId,
   activeId,
   availableMeshes,
+  isolating,
   onSelect,
 }: {
   view: CameraView;
   hoveredId: string | null;
   activeId: string | null;
   availableMeshes: Set<string>;
+  isolating: boolean;
   onSelect: (id: string) => void;
 }) {
-  const visible = view !== "interior";
+  // Pills hide entirely in interior view; during isolation they stay
+  // rendered but fade out and become non-interactive so the only way to
+  // exit is the back button.
+  const visible = view !== "interior" && !isolating;
   const visibleHotspots = LC300_HOTSPOTS.filter((h) => {
     const inView = view === "exterior"
       ? ["hood", "door_fl", "door_fr", "door_rl", "door_rr", "wheel_fl", "wheel_fr"].includes(h.id)
@@ -1179,9 +1184,23 @@ export default function VehicleExplorer() {
     (id: string) => {
       const hs = LC300_HOTSPOTS.find((h) => h.id === id);
       if (!hs) return;
-      if (id === "hood" && view === "exterior") {
-        setView("hood");
-        setPickedId(null);
+      // While a part is isolated the legend is also disabled visually, but
+      // bonnet-mesh clicks could still fire — silently ignore so a stray
+      // raycast hit during isolation doesn't queue a doomed second isolate.
+      if (isolatedHotspot) return;
+      // Hood toggles the camera view; it never isolates. In exterior view a
+      // hood click opens the bay. In hood view it shows the hood-services
+      // modal (legacy behavior). A bonnet-mesh click in hood view goes
+      // through the same path, so it also shows the modal instead of doing
+      // something destructive like detaching the hood.
+      if (id === "hood") {
+        if (view === "exterior") {
+          setView("hood");
+          setPickedId(null);
+          return;
+        }
+        setPickedId(id);
+        setModalHotspot(hs);
         return;
       }
       // In hood view, engine parts with an isolate target trigger the
@@ -1196,7 +1215,7 @@ export default function VehicleExplorer() {
       setPickedId(id);
       setModalHotspot(hs);
     },
-    [view, availableMeshes],
+    [view, availableMeshes, isolatedHotspot],
   );
 
   const handleCloseModal = useCallback(() => {
@@ -1322,6 +1341,7 @@ export default function VehicleExplorer() {
               hoveredId={hoveredId}
               activeId={pickedId}
               availableMeshes={availableMeshes}
+              isolating={!!isolatedHotspot}
               onSelect={handlePick}
             />
             <CameraViewButtons view={view} onViewChange={setView} />
