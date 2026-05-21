@@ -421,10 +421,11 @@ function LC300Scene({ view, hoveredId, pickedId, onHover, onPick }: SceneProps) 
       }
 
       if (name === "carpaint") {
-        // Metallic white paint. Higher metalness + lower roughness lets the
-        // HDRI carry the body highlights instead of reading as matte plastic.
-        mat.metalness = 0.85;
-        mat.roughness = 0.30;
+        // White automotive paint is dielectric (NOT metallic) with a smooth
+        // clearcoat shine — high metalness reads as silver chrome. Roughness
+        // is low so the HDRI still gives the body a polished sheen.
+        mat.metalness = 0.0;
+        mat.roughness = 0.15;
         mat.envMapIntensity = 1.5;
       } else if (name === "mirror" || name === "white op") {
         mat.metalness = 1.0;
@@ -936,7 +937,7 @@ export default function VehicleExplorer() {
                   the untextured chrome, mirror, rim, and paint materials.
                   Without this, PBR metals read as flat plastic. */}
               <Environment files={HDRI_URL} background={false} />
-              <EnvIntensity value={1.4} />
+              <EnvIntensity value={0.9} />
 
               <CameraRig view={view} />
               <Lighting />
