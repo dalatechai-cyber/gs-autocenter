@@ -531,6 +531,29 @@ function LC300Scene({
         mat.metalness = 1.0;
         mat.roughness = 0.14;
         mat.envMapIntensity = 1.8;
+      } else if (name === "tail light" || name === "tail light 2" || name.startsWith("tail")) {
+        // Rear tail-light lens — GLB ships emissiveFactor=(1,0.04,0.02)
+        // but emissiveIntensity=1 only tints the surface red, it
+        // doesn't read as "lit". Bump the intensity so the lights
+        // visibly glow against the black body — exactly the red detail
+        // the user asked for to break the all-metallic look.
+        mat.emissiveIntensity = 5.0;
+        mat.roughness = 0.25;
+        mat.envMapIntensity = 1.2;
+      } else if (name === "whitefrontlight" || name.includes("frontlight") || name === "headlight" || name.includes("headlight")) {
+        // LED headlight panel — bright warm-white emissive that
+        // matches a real LC300's matrix-LED.
+        mat.emissiveIntensity = 3.5;
+        mat.roughness = 0.18;
+        mat.envMapIntensity = 1.1;
+      } else if (name === "glass light") {
+        // Light-housing lens (sits over the emissive panel). Keep its
+        // dielectric look but smooth so the emissive shows through.
+        mat.roughness = 0.06;
+        mat.envMapIntensity = 1.3;
+      } else if (name === "dinterior" || name === "dinterior screen" || name.startsWith("dinterior")) {
+        // Dashboard / infotainment glow — visible during interior view.
+        mat.emissiveIntensity = name.includes("screen") ? 1.5 : 1.8;
       } else if (name === "tire") {
         mat.metalness = 0;
         mat.roughness = 0.92;
@@ -597,6 +620,23 @@ function LC300Scene({
         mesh.geometry.computeVertexNormals();
       }
     });
+
+    // Capture emissive *after* the tune so the hover/restore branch
+    // preserves the boosted tail-light / headlight glow.
+    const newOrig = new Map<THREE.Mesh, { color: THREE.Color; intensity: number }>();
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as
+        | THREE.MeshStandardMaterial
+        | undefined;
+      if (!mat?.emissive) return;
+      newOrig.set(mesh, {
+        color: mat.emissive.clone(),
+        intensity: mat.emissiveIntensity ?? 0,
+      });
+    });
+    origEmissive.current = newOrig;
   }, [scene]);
 
   /* Publish the set of object names in the loaded GLB so the legend can
@@ -625,18 +665,14 @@ function LC300Scene({
     return m;
   }, [scene]);
 
-  /* preserve original emissives for restore */
-  const origEmissive = useMemo(() => {
-    const map = new Map<THREE.Mesh, { color: THREE.Color; intensity: number }>();
-    scene.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as THREE.MeshStandardMaterial | undefined;
-      if (!mat?.emissive) return;
-      map.set(mesh, { color: mat.emissive.clone(), intensity: mat.emissiveIntensity ?? 0 });
-    });
-    return map;
-  }, [scene]);
+  /* Preserve original emissives for restore after hover / pick. This is
+     a ref (not useMemo) populated INSIDE the material-tune effect, after
+     light materials have had their intensity boosted — so the restore
+     branch of the hover effect keeps the tail-lights glowing instead of
+     reverting them to the GLB's intensity=1 default. */
+  const origEmissive = useRef(
+    new Map<THREE.Mesh, { color: THREE.Color; intensity: number }>(),
+  );
 
   /* which hotspots are clickable in this view */
   const allowedIds = useMemo<Set<string>>(() => {
@@ -655,7 +691,7 @@ function LC300Scene({
       mats.forEach((mat) => {
         const std = mat as THREE.MeshStandardMaterial;
         if (!std?.emissive) return;
-        const orig = origEmissive.get(mesh);
+        const orig = origEmissive.current.get(mesh);
         if (!orig) return;
         const active = id && allowedIds.has(id) && (id === hoveredId || id === pickedId);
         if (active) {
@@ -668,7 +704,7 @@ function LC300Scene({
         }
       });
     });
-  }, [hoveredId, pickedId, view, scene, meshToId, origEmissive, allowedIds]);
+  }, [hoveredId, pickedId, view, scene, meshToId, allowedIds]);
 
   /* Hood animation — Bonnet_Full has its origin baked at the rear-bottom
      hinge in Blender, so we rotate the object directly (no pivot Group,
