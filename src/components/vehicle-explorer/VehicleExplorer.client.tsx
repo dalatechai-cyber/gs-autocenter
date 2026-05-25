@@ -21,14 +21,6 @@ import {
   useState,
 } from "react";
 import * as THREE from "three";
-import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
-
-// RectAreaLight needs its precomputed BRDF lookup tables uploaded once. The
-// JSM helper hot-path early-returns on subsequent calls, so init at module
-// scope is safe even in dev with HMR.
-if (typeof window !== "undefined") {
-  RectAreaLightUniformsLib.init();
-}
 import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
@@ -757,19 +749,28 @@ function LC300Scene({
     return new Set();
   }, [view]);
 
-  /* hover/pick emissive glow */
+  /* hover/pick emissive glow — only touch meshes that actually belong to a
+     hotspot in the current view. The previous version walked the entire
+     scene + mutated every emissive on every pointer-over, which fired
+     dozens of material updates per second during mouse movement and was
+     a major source of stutter on mid-range hardware. */
+  const hotspotMeshes = useMemo(() => {
+    const list: { mesh: THREE.Mesh; id: string }[] = [];
+    meshToId.forEach((id, mesh) => {
+      if (allowedIds.has(id)) list.push({ mesh, id });
+    });
+    return list;
+  }, [meshToId, allowedIds]);
+
   useEffect(() => {
-    scene.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh) return;
+    hotspotMeshes.forEach(({ mesh, id }) => {
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      const id = meshToId.get(mesh);
       mats.forEach((mat) => {
         const std = mat as THREE.MeshStandardMaterial;
         if (!std?.emissive) return;
         const orig = origEmissive.current.get(mesh);
         if (!orig) return;
-        const active = id && allowedIds.has(id) && (id === hoveredId || id === pickedId);
+        const active = id === hoveredId || id === pickedId;
         if (active) {
           const strength = id === pickedId ? 0.40 : 0.18;
           std.emissive.setRGB(strength, 0.03 * strength, 0.03 * strength);
@@ -780,7 +781,7 @@ function LC300Scene({
         }
       });
     });
-  }, [hoveredId, pickedId, view, scene, meshToId, allowedIds]);
+  }, [hoveredId, pickedId, hotspotMeshes]);
 
   /* Hood animation — Bonnet_Full has its origin baked at the rear-bottom
      hinge in Blender, so we rotate the object directly (no pivot Group,
@@ -798,6 +799,9 @@ function LC300Scene({
   const hoodAnimFromRef = useRef(0);
 
   useEffect(() => {
+    // Bonnet_Full is the hood node (mesh: Hood.001) at translation
+    // (0, 1.28, -5.33) — origin baked at the rear hinge so a local +X
+    // rotation swings the front edge up like a real hood opening.
     bonnetRef.current = scene.getObjectByName("Bonnet_Full") ?? null;
   }, [scene]);
 
@@ -1112,52 +1116,48 @@ function EnvIntensity({ value }: { value: number }) {
  *    not jet-black.
  */
 function Lighting() {
-  // Orient the area light to face downward at the car.
-  const overheadRef = useRef<THREE.RectAreaLight>(null);
-  useEffect(() => {
-    overheadRef.current?.lookAt(0, 0, 0);
-  }, []);
-
   return (
     <>
-      {/* Overhead RectAreaLight — this is the single biggest factor in
-          making the body read as "automotive paint" instead of waxy
-          plastic. It's a 5m×1.5m horizontal panel directly above the
-          car that creates the long *streak* highlight running across
-          the hood, roof and rear deck — the canonical specular tell
-          of a real studio softbox. The HDRI alone projects the
-          softbox shape into the clearcoat reflections but its
-          intensity gets attenuated; an explicit area light adds the
-          extra punch needed to push the streak into white-clipping. */}
-      <rectAreaLight
-        ref={overheadRef}
-        position={[0, 4.2, -1.8]}
-        width={5}
-        height={1.5}
-        intensity={9}
-        color="#ffffff"
-      />
+      {/* Top key — directional light with a soft shadow. Substantially
+          cheaper than the previous RectAreaLight rig: directional lights
+          don't compile the RECT_AREA_LIGHTS uniform branch and don't
+          need the BRDF lookup textures. The HDRI (brown_photostudio_02)
+          already projects the softbox shape into the clearcoat
+          reflections, so the explicit area panel was redundant — its
+          only contribution was extra GPU cost.
 
-      {/* Top key — still useful for the shadow it casts on the floor.
-          Low intensity so it doesn't compete with the area light. */}
+          Shadow map is 1024² instead of 2048² (4× fewer depth samples
+          to compute every frame) and the camera frustum is tightened
+          to just the car bbox, which keeps shadow texel density high
+          enough to avoid blocky edges. */}
       <directionalLight
         position={[-2.5, 6.5, -2.0]}
-        intensity={0.45}
+        intensity={1.4}
         color="#ffffff"
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0005}
         shadow-normalBias={0.02}
         shadow-camera-near={0.1}
         shadow-camera-far={20}
-        shadow-camera-left={-6}
-        shadow-camera-right={6}
-        shadow-camera-top={6}
-        shadow-camera-bottom={-6}
+        shadow-camera-left={-3.5}
+        shadow-camera-right={3.5}
+        shadow-camera-top={3.5}
+        shadow-camera-bottom={-3.5}
       />
 
+      {/* Front-right fill — opens up the shadow side so the body doesn't
+          read as half-lit. No shadow casting (would double the depth
+          pass cost for almost no visual gain). */}
+      <directionalLight position={[3.0, 3.5, -2.0]} intensity={0.5} color="#fff4e6" />
+
+      {/* Soft bounce from below so the underside of bumpers and skirts
+          isn't crushed black — much cheaper than ContactShadows alone. */}
+      <hemisphereLight args={["#ffffff", "#1a1a1c", 0.35]} />
+
       {/* Brand-red rim from behind — separates the silhouette from the
-          dark page bg. */}
+          dark page bg. Decay 2.2 + distance 9 keeps the falloff tight
+          so the red glow doesn't leak onto the body crown. */}
       <pointLight position={[0, 1.0, 4.8]} intensity={1.4} color="#DC0D01" distance={9} decay={2.2} />
     </>
   );
@@ -1593,8 +1593,9 @@ export default function VehicleExplorer() {
             />
 
             <Canvas
-              shadows
-              dpr={[1, 2]}
+              shadows="soft"
+              dpr={[1, 1.5]}
+              performance={{ min: 0.5 }}
               camera={{ position: CAM.exterior.pos, fov: CAM.exterior.fov }}
               gl={{
                 alpha: true,
