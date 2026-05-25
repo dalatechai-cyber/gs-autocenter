@@ -37,49 +37,51 @@ if (!inPath || !outPath) {
 // Per-node simplification ratios. Higher ratio = keep more verts.
 // Anything not listed gets DEFAULT_RATIO.
 //
-// Strategy:
-//   exterior body/hood (silhouette-critical) → keep 85%
-//   wheels (always visible, but rotational symmetry hides decimation) → 70%
-//   lights (complex inner geometry, mostly unseen detail) → 35%
-//   engine bay (only visible in hood view) → 45%
-//   suspension (hidden behind wheels/body) → 15%
-//   interior (visible only through tinted glass at exterior angle) → 50%
-//   structural supports → 15%
+// HQ pass — restore body crease detail. Exterior panels keep 100% of their
+// verts; only hidden structural geometry is decimated aggressively.
 const RATIOS = {
-  // exterior body & hood — silhouette critical
-  "Main body": 0.85,
-  "Bonnet_Full": 0.85,
-  "Door_FL": 0.85,
-  "Door_FR": 0.85,
-  "Door_RL": 0.85,
-  "Door_RR": 0.85,
-  // wheels — geometric repetition tolerates simplification
-  "Wheel_FL": 0.70,
-  "Wheel_FR": 0.70,
-  "Wheel_RL": 0.70,
-  "Wheel_RR": 0.70,
-  // lights — inner reflectors, not the outer lens silhouette
-  "Front lights 1": 0.55,
-  "Front lights 2": 0.35,
-  "Tail lights 1": 0.35,
-  "Tail lights 2": 0.55,
-  // engine bay — only visible in hood view, mostly hidden parts
-  "Engine_Block": 0.45,
+  // NOTE: keys are the PREPPED runtime node names (Door_FL, Bonnet_Full,
+  // Wheel_FL, Suspension_FL) — i.e. what lc300-hood-fixed.glb actually
+  // contains — NOT the raw .blend names. Mismatched keys silently fall to
+  // DEFAULT_RATIO and over-decimate the body, so keep these in sync.
+  // exterior body & hood & doors — full detail, no simplification
+  "Main body": 1.0,
+  "Bonnet_Full": 1.0,
+  "Door_FL": 1.0,
+  "Door_FR": 1.0,
+  "Door_RL": 1.0,
+  "Door_RR": 1.0,
+  // wheels
+  "Wheel_FL": 0.9,
+  "Wheel_FR": 0.9,
+  "Wheel_RL": 0.9,
+  "Wheel_RR": 0.9,
+  // lights
+  "Front lights 1": 0.8,
+  "Front lights 2": 0.8,
+  "Tail lights 1": 0.8,
+  "Tail lights 2": 0.8,
+  // V6 engine import — Engine_Block is a 110-mesh join, decimate moderately;
+  // Air_Filter keeps shape; Battery/Radiator are simple boxes (ratio moot).
+  "Engine_Block": 0.5,
+  "Air_Filter": 0.6,
+  "Battery": 1.0,
+  "Radiator": 1.0,
   // hidden structural
-  "Suspension_FL": 0.15,
-  "Other parts": 0.15,
-  "Support 1": 0.15,
-  "Support 2": 0.15,
-  // interior — visible through glass at the production camera angle
-  "Seats": 0.50,
-  "Dashboard": 0.50,
-  "Steeringwheel": 0.50,
-  "IntFR_Door": 0.50,
-  "IntFL_Door": 0.50,
-  "IntRL_Door": 0.50,
-  "IntRR_Door": 0.50,
+  "Suspension_FL": 0.3,
+  "Other parts": 0.3,
+  "Support 1": 0.3,
+  "Support 2": 0.3,
+  // interior — visible through glass
+  "Seats": 0.7,
+  "Dashboard": 0.7,
+  "Steeringwheel": 0.7,
+  "IntFR_Door": 0.7,
+  "IntFL_Door": 0.7,
+  "IntRL_Door": 0.7,
+  "IntRR_Door": 0.7,
 };
-const DEFAULT_RATIO = 0.50;
+const DEFAULT_RATIO = 0.7;
 const ERROR = 0.005;
 
 const io = new NodeIO()

@@ -57,7 +57,7 @@ if (typeof window !== "undefined") {
 // 11.4MB source, file size effectively the same as the flat-ratio v3.
 const MODEL_URL =
   process.env.NEXT_PUBLIC_LC300_MODEL_URL ??
-  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-opt-v4.glb";
+  "https://vhrdanvvpxwiaotn.public.blob.vercel-storage.com/models/lc300-engine.glb";
 // Draco decoder served from gstatic; the CSP connect-src already allows it.
 const DRACO_DECODER_URL = "https://www.gstatic.com/draco/v1/decoders/";
 // Polyhaven brown_photostudio_02 — the classic car-render HDRI. Dark studio
