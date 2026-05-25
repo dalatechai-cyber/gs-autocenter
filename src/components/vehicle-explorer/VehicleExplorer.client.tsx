@@ -24,6 +24,26 @@ import * as THREE from "three";
 import { LC300_HOTSPOTS, findHotspotId, type Hotspot } from "./hotspots";
 import { PHONE_HREF, PHONE_DISPLAY } from "@/lib/contact";
 
+// Three.js 0.184 deprecated THREE.Clock in favour of THREE.Timer, but
+// @react-three/fiber's internal render loop still constructs a Clock per
+// canvas. The deprecation warning fires once per scene mount and isn't
+// actionable from our code — wrap console.warn so the message doesn't
+// pollute the production console. Guarded to client-only + applied once.
+if (typeof window !== "undefined") {
+  const w = window as unknown as { __clockWarnSuppressed?: boolean };
+  if (!w.__clockWarnSuppressed) {
+    w.__clockWarnSuppressed = true;
+    const origWarn = console.warn.bind(console);
+    console.warn = (...args: unknown[]) => {
+      const first = args[0];
+      if (typeof first === "string" && first.includes("THREE.Clock") && first.includes("deprecated")) {
+        return;
+      }
+      origWarn(...args);
+    };
+  }
+}
+
 /* ─── constants ─────────────────────────────────────────────────── */
 // LC300 model: Blender export with the hood mirror+bevel+subdiv modifiers
 // baked into "Bonnet_Full" (origin at the rear-bottom hinge so we rotate
