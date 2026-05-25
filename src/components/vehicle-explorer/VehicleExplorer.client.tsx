@@ -819,48 +819,74 @@ function LC300Scene({
   const hoodAnimFromRef = useRef(0);
 
   useEffect(() => {
-    // Bonnet_Full is the hood node (mesh: Hood.001) at translation
-    // (0, 1.28, -5.33) — origin baked at the rear hinge so a local +X
-    // rotation swings the front edge up like a real hood opening.
-    bonnetRef.current = scene.getObjectByName("Bonnet_Full") ?? null;
-    if (typeof window !== "undefined") {
-      // DEBUG: expose scene + bonnet structure so we can see what's actually loaded
-      const w = window as unknown as { __lc?: Record<string, unknown> };
-      const bonnet = bonnetRef.current;
-      const dump = (o: THREE.Object3D | null, d = 0): unknown => {
-        if (!o) return null;
-        const box = new THREE.Box3().setFromObject(o);
-        const sz = box.getSize(new THREE.Vector3());
-        const ctr = box.getCenter(new THREE.Vector3());
-        return {
-          name: o.name,
-          type: o.type,
-          pos: o.position.toArray().map((n) => +n.toFixed(2)),
-          rot: o.rotation.toArray().slice(0, 3).map((n) => +(typeof n === "number" ? n : 0).toFixed(2)),
-          bboxSize: sz.toArray().map((n) => +n.toFixed(2)),
-          bboxCenter: ctr.toArray().map((n) => +n.toFixed(2)),
-          children: d < 2 ? o.children.map((c) => dump(c, d + 1)) : `[${o.children.length} children]`,
-        };
-      };
-      const hoodLike: unknown[] = [];
-      scene.traverse((o) => {
-        if (/bonnet|hood|plane\.0?08/i.test(o.name)) {
-          hoodLike.push(dump(o));
-        }
-      });
-      w.__lc = {
-        bonnet: dump(bonnet),
-        rootChildren: scene.children.map((c) => ({
-          name: c.name,
-          pos: c.position.toArray().map((n) => +n.toFixed(2)),
-          bboxSize: new THREE.Box3().setFromObject(c).getSize(new THREE.Vector3()).toArray().map((n) => +n.toFixed(2)),
-          children: c.children.length,
-        })),
-        hoodLike,
-      };
-      // eslint-disable-next-line no-console
-      console.log("[DBG] LC300 scene ready", w.__lc);
+    // The hood node ships under two different names depending on which GLB
+    // export we're loading:
+    //   - lc300-opt-v4.glb: "Bonnet_Full" with a full-width hood mesh
+    //     (the Blender Mirror modifier was baked in at export time).
+    //   - lc300-hq.glb: "Bonnet" with only the LEFT half of the hood
+    //     (the Mirror modifier was NOT baked — only the half the artist
+    //     actually modelled exists in the GLB, the symmetric right half
+    //     was meant to come from runtime mirroring).
+    // We have to handle both: prefer Bonnet_Full when present; otherwise
+    // fall back to Bonnet and synthesise the right half ourselves so the
+    // entire hood opens together instead of just the driver's side.
+    const fullHood = scene.getObjectByName("Bonnet_Full");
+    if (fullHood) {
+      bonnetRef.current = fullHood;
+      return;
     }
+    const halfHood = scene.getObjectByName("Bonnet");
+    if (!halfHood) {
+      bonnetRef.current = null;
+      return;
+    }
+    // Already mirrored on a prior mount (cached scene from useGLTF) — just
+    // grab the pivot we previously created instead of double-wrapping.
+    const existingPivot = scene.getObjectByName("Bonnet_Pivot");
+    if (existingPivot) {
+      bonnetRef.current = existingPivot;
+      return;
+    }
+
+    // Build a mirror sibling for the right half. The original "Bonnet"
+    // node's TRANSLATION carries the hinge offset, so we hoist that into a
+    // new pivot group and reset both halves' positions to (0,0,0). The
+    // mirrored clone uses scale.x = -1 to flip across the car centerline.
+    // Negative scale flips face winding, so we mark every cloned material
+    // DoubleSided to keep the inner skin visible from the camera side.
+    const parent = halfHood.parent;
+    if (!parent) {
+      bonnetRef.current = halfHood;
+      return;
+    }
+    const mirror = halfHood.clone(true);
+    mirror.name = "Bonnet_Mirror";
+    mirror.scale.x *= -1;
+    mirror.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mesh.material = mats.map((m) => {
+        if (!m) return m;
+        const cloned = m.clone();
+        cloned.side = THREE.DoubleSide;
+        return cloned;
+      });
+      if (Array.isArray(mesh.material) && mesh.material.length === 1) {
+        mesh.material = mesh.material[0];
+      }
+    });
+
+    const pivot = new THREE.Group();
+    pivot.name = "Bonnet_Pivot";
+    pivot.position.copy(halfHood.position);
+    halfHood.position.set(0, 0, 0);
+    mirror.position.set(0, 0, 0);
+    parent.add(pivot);
+    pivot.add(halfHood);
+    pivot.add(mirror);
+
+    bonnetRef.current = pivot;
   }, [scene]);
 
   useEffect(() => {
@@ -1176,41 +1202,22 @@ function EnvIntensity({ value }: { value: number }) {
 function Lighting() {
   return (
     <>
-      {/* Top key — directional light with a soft shadow. Substantially
-          cheaper than the previous RectAreaLight rig: directional lights
-          don't compile the RECT_AREA_LIGHTS uniform branch and don't
-          need the BRDF lookup textures. The HDRI (brown_photostudio_02)
-          already projects the softbox shape into the clearcoat
-          reflections, so the explicit area panel was redundant — its
-          only contribution was extra GPU cost.
-
-          Shadow map is 1024² instead of 2048² (4× fewer depth samples
-          to compute every frame) and the camera frustum is tightened
-          to just the car bbox, which keeps shadow texel density high
-          enough to avoid blocky edges. */}
-      <directionalLight
-        position={[-2.5, 6.5, -2.0]}
-        intensity={1.4}
-        color="#ffffff"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-bias={-0.0005}
-        shadow-normalBias={0.02}
-        shadow-camera-near={0.1}
-        shadow-camera-far={20}
-        shadow-camera-left={-3.5}
-        shadow-camera-right={3.5}
-        shadow-camera-top={3.5}
-        shadow-camera-bottom={-3.5}
-      />
+      {/* Top key — directional light WITHOUT shadow casting. Real-time
+          shadow maps were the second-biggest GPU cost per frame (after
+          the clearcoat shader): we ran one extra depth pass over every
+          mesh, plus PCF samples per fragment. The car still reads
+          grounded because <ContactShadows> renders a dedicated wheel
+          shadow once at mount, and the brown_photostudio HDRI already
+          drives the body's specular shaping. Visual cost: zero on the
+          car, only the floor cast is slightly less crisp. */}
+      <directionalLight position={[-2.5, 6.5, -2.0]} intensity={1.4} color="#ffffff" />
 
       {/* Front-right fill — opens up the shadow side so the body doesn't
-          read as half-lit. No shadow casting (would double the depth
-          pass cost for almost no visual gain). */}
+          read as half-lit. */}
       <directionalLight position={[3.0, 3.5, -2.0]} intensity={0.5} color="#fff4e6" />
 
       {/* Soft bounce from below so the underside of bumpers and skirts
-          isn't crushed black — much cheaper than ContactShadows alone. */}
+          isn't crushed black. */}
       <hemisphereLight args={["#ffffff", "#1a1a1c", 0.35]} />
 
       {/* Brand-red rim from behind — separates the silhouette from the
@@ -1651,9 +1658,10 @@ export default function VehicleExplorer() {
             />
 
             <Canvas
-              shadows={{ type: THREE.PCFShadowMap }}
-              dpr={[1, 1.5]}
+              shadows={false}
+              dpr={1}
               performance={{ min: 0.5 }}
+              frameloop="always"
               camera={{ position: CAM.exterior.pos, fov: CAM.exterior.fov }}
               gl={{
                 alpha: true,
