@@ -823,6 +823,44 @@ function LC300Scene({
     // (0, 1.28, -5.33) — origin baked at the rear hinge so a local +X
     // rotation swings the front edge up like a real hood opening.
     bonnetRef.current = scene.getObjectByName("Bonnet_Full") ?? null;
+    if (typeof window !== "undefined") {
+      // DEBUG: expose scene + bonnet structure so we can see what's actually loaded
+      const w = window as unknown as { __lc?: Record<string, unknown> };
+      const bonnet = bonnetRef.current;
+      const dump = (o: THREE.Object3D | null, d = 0): unknown => {
+        if (!o) return null;
+        const box = new THREE.Box3().setFromObject(o);
+        const sz = box.getSize(new THREE.Vector3());
+        const ctr = box.getCenter(new THREE.Vector3());
+        return {
+          name: o.name,
+          type: o.type,
+          pos: o.position.toArray().map((n) => +n.toFixed(2)),
+          rot: o.rotation.toArray().slice(0, 3).map((n) => +(typeof n === "number" ? n : 0).toFixed(2)),
+          bboxSize: sz.toArray().map((n) => +n.toFixed(2)),
+          bboxCenter: ctr.toArray().map((n) => +n.toFixed(2)),
+          children: d < 2 ? o.children.map((c) => dump(c, d + 1)) : `[${o.children.length} children]`,
+        };
+      };
+      const hoodLike: unknown[] = [];
+      scene.traverse((o) => {
+        if (/bonnet|hood|plane\.0?08/i.test(o.name)) {
+          hoodLike.push(dump(o));
+        }
+      });
+      w.__lc = {
+        bonnet: dump(bonnet),
+        rootChildren: scene.children.map((c) => ({
+          name: c.name,
+          pos: c.position.toArray().map((n) => +n.toFixed(2)),
+          bboxSize: new THREE.Box3().setFromObject(c).getSize(new THREE.Vector3()).toArray().map((n) => +n.toFixed(2)),
+          children: c.children.length,
+        })),
+        hoodLike,
+      };
+      // eslint-disable-next-line no-console
+      console.log("[DBG] LC300 scene ready", w.__lc);
+    }
   }, [scene]);
 
   useEffect(() => {
