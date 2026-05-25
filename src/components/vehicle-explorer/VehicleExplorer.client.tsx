@@ -1593,7 +1593,7 @@ export default function VehicleExplorer() {
             />
 
             <Canvas
-              shadows="soft"
+              shadows={{ type: THREE.PCFShadowMap }}
               dpr={[1, 1.5]}
               performance={{ min: 0.5 }}
               camera={{ position: CAM.exterior.pos, fov: CAM.exterior.fov }}
