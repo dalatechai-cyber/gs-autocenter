@@ -19,6 +19,35 @@ if [ ! -f "$BLEND" ]; then
   exit 1
 fi
 
-blender --background "$BLEND" \
-        --python scripts/blender/render_stages.py \
-        -- --stage "$STAGE"
+# Resolve Blender executable: prefer $BLENDER env var, else PATH, else known install paths.
+BLENDER="${BLENDER:-}"
+if [ -z "$BLENDER" ]; then
+  if command -v blender >/dev/null 2>&1; then
+    BLENDER="blender"
+  else
+    for candidate in \
+      "/c/Program Files/Blender Foundation/Blender 5.1/blender.exe" \
+      "/c/Program Files/Blender Foundation/Blender 5.0/blender.exe" \
+      "/c/Program Files/Blender Foundation/Blender 4.5/blender.exe" \
+      "/c/Program Files/Blender Foundation/Blender 4.4/blender.exe" \
+      "/c/Program Files/Blender Foundation/Blender 4.3/blender.exe" \
+      "/c/Program Files/Blender Foundation/Blender 4.2/blender.exe" \
+      "/c/Program Files/Blender Foundation/Blender/blender.exe" \
+      "/Applications/Blender.app/Contents/MacOS/Blender" \
+      "/usr/bin/blender"
+    do
+      if [ -f "$candidate" ]; then BLENDER="$candidate"; break; fi
+    done
+  fi
+fi
+if [ -z "$BLENDER" ]; then
+  echo "ERROR: Blender not found. Set the BLENDER env var, e.g.:"
+  echo "       BLENDER=\"/c/Program Files/Blender Foundation/Blender 5.1/blender.exe\" \\"
+  echo "         bash scripts/blender/render_stage.sh $STAGE"
+  exit 1
+fi
+echo "[render] using Blender: $BLENDER"
+
+"$BLENDER" --background "$BLEND" \
+           --python scripts/blender/render_stages.py \
+           -- --stage "$STAGE"
