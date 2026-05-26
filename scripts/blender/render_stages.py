@@ -287,6 +287,7 @@ def render_stage(stage_name):
     out_json = os.path.join(out_dir, 'projections.json')
     degenerate = False
     reason = 'render did not complete'
+    completed = False
 
     def write_projections(final=False):
         """Flush per_frame_projections to disk. Safe to call mid-render."""
@@ -359,14 +360,14 @@ def render_stage(stage_name):
                     h['visible'] = bool(h.get('in_frame'))
 
         write_projections(final=True)
+        completed = True
         print(f'[{stage_name}] wrote projections.json')
     finally:
-        # If the try-block crashed before the final write, the partial state is still
-        # useful (PNGs match the JSON's per-frame entries). Flush whatever we have.
-        if not os.path.exists(out_json) or len(per_frame_projections) > 0:
+        # On crash, flush whatever partial state we have so the rendered PNGs aren't orphaned.
+        # On successful completion, the success path already wrote complete=True; don't overwrite it.
+        if not completed:
             write_projections(final=False)
-            if degenerate is False and reason == 'render did not complete':
-                print(f'[{stage_name}] flushed partial projections.json (render incomplete)')
+            print(f'[{stage_name}] flushed partial projections.json (render incomplete)')
 
 
 if args.stage == 'all':
