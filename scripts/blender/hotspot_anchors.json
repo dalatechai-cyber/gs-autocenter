@@ -1,9 +1,7 @@
 {
-  "_comment": "LC300 hotspot 3D anchors, reconciled with scripts/blender/INVENTORY.md (SHA 929f32e). Coordinate system: +X=Right, -X=Left, +Y=Front, +Z=Up. Bonnet reference: (0, 5.33, 1.59). Anchored entries reference a real mesh by name + local offset; DEFERRED entries have no mesh and use world_position directly (no offset applied).",
+  "_comment": "LC300 hotspot 3D anchors, reconciled with scripts/blender/INVENTORY.md (SHA 929f32e). Coordinate system: +X=Right, -X=Left, +Y=Front, +Z=Up. Bonnet reference: (0, 5.33, 1.59). Anchored entries reference a real mesh by name + local offset; DEFERRED entries have no mesh and use world_position directly (no offset applied). Note: 'Front lights 1' (11982 tris) and 'Front lights 2' (1627 tris) BOTH span the full car width (X from -1.24 to +1.24, bbox center Y=6.83 Z=1.19) — they are full-width assemblies (main lens cluster + outer bezel/DRL trim), NOT a L/R pair. Headlight L/R hotspots are placed via DEFERRED world_position at the left and right sides of the assembly.",
   "exterior": [
     { "id": "ext-hood",        "anchor": "Bonnet",         "offset": [0, 0, 0.05] },
-    { "id": "ext-headlight-l", "anchor": "Front lights 1", "offset": [0, 0, 0] },
-    { "id": "ext-headlight-r", "anchor": "Front lights 2", "offset": [0, 0, 0] },
     { "id": "ext-wheel-fl",    "anchor": "FL_Wheel",       "offset": [0, 0, 0] },
     { "id": "ext-wheel-fr",    "anchor": "FR_Wheel",       "offset": [0, 0, 0] },
     { "id": "ext-wheel-rl",    "anchor": "RL_Wheel",       "offset": [0, 0, 0] },
@@ -12,6 +10,8 @@
   "engine": [],
   "underneath": [],
   "DEFERRED": [
+    { "id": "ext-headlight-l", "anchor": null, "world_position": [-0.95, 6.83, 1.19], "_note": "Left (driver-side) headlight; verified via Blender MCP — 'Front lights 1/2' both span the full width (X -1.24 to +1.24, bbox center Y=6.83 Z=1.19). Placed at -0.95 X (one-quarter from left edge of the assembly) so the marker lands on the visible left headlight lamp from the front-quarter exterior view." },
+    { "id": "ext-headlight-r", "anchor": null, "world_position": [0.95, 6.83, 1.19], "_note": "Right (passenger-side) headlight; mirrored across X from ext-headlight-l." },
     { "id": "ext-grille",      "anchor": null, "world_position": [0.00, 6.20, 1.10], "_note": "Front center grille area; merged into Main body / Other parts. Estimated forward of Bonnet (Y=5.33+0.87) and below it." },
     { "id": "ext-mirror-l",    "anchor": null, "world_position": [-1.40, 5.20, 1.55], "_note": "Driver side mirror; merged. Estimated outboard of FL_Door (X=-1.27) at door-top height." },
     { "id": "ext-mirror-r",    "anchor": null, "world_position": [1.40, 5.20, 1.55], "_note": "Passenger side mirror; mirrored across X from ext-mirror-l." },
