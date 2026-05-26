@@ -6,11 +6,25 @@ can open it directly.
 import bpy
 import math
 import os
+import sys
 from mathutils import Vector
 
 BLEND_IN  = os.path.abspath('public/models/lc300-raw/lc300-working.blend')
 BLEND_OUT = os.path.abspath('public/models/lc300-raw/lc300-working.blend')
 HDRI_PATH = os.path.abspath('public/hdr/studio_small_09_2k.hdr')
+
+# Pre-flight: fail fast if inputs are missing rather than producing a broken .blend.
+if not os.path.exists(BLEND_IN):
+    sys.exit(
+        f'ERROR: working .blend not found at {BLEND_IN}\n'
+        '       Run Task 1.2 first (verify_textures.py) to produce it.'
+    )
+
+if not os.path.exists(HDRI_PATH):
+    sys.exit(
+        f'ERROR: studio HDRI not found at {HDRI_PATH}\n'
+        '       Run the curl commands in Task 1.4 Step 1 to download it.'
+    )
 
 bpy.ops.wm.open_mainfile(filepath=BLEND_IN)
 
