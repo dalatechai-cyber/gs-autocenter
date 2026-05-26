@@ -1,0 +1,35 @@
+{
+  "_comment": "LC300 hotspot 3D anchors, reconciled with scripts/blender/INVENTORY.md (SHA 929f32e). Coordinate system: +X=Right, -X=Left, +Y=Front, +Z=Up. Bonnet reference: (0, 5.33, 1.59). Anchored entries reference a real mesh by name + local offset; DEFERRED entries have no mesh and use world_position directly (no offset applied).",
+  "exterior": [
+    { "id": "ext-hood",        "anchor": "Bonnet",         "offset": [0, 0, 0.05] },
+    { "id": "ext-headlight-l", "anchor": "Front lights 1", "offset": [0, 0, 0] },
+    { "id": "ext-headlight-r", "anchor": "Front lights 2", "offset": [0, 0, 0] },
+    { "id": "ext-wheel-fl",    "anchor": "FL_Wheel",       "offset": [0, 0, 0] },
+    { "id": "ext-wheel-fr",    "anchor": "FR_Wheel",       "offset": [0, 0, 0] },
+    { "id": "ext-wheel-rl",    "anchor": "RL_Wheel",       "offset": [0, 0, 0] },
+    { "id": "ext-wheel-rr",    "anchor": "RR_Wheel",       "offset": [0, 0, 0] }
+  ],
+  "engine": [],
+  "underneath": [],
+  "DEFERRED": [
+    { "id": "ext-grille",      "anchor": null, "world_position": [0.00, 6.20, 1.10], "_note": "Front center grille area; merged into Main body / Other parts. Estimated forward of Bonnet (Y=5.33+0.87) and below it." },
+    { "id": "ext-mirror-l",    "anchor": null, "world_position": [-1.40, 5.20, 1.55], "_note": "Driver side mirror; merged. Estimated outboard of FL_Door (X=-1.27) at door-top height." },
+    { "id": "ext-mirror-r",    "anchor": null, "world_position": [1.40, 5.20, 1.55], "_note": "Passenger side mirror; mirrored across X from ext-mirror-l." },
+    { "id": "ext-windshield",  "anchor": null, "world_position": [0.00, 4.90, 1.85], "_note": "Windshield center; merged into Main body. Estimated rear of Bonnet (Y=5.33-0.43) and above its top." },
+    { "id": "eng-block",       "anchor": null, "world_position": [0.00, 5.33, 1.40], "_note": "Engine block center; Engine mesh is one combined object. Estimated under Bonnet center." },
+    { "id": "eng-battery",     "anchor": null, "world_position": [-0.50, 5.33, 1.40], "_note": "Battery; -0.5m X (driver side) of block." },
+    { "id": "eng-air-filter",  "anchor": null, "world_position": [0.50, 5.33, 1.40], "_note": "Air filter; +0.5m X (passenger side) of block." },
+    { "id": "eng-radiator",    "anchor": null, "world_position": [0.00, 6.03, 1.40], "_note": "Radiator; +0.7m Y (further forward) from block." },
+    { "id": "eng-intake",      "anchor": null, "world_position": [0.00, 5.33, 1.60], "_note": "Intake; top of block (+0.2m Z)." },
+    { "id": "eng-fuse-box",    "anchor": null, "world_position": [-0.40, 5.73, 1.40], "_note": "Fuse box; -0.4m X, +0.4m Y from block." },
+    { "id": "und-susp-fl",     "anchor": null, "world_position": [-1.17, 5.97, 0.20], "_note": "Front-left suspension; Suspension is one combined mesh. Estimated below FL_Wheel hub (Z lowered)." },
+    { "id": "und-susp-fr",     "anchor": null, "world_position": [1.17, 5.97, 0.20], "_note": "Front-right suspension; mirror of und-susp-fl across X." },
+    { "id": "und-susp-rl",     "anchor": null, "world_position": [-1.32, 2.20, 0.20], "_note": "Rear-left suspension; below RL_Wheel hub." },
+    { "id": "und-susp-rr",     "anchor": null, "world_position": [1.32, 2.20, 0.20], "_note": "Rear-right suspension; below RR_Wheel hub." },
+    { "id": "und-exhaust",     "anchor": null, "world_position": [0.30, 3.00, 0.25], "_note": "Exhaust system; not a discrete mesh. Estimated along rear underbody, slightly +X (exhaust typically on passenger side)." },
+    { "id": "und-fuel-tank",   "anchor": null, "world_position": [0.00, 3.50, 0.30], "_note": "Fuel tank; not a discrete mesh. Estimated mid-rear underbody, between rear axle (Y=2.20) and cabin." },
+    { "id": "und-transfer",    "anchor": null, "world_position": [0.00, 4.10, 0.35], "_note": "Transfer case; between front and rear axles, slightly aft of midpoint." },
+    { "id": "und-diff-f",      "anchor": null, "world_position": [0.00, 5.97, 0.30], "_note": "Front differential; centered between FL/FR wheels (X=0) at front axle Y=5.97." },
+    { "id": "und-diff-r",      "anchor": null, "world_position": [0.00, 2.20, 0.30], "_note": "Rear differential; centered between RL/RR wheels (X=0) at rear axle Y=2.20." }
+  ]
+}
