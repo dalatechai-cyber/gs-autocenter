@@ -34,6 +34,15 @@ if (existsSync(SENTINEL)) {
   ]);
 }
 
+// generate-manifest.mjs writes atomically via .tmp + rename. A stray .tmp means the
+// previous generation was interrupted; the current manifest.json (if any) is stale.
+if (existsSync(MANIFEST + '.tmp')) {
+  fail([
+    `Stale ${MANIFEST}.tmp present — previous manifest generation was interrupted.`,
+    `Re-run: npm run build-360`,
+  ]);
+}
+
 if (!existsSync(MANIFEST)) {
   fail([`Missing manifest: ${MANIFEST}`]);
 }
