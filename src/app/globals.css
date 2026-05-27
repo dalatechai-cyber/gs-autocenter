@@ -119,10 +119,14 @@
 }
 
 /* Word reveal: each word climbs up behind a clipping mask. Mechanical. */
+/* word-rise: rises words from below their final position. Opacity stays at
+   1 throughout (was 0 → 1 fade) so the H1 is LCP-eligible from frame 0 —
+   Lighthouse skips opacity-0 elements for LCP candidacy. The .word-row
+   overflow:hidden mask still hides the translated-down portion until it
+   rises into view, so the visual effect is preserved. */
 @keyframes word-rise {
-  0%   { transform: translateY(115%); opacity: 0; }
-  60%  { opacity: 1; }
-  100% { transform: translateY(0);    opacity: 1; }
+  0%   { transform: translateY(115%); }
+  100% { transform: translateY(0);    }
 }
 
 /* Shimmer sweep across a CTA, every 5s */
