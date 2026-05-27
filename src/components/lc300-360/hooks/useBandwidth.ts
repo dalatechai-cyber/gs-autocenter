@@ -9,27 +9,33 @@ interface NavConn {
   removeEventListener?: (t: string, fn: () => void) => void;
 }
 
+function getConn(): NavConn | undefined {
+  if (typeof navigator === 'undefined') return undefined;
+  return (navigator as unknown as { connection?: NavConn }).connection;
+}
+
+function computeProfile(conn: NavConn | undefined): NetworkProfile {
+  if (typeof window === 'undefined') return 'full';
+  if (window.matchMedia('(prefers-reduced-data: reduce)').matches) return 'minimal';
+  if (!conn) return 'full';
+  if (conn.saveData) return 'minimal';
+  switch (conn.effectiveType) {
+    case 'slow-2g':
+    case '2g':       return 'minimal';
+    case '3g':       return 'reduced';
+    default:         return 'full';
+  }
+}
+
 export function useBandwidth(): NetworkProfile {
-  const [profile, setProfile] = useState<NetworkProfile>('full');
+  // Initialise from the network API directly (lazy useState) so the effect
+  // only has to subscribe for future 'change' events — no synchronous setState
+  // inside the effect body, which React Compiler flags as cascading renders.
+  const [profile, setProfile] = useState<NetworkProfile>(() => computeProfile(getConn()));
 
   useEffect(() => {
-    if (typeof navigator === 'undefined') return;
-    const conn = (navigator as unknown as { connection?: NavConn }).connection;
-
-    const compute = (): NetworkProfile => {
-      if (window.matchMedia('(prefers-reduced-data: reduce)').matches) return 'minimal';
-      if (!conn) return 'full';
-      if (conn.saveData) return 'minimal';
-      switch (conn.effectiveType) {
-        case 'slow-2g':
-        case '2g':       return 'minimal';
-        case '3g':       return 'reduced';
-        default:         return 'full';
-      }
-    };
-
-    setProfile(compute());
-    const handler = () => setProfile(compute());
+    const conn = getConn();
+    const handler = () => setProfile(computeProfile(conn));
     conn?.addEventListener?.('change', handler);
     return () => conn?.removeEventListener?.('change', handler);
   }, []);
