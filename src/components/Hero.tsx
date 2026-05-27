@@ -1,7 +1,6 @@
 import { ArrowRight, PhoneIcon } from "./icons";
 import { PHONE_HREF } from "@/lib/contact";
 import ParticleField from "./ParticleField";
-import MagneticButton from "./MagneticButton";
 
 /* ---------------------------------------------------------------------------
    Hero · asymmetric editorial
@@ -196,13 +195,17 @@ export default function Hero() {
             className="mt-10 flex flex-col gap-3 sm:mt-14 sm:flex-row sm:gap-4"
             style={{ animation: "var(--animate-rise)", animationDelay: "1000ms" }}
           >
-            <MagneticButton
+            {/* Plain anchor (was MagneticButton) — the magnetic-cursor effect
+                is decorative; removing it eliminates a Client Component from
+                the above-the-fold critical path, reducing hydration cost and
+                LCP "settle" time. CSS hover effects below preserve interaction. */}
+            <a
               href={PHONE_HREF}
               className="cta-shine pressable group/cta inline-flex items-center justify-center gap-3 bg-gs-red px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-snow transition-colors duration-150 ease-out hover:bg-gs-red-600 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-snow"
             >
               <PhoneIcon className="size-4" />
               77-200-570
-            </MagneticButton>
+            </a>
             <a
               href="#uilchilgee"
               className="pressable group/cta inline-flex items-center justify-center gap-3 border border-charcoal px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-paper transition-colors duration-150 ease-out hover:border-paper"

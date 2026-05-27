@@ -53,6 +53,8 @@ public/models/*.gltf
 public/models/lc300-raw/
 # Scratch dir used by scripts/strip-nlm.mjs + gltf-transform pipeline
 tmp-glb/
+# General scratch dir — Lighthouse JSONs, Blender render outputs, etc.
+tmp/
 # HDRIs — render-only inputs for the 360° explorer (CC0 from Polyhaven, fetched by setup_render_scene.py)
 public/hdr/*.hdr
 .env*.local
