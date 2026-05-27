@@ -10,7 +10,9 @@
     "lint": "eslint",
     "encode-webp": "node scripts/encode-webp.mjs",
     "build-360": "node scripts/encode-webp.mjs && node scripts/generate-manifest.mjs",
-    "check-360": "node scripts/check-360-assets.mjs"
+    "check-360": "node scripts/check-360-assets.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@react-spring/three": "^10.0.3",
@@ -28,13 +30,18 @@
     "@gltf-transform/extensions": "^4.3.0",
     "@gltf-transform/functions": "^4.3.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.2",
     "draco3dgltf": "^1.5.7",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.7"
   }
 }
