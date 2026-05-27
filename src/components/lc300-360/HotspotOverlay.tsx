@@ -27,6 +27,7 @@ export function HotspotOverlay({ stage, frame, onSelect }: Props) {
           aria-label={`${h.titleMn} - үйлчилгээний мэдээлэл`}
           onClick={(e) => onSelect(h, e.currentTarget)}
           tabIndex={p.visible ? 0 : -1}
+          aria-hidden={!p.visible}
           style={{
             position: 'absolute',
             left: `${p.x * 100}%`,
