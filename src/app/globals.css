@@ -303,12 +303,15 @@
     overflow: hidden;
     padding-bottom: 0.06em;
   }
+  /* Hero word "rise" entrance — kept for branding but reworked so the H1 is
+     visible from the first paint (was opacity:0 + translateY before, which
+     made the H1 LCP-ineligible and forced Lighthouse to pick the tiny Nav
+     logo as LCP). Now the .word-row clip-path mask reveals the words as the
+     animation runs; the words themselves stay visible throughout. */
   .word-row .word {
     display: inline-block;
-    transform: translateY(115%);
-    opacity: 0;
     animation: word-rise 720ms var(--ease-mech) forwards;
-    will-change: transform, opacity;
+    will-change: transform;
   }
 
   /* ---- CTA shimmer ---------------------------------------------- */
