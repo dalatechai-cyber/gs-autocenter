@@ -12,7 +12,7 @@ export function StageButtons({ stage, onChange }: Props) {
   return (
     <div
       role="tablist"
-      aria-label="Машины үзэх булан"
+      aria-label="Машины хэсгүүд"
       style={{
         display: 'flex', gap: 8, padding: 8,
         background: 'rgba(0,0,0,0.55)', borderRadius: 999,
