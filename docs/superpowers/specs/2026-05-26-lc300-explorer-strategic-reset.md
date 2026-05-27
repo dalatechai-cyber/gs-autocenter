@@ -832,19 +832,11 @@ All events are anonymized (`anonymize_ip: true` in the GA4 init at `src/app/layo
 
 ## Keyboard Map (LC300 Explorer) (added 2026-05-27)
 
-For support staff: how customers can drive the explorer with the keyboard.
+This section describes every keyboard interaction a customer can use in the LC300 360° explorer, so support staff can answer keyboard accessibility questions without consulting a developer.
 
-> **Actual tab order (as built):** Carousel → Visible hotspots → Stage tabs.
-> This differs from the Phase 8.1 plan which expected tabs first. The DOM order in
-> `LC300Carousel.tsx` places `StageCarousel` first, then `HotspotOverlay` buttons,
-> then `StageButtons` last. All controls are reachable; the order is intentional for
-> the visual flow (carousel is the primary element). No tabIndex fix was applied.
+**Scope:** keyboard-only (desktop). On touch devices the explorer is driven by tap, swipe, and pinch — there is no keyboard surface to document there. Hotspot modals open on tap; the carousel rotates on horizontal swipe.
 
-### Stage tabs (bottom of explorer)
-- **Tab** — focus reaches the 4 stage tabs after the carousel and any visible hotspots
-- **Enter / Space** — activate the focused tab and switch to that stage
-- Note: there is **no arrow-key navigation between tabs** — the tab buttons have no `onKeyDown` handler. This is intentional per Phase 4 simplification. Only Enter/Space and mouse click work.
-- Tab order within the tablist: Exterior → Engine Approach → Engine Bay → Underneath (matches `STAGE_ORDER` array in `src/components/lc300-360/data/types.ts`)
+> **Actual tab order:** Carousel → Visible hotspots → Stage tabs. Sections below appear in this order. (The Phase 8.1 plan expected tabs first; DOM order in `LC300Carousel.tsx` keeps the visually-first carousel as the first tab stop — intentional, no fix needed.)
 
 ### Carousel (the 360° image)
 - **Tab** — focus moves to the carousel container (`tabIndex={0}`, `StageCarousel.tsx` line 70), which is the **first** focusable element in the explorer
@@ -857,8 +849,15 @@ For support staff: how customers can drive the explorer with the keyboard.
 ### Hotspots
 - **Tab** — visible hotspots receive focus in DOM order after the carousel container
 - **Enter / Space** — open the hotspot modal for the focused hotspot
-- Hidden (occluded) hotspots are excluded from tab order: they receive `tabIndex={-1}` and `pointerEvents: none` (`HotspotOverlay.tsx` line 29 and line 37). They are not explicitly `aria-hidden` in code — they remain in the accessibility tree but are not operable.
+- Hidden (occluded) hotspots are excluded from tab order: they receive `tabIndex={-1}` and `pointerEvents: none` (`HotspotOverlay.tsx` line 29 and line 37). They also have `aria-hidden={true}` which removes them from the accessibility tree entirely when occluded.
 - The set of visible hotspots changes as the carousel rotates (each frame has its own projection list), so the number of tabbable hotspots varies by frame.
+- **Visible focus indicator** — focused hotspots show the browser's default focus ring around the 28 px button. No custom focus style is set in `HotspotOverlay.tsx`. Customers can tell where their keyboard is by looking for the ring on the red circle.
+
+### Stage tabs (bottom of explorer)
+- **Tab** — focus reaches the 4 stage tabs after the carousel and any visible hotspots
+- **Enter / Space** — activate the focused tab and switch to that stage
+- Note: there is **no arrow-key navigation between tabs** — the tab buttons have no `onKeyDown` handler. This is intentional per Phase 4 simplification. Only Enter/Space and mouse click work.
+- Tab order within the tablist: Exterior → Engine Approach → Engine Bay → Underneath (matches `STAGE_ORDER` array in `src/components/lc300-360/data/types.ts`)
 
 ### Modal (when a hotspot is open)
 - **On open** — focus moves immediately to the **close button** ("Хаах") via `closeBtnRef.current?.focus()` (`HotspotModal.tsx` line 20)
