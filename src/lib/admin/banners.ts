@@ -19,7 +19,12 @@ async function findBannersFileUrl(): Promise<string | null> {
 export async function readBanners(): Promise<Banner[]> {
   const url = await findBannersFileUrl();
   if (!url) return [];
-  const res = await fetch(url, { cache: "no-store" });
+  // ISR-friendly cache: refreshes every 60 s by default. Admin mutations
+  // call `revalidateTag("banners")` for instant invalidation. Admin pages
+  // marked `dynamic = "force-dynamic"` automatically bypass this cache.
+  const res = await fetch(url, {
+    next: { revalidate: 60, tags: ["banners"] },
+  });
   if (!res.ok) return [];
   try {
     const data = (await res.json()) as Banner[];

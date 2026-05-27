@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { isAdmin, signIn, signOut } from "@/lib/admin/auth";
 import {
@@ -149,6 +149,7 @@ export async function createBannerAction(
       error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа.",
     };
   }
+  updateTag("banners");
   revalidatePath("/admin");
   revalidatePath("/");
   redirect("/admin");
@@ -177,6 +178,7 @@ export async function updateBannerAction(
       error: err instanceof Error ? err.message : "Хадгалахад алдаа гарлаа.",
     };
   }
+  updateTag("banners");
   revalidatePath("/admin");
   revalidatePath(`/admin/banners/${id}`);
   revalidatePath("/");
@@ -189,6 +191,7 @@ export async function toggleBannerActiveAction(formData: FormData): Promise<void
   const nextActive = String(formData.get("nextActive") ?? "") === "true";
   if (!id) return;
   await updateBanner(id, { isActive: nextActive } as Partial<BannerInput>);
+  updateTag("banners");
   revalidatePath("/admin");
   revalidatePath("/");
 }
@@ -198,6 +201,7 @@ export async function deleteBannerAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   await deleteBanner(id);
+  updateTag("banners");
   revalidatePath("/admin");
   revalidatePath("/");
   redirect("/admin");

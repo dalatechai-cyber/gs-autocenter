@@ -11,10 +11,21 @@ import Contact from "@/components/Contact";
 import Reveal from "@/components/Reveal";
 import { SITE_URL } from "@/lib/site-url";
 
-// The announcement bar in the shared layout reads from Vercel Blob per request.
-// Opting the homepage into dynamic rendering ensures the live banner streams
-// into the response instead of being dropped after the static shell flushes.
-export const dynamic = "force-dynamic";
+// Render the homepage statically with ISR — eliminates the RSC streaming
+// long tasks at ~3.5 s that Lighthouse was waiting on for LCP "settle".
+//
+// Banner freshness is preserved by two layers:
+//   1. Admin actions (src/app/admin/actions.ts) call revalidatePath("/") on
+//      every banner mutation, so visible banner changes propagate immediately
+//      after the admin saves — no wait at all.
+//   2. As a safety net, the page revalidates every 60 s on its own. If a
+//      banner is scheduled to activate/expire by date alone (no admin save),
+//      the change becomes visible within ~60 s.
+//
+// Together this gives static-page LCP performance with near-realtime banner
+// updates. readBanners() in lib/admin/banners.ts uses `next: { revalidate: 60 }`
+// to participate in this revalidation rather than opting out via cache:no-store.
+export const revalidate = 60;
 
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
