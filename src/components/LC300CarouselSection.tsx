@@ -1,13 +1,8 @@
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { LC300Carousel } from './lc300-360';
 import type { Manifest } from './lc300-360/data/types';
-
-const LC300Carousel = dynamic(
-  () => import('./lc300-360').then((m) => m.LC300Carousel),
-  { ssr: false },
-);
 
 async function loadManifest(): Promise<Manifest | null> {
   try {
