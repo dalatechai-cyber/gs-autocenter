@@ -829,3 +829,43 @@ All events are anonymized (`anonymize_ip: true` in the GA4 init at `src/app/layo
 3. Click each of the 4 stage tabs in order. Verify 3 `lc300_stage_changed` events (no event fires for first load — only on transitions).
 4. Click any hotspot. Verify `lc300_hotspot_opened`.
 5. Click the Цаг захиалах CTA. Verify `lc300_cta_clicked`. (The phone dialer will also open on mobile.)
+
+## Keyboard Map (LC300 Explorer) (added 2026-05-27)
+
+For support staff: how customers can drive the explorer with the keyboard.
+
+> **Actual tab order (as built):** Carousel → Visible hotspots → Stage tabs.
+> This differs from the Phase 8.1 plan which expected tabs first. The DOM order in
+> `LC300Carousel.tsx` places `StageCarousel` first, then `HotspotOverlay` buttons,
+> then `StageButtons` last. All controls are reachable; the order is intentional for
+> the visual flow (carousel is the primary element). No tabIndex fix was applied.
+
+### Stage tabs (bottom of explorer)
+- **Tab** — focus reaches the 4 stage tabs after the carousel and any visible hotspots
+- **Enter / Space** — activate the focused tab and switch to that stage
+- Note: there is **no arrow-key navigation between tabs** — the tab buttons have no `onKeyDown` handler. This is intentional per Phase 4 simplification. Only Enter/Space and mouse click work.
+- Tab order within the tablist: Exterior → Engine Approach → Engine Bay → Underneath (matches `STAGE_ORDER` array in `data/types.ts`)
+
+### Carousel (the 360° image)
+- **Tab** — focus moves to the carousel container (`tabIndex={0}`, `StageCarousel.tsx` line 70), which is the **first** focusable element in the explorer
+- **← / →** — rotate one frame (decrease / increase frame index)
+- **Shift + ← / →** — rotate ten frames at a time
+- **Home** — jump to frame 0 (first frame of the current stage)
+- **End** — jump to the last frame of the current stage
+- Note: the key handler is attached to `window` (`StageCarousel.tsx` lines 36–48), so arrow keys work regardless of which element currently has focus — not only when the carousel div is focused. Customers do not need to click the carousel first to use arrow keys.
+
+### Hotspots
+- **Tab** — visible hotspots receive focus in DOM order after the carousel container
+- **Enter / Space** — open the hotspot modal for the focused hotspot
+- Hidden (occluded) hotspots are excluded from tab order: they receive `tabIndex={-1}` and `pointerEvents: none` (`HotspotOverlay.tsx` line 29 and line 37). They are not explicitly `aria-hidden` in code — they remain in the accessibility tree but are not operable.
+- The set of visible hotspots changes as the carousel rotates (each frame has its own projection list), so the number of tabbable hotspots varies by frame.
+
+### Modal (when a hotspot is open)
+- **On open** — focus moves immediately to the **close button** ("Хаах") via `closeBtnRef.current?.focus()` (`HotspotModal.tsx` line 20)
+- **Tab order inside modal** — CTA link ("Цаг захиалах · …") comes first in DOM, then close button ("Хаах") second. Because focus opens on the close button, the first Tab keypress moves to the CTA link, then wraps back to close button.
+- **Esc** — closes the modal and returns focus to the hotspot button that triggered it (`returnFocusTo` / `lastTriggerRef.current`, `HotspotModal.tsx` lines 28–29)
+- The modal is **not a strict focus trap** — Tab can move focus outside the modal panel. The a11y contract is: Escape to close + automatic focus return to the trigger. `aria-modal="true"` is set on the dialog (`HotspotModal.tsx` line 35) which signals screen readers to treat it as modal, but browser-level Tab trapping is not implemented.
+- Clicking the backdrop (outside the modal panel) also closes the modal.
+
+### Reduced motion
+- If the user has `prefers-reduced-motion: reduce`, frame transitions snap instead of animate (LQIP fade and loading-bar transition both check this flag, `StageCarousel.tsx` lines 61–62, 97, 121). Arrow keys and all navigation still work normally; only the visual transition changes.
