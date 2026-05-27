@@ -11,7 +11,13 @@ import { MANIFEST_URL } from './data/paths';
 import type { Hotspot, Manifest, Stage } from './data/types';
 
 interface Props {
-  manifest?: Manifest;
+  // Hero placeholder data — small strings passed from the Server Component
+  // so the placeholder renders immediately without serializing the entire
+  // 900 KB manifest into the HTML. The full manifest is fetched client-side
+  // when the section enters the viewport.
+  heroSrc?: string;
+  heroWidth?: number;
+  heroHeight?: number;
 }
 
 const STAGE_ARIA: Record<Stage, string> = {
@@ -21,8 +27,8 @@ const STAGE_ARIA: Record<Stage, string> = {
   underneath:      'Land Cruiser 300 доод тал',
 };
 
-export default function LC300Carousel({ manifest: ssrManifest }: Props) {
-  const [manifest, setManifest] = useState<Manifest | null>(ssrManifest ?? null);
+export default function LC300Carousel({ heroSrc, heroWidth, heroHeight }: Props) {
+  const [manifest, setManifest] = useState<Manifest | null>(null);
   const { stage, goTo } = useStage();
   const [frame, setFrame] = useState(0);
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
@@ -56,10 +62,13 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
     return () => observer.disconnect();
   }, []);
 
+  // Fetch the full manifest only when the section nears the viewport.
+  // This defers ~900 KB of JSON parsing (hotspot projections per frame)
+  // until the user actually scrolls toward the LC300 explorer.
   useEffect(() => {
-    if (manifest) return;
+    if (!isVisible || manifest) return;
     fetch(MANIFEST_URL).then((r) => r.json()).then(setManifest);
-  }, [manifest]);
+  }, [isVisible, manifest]);
 
   useEffect(() => {
     if (manifest) {
@@ -67,14 +76,15 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
     }
   }, [manifest, track, mountedAt]);
 
-  if (!manifest) return null;
-
-  const stageData = manifest.stages[stage];
-  const exteriorStage = manifest.stages.exterior;
+  // Render the placeholder until the carousel is both visible AND has the
+  // manifest. Both conditions are gated so we don't show the interactive
+  // carousel before the manifest fetch resolves.
+  const stageData = manifest?.stages[stage];
+  const showInteractive = isVisible && manifest && stageData;
 
   return (
     <div ref={sectionRef} style={{ position: 'relative', width: '100%' }}>
-      {isVisible ? (
+      {showInteractive ? (
         <>
           <StageCarousel
             key={stage}
@@ -105,21 +115,20 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
             />
           </div>
         </>
-      ) : (
-        // Placeholder shown until the section approaches the viewport (~300 px away).
-        // Same dimensions as StageCarousel to prevent layout shift on swap-in.
-        // fetchPriority="high" so the browser fetches it early — it's also the LCP candidate.
+      ) : heroSrc && heroWidth && heroHeight ? (
+        // Placeholder shown until the section nears viewport AND the manifest
+        // arrives. Same dimensions as StageCarousel to prevent layout shift.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={exteriorStage.heroPath}
+          src={heroSrc}
           alt="Land Cruiser 300"
-          width={exteriorStage.width}
-          height={exteriorStage.height}
+          width={heroWidth}
+          height={heroHeight}
           style={{ width: '100%', height: 'auto' }}
           loading="eager"
           fetchPriority="high"
         />
-      )}
+      ) : null}
       {/* HotspotModal is always mounted — hotspot=null renders it invisible.
           Keeping it outside the isVisible branch avoids conditional state issues. */}
       <HotspotModal

@@ -94,7 +94,16 @@ export default async function LC300CarouselSection() {
         )}
       </noscript>
 
-      <LC300Carousel manifest={manifest ?? undefined} />
+      {/* Don't pass the full manifest — its hotspotProjections array (240
+          frames × ~28 projections each) serializes to ~900 KB in the RSC
+          payload, bloating the document HTML. Pass only the 3 hero fields
+          needed for the placeholder; the client fetches the full manifest
+          when the IntersectionObserver fires. */}
+      <LC300Carousel
+        heroSrc={manifest?.stages.exterior.heroPath}
+        heroWidth={manifest?.stages.exterior.width}
+        heroHeight={manifest?.stages.exterior.height}
+      />
 
       <script
         type="application/ld+json"
