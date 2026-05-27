@@ -49,8 +49,27 @@ const SCHEMA = {
 
 export default async function LC300CarouselSection() {
   const manifest = await loadManifest();
+
+  // Compute first exterior frame URL for LCP preload.
+  // framePathPattern e.g. "/models/lc300-360/exterior/frame_{NNN}.webp"
+  // — {NNN} is the zero-padded 3-digit frame index.
+  const firstFrameUrl = manifest
+    ? manifest.stages.exterior.framePathPattern.replace('{NNN}', '000')
+    : null;
+
   return (
-    <section id="lc300-explorer" style={{ padding: '64px 0' }}>
+    <>
+      {manifest && firstFrameUrl && (
+        <>
+          {/* Preload exterior LQIP + first frame so they are explicit network
+              priorities and arrive before the carousel JavaScript runs. This
+              fixes the LCP regression where the first frame was racing against
+              every other resource on the page. */}
+          <link rel="preload" as="image" href={manifest.stages.exterior.lqipPath} fetchPriority="high" />
+          <link rel="preload" as="image" href={firstFrameUrl} fetchPriority="high" />
+        </>
+      )}
+      <section id="lc300-explorer" style={{ padding: '64px 0' }}>
       <div style={{ textAlign: 'center', marginBottom: 24, color: '#f5f5f5' }}>
         <h2 style={{ fontSize: 32, fontWeight: 700, margin: 0 }}>Land Cruiser 300</h2>
         <p style={{ marginTop: 8, color: '#9a9aa0' }}>
@@ -82,5 +101,6 @@ export default async function LC300CarouselSection() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(SCHEMA) }}
       />
     </section>
+    </>
   );
 }
