@@ -12,16 +12,14 @@ const chatbotUrl = process.env.NEXT_PUBLIC_CHATBOT_URL?.replace(/\/$/, "");
 // caches without waiting for the default Cache-Control window.
 const CHATBOT_WIDGET_VERSION = "3";
 
+// Italic Montserrat omitted intentionally: only usage was `not-italic` on
+// <address> (Contact.tsx) which removes the browser default — no real italic
+// text ships. Dropping the file saves ~303 KB / 29% of total page weight.
 const montserrat = localFont({
   src: [
     {
       path: "../../public/fonts/Montserrat-Variable.ttf",
       style: "normal",
-      weight: "100 900",
-    },
-    {
-      path: "../../public/fonts/Montserrat-Italic-Variable.ttf",
-      style: "italic",
       weight: "100 900",
     },
   ],
