@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { LC300Carousel } from './lc300-360';
 import type { Manifest } from './lc300-360/data/types';
+import { SITE_URL } from '@/lib/site-url';
 
 async function loadManifest(): Promise<Manifest | null> {
   try {
@@ -21,12 +22,12 @@ async function loadManifest(): Promise<Manifest | null> {
 const SCHEMA = {
   '@context': 'https://schema.org',
   '@type': 'AutoRepair',
-  '@id': 'https://gs-autocenter.mn/#business',
+  '@id': `${SITE_URL}/#business`,
   name: 'GS Auto Center',
   description: 'Toyota болон Lexus автомашины засвар үйлчилгээний төв. Хөдөлгүүр, түдгэлзүүр, цахилгаан, оношилгоо.',
   telephone: '+97677200570',
-  url: 'https://gs-autocenter.mn',
-  image: 'https://gs-autocenter.mn/models/lc300-360/exterior/hero.webp',
+  url: SITE_URL,
+  image: `${SITE_URL}/models/lc300-360/exterior/hero.webp`,
   areaServed: { '@type': 'AdministrativeArea', name: 'Ulaanbaatar' },
   knowsAbout: [
     'Toyota Land Cruiser 300',

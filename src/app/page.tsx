@@ -9,13 +9,12 @@ import About from "@/components/About";
 import DirectorGreeting from "@/components/DirectorGreeting";
 import Contact from "@/components/Contact";
 import Reveal from "@/components/Reveal";
+import { SITE_URL } from "@/lib/site-url";
 
 // The announcement bar in the shared layout reads from Vercel Blob per request.
 // Opting the homepage into dynamic rendering ensures the live banner streams
 // into the response instead of being dropped after the static shell flushes.
 export const dynamic = "force-dynamic";
-
-const SITE_URL = "https://gs-autocenter.vercel.app";
 
 const localBusinessJsonLd = {
   "@context": "https://schema.org",

@@ -4,6 +4,7 @@ import Script from "next/script";
 import Nav from "@/components/Nav";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const chatbotUrl = process.env.NEXT_PUBLIC_CHATBOT_URL?.replace(/\/$/, "");
@@ -39,7 +40,7 @@ const audiowide = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gs-autocenter.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "GS Auto Center · TOYOTA & LEXUS засвар үйлчилгээ",
     template: "%s · GS Auto Center",
