@@ -91,11 +91,14 @@ STAGES = {
         'samples': 256,
         'turntable_location': (0.0, 6.0, 1.0),
         'turntable_rotation': lambda f, n: (0, 0, math.radians(360 * f / n)),
-        'camera_local': (1.5, 0.3, 3.5),
-        # Euler computed from Vector((1.5,0.3,3.5)).to_track_quat('-Z','Y'):
-        # (0.412, 0.0, 1.768) rad = (23.61, 0.00, 101.31) deg — camera points
-        # at the engine bay center (turntable origin in this stage).
-        'camera_rotation': (0.412040, 0.0, 1.768192),
+        'camera_local': (0.8, 0.3, 4.5),
+        # Near-top-down view. Earlier 3/4 angle (1.5, 0.3, 3.5) put the open
+        # hood between the camera and the engine bay, blocking the view.
+        # This higher, more directly-overhead camera clears the upright hood
+        # and looks down into the bay to show the engine cover, intake, etc.
+        # Euler from Vector((0.8,0.3,4.5)).to_track_quat('-Z','Y'):
+        # (0.188, 0.0, 1.930) rad = (10.75, 0.00, 110.56) deg.
+        'camera_rotation': (0.187633, 0.0, 1.929567),
         'lens': 35,
         'hood_open_frac': 1,
         'anchors_key': 'engine',
@@ -318,7 +321,7 @@ def configure_fill_lights(cfg):
         ebl = bpy.context.active_object
         ebl.name = 'LC300_EngineBayFill'
         ebl.data.size = 2.0
-        ebl.data.energy = 800
+        ebl.data.energy = 1000  # bright — needs to overpower hood shadow
         ebl.data.color = (1.0, 0.98, 0.92)
         ebl.rotation_euler = (0, 0, 0)  # area lights emit -Z
     ebl.hide_render = not cfg.get('engine_bay_fill_light', False)
