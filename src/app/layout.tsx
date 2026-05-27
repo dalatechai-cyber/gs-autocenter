@@ -117,7 +117,12 @@ export default function RootLayout({
   return (
     <html
       lang="mn"
-      className={`${montserrat.variable} ${audiowide.variable} h-full antialiased`}
+      // audiowide.className on <html> is intentional — Next.js only auto-preloads
+      // next/font/local files when `.className` is used in JSX, not when only
+      // `.variable` is referenced. The body rule (font-family: var(--font-sans))
+      // overrides at body level, so this changes nothing visually but tells
+      // Next.js to emit <link rel="preload" as="font"> in <head>.
+      className={`${montserrat.variable} ${audiowide.variable} ${audiowide.className} h-full antialiased`}
     >
       <body className="min-h-full">
         <AnnouncementBar />
