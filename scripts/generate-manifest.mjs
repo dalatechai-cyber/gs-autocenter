@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
 
 const SRC_ROOT = 'tmp/renders';
@@ -55,13 +55,19 @@ for (const stage of STAGES) {
     heroPath: `/models/lc300-360/${stage}/hero.webp`,
     avgFrameKB: Math.round(totalBytes / proj.frameCount / 1024),
     totalKB: Math.round(totalBytes / 1024),
+    // Older projections.json predates the occlusion fix — treat missing field as "not degenerate".
     occlusionDegenerate: proj.occlusionDegenerate ?? false,
     hotspotProjections: proj.perFrame,
   };
 }
 
-writeFileSync(path.join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
-console.log('manifest written:', path.join(OUT_DIR, 'manifest.json'));
+// Atomic write: stage to .tmp, then rename. Avoids leaving a truncated manifest if
+// the process is killed mid-write.
+const manifestPath = path.join(OUT_DIR, 'manifest.json');
+const tmpPath = manifestPath + '.tmp';
+writeFileSync(tmpPath, JSON.stringify(manifest, null, 2));
+renameSync(tmpPath, manifestPath);
+console.log('manifest written:', manifestPath);
 console.log('totals:');
 let grandTotalKB = 0;
 for (const [s, d] of Object.entries(manifest.stages)) {
