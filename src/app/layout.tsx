@@ -36,7 +36,10 @@ const audiowide = localFont({
   weight: "400",
   style: "normal",
   display: "swap",
-  preload: false,
+  // Preload so wordmark headings (Hero, Manifesto, VehicleShowcase) and any
+  // above-the-fold text using --font-audiowide doesn't block LCP waiting for
+  // the .ttf to download. The Audiowide-Regular.ttf file is small (~30 KB).
+  preload: true,
 });
 
 export const metadata: Metadata = {
