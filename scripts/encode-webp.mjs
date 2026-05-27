@@ -2,7 +2,7 @@
 // Encode all PNG renders to WebP at quality 78. Generates LQIP + hero WebP per stage.
 
 import { execSync } from 'node:child_process';
-import { readdirSync, mkdirSync, existsSync, statSync } from 'node:fs';
+import { readdirSync, mkdirSync, existsSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const STAGES = ['exterior', 'engine_approach', 'engine_bay', 'underneath'];
@@ -61,6 +61,11 @@ for (const stage of STAGES) {
   }
   mkdirSync(outDir, { recursive: true });
 
+  // Remove stale frame_*.webp from a prior run so an N→M frame-count change doesn't ship orphans.
+  for (const stale of readdirSync(outDir).filter((f) => /^frame_\d+\.webp$/.test(f))) {
+    unlinkSync(path.join(outDir, stale));
+  }
+
   const frames = readdirSync(srcDir).filter((f) => /^frame_\d+\.png$/.test(f)).sort();
   console.log(`${stage}: ${frames.length} frames`);
 
@@ -77,20 +82,41 @@ for (const stage of STAGES) {
   // LQIP: blurred low-quality thumbnail (~24 KB target)
   const heroIdx = HERO_FRAME[stage];
   const heroSrc = path.join(srcDir, `frame_${String(heroIdx).padStart(3, '0')}.png`);
-  if (existsSync(heroSrc)) {
-    const lqipOut = path.join(outDir, 'lqip.webp');
-    execSync(`${QUOTED_CWEBP} -q 30 -resize 320 0 "${heroSrc}" -o "${lqipOut}"`, { stdio: 'pipe' });
-    console.log(`  ${stage} lqip: ${(statSync(lqipOut).size / 1024).toFixed(0)} KB`);
-
-    // Hero WebP for SSR fallback (Googlebot understands WebP)
-    const heroOut = path.join(outDir, 'hero.webp');
-    execSync(`${QUOTED_CWEBP} -q 85 -resize 1280 0 "${heroSrc}" -o "${heroOut}"`, { stdio: 'pipe' });
-    console.log(`  ${stage} hero.webp: ${(statSync(heroOut).size / 1024).toFixed(0)} KB`);
+  if (!existsSync(heroSrc)) {
+    console.error(
+      `ERROR: hero source missing for ${stage}: ${heroSrc}\n` +
+      `       HERO_FRAME.${stage} = ${heroIdx} but that PNG doesn't exist.\n` +
+      `       Either the render produced fewer frames than expected, or HERO_FRAME is wrong.\n` +
+      `       Fix HERO_FRAME in this script or re-render.`
+    );
+    process.exit(1);
   }
+  const lqipOut = path.join(outDir, 'lqip.webp');
+  execSync(`${QUOTED_CWEBP} -q 30 -resize 320 0 "${heroSrc}" -o "${lqipOut}"`, { stdio: 'pipe' });
+  console.log(`  ${stage} lqip: ${(statSync(lqipOut).size / 1024).toFixed(0)} KB`);
+
+  // Hero WebP for SSR fallback (Googlebot understands WebP)
+  const heroOut = path.join(outDir, 'hero.webp');
+  execSync(`${QUOTED_CWEBP} -q 85 -resize 1280 0 "${heroSrc}" -o "${heroOut}"`, { stdio: 'pipe' });
+  console.log(`  ${stage} hero.webp: ${(statSync(heroOut).size / 1024).toFixed(0)} KB`);
 }
 
+const BUDGET_BYTES = 5 * 1024 * 1024;
+const SENTINEL = path.join(OUT_ROOT, '.BUDGET_FAIL');
 console.log(`TOTAL WebP bytes: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`);
-if (totalBytes > 5 * 1024 * 1024) {
-  console.error(`OVER BUDGET (5 MB limit)`);
+
+if (totalBytes > BUDGET_BYTES) {
+  const msg = `Total WebP frames = ${totalBytes} bytes (${(totalBytes / 1024 / 1024).toFixed(2)} MB), over the ${BUDGET_BYTES} byte (5 MB) budget. Downstream consumers (manifest, build) must refuse to proceed. Re-encode with a lower WEBP_QUALITY or reduce frame counts to clear this.`;
+  writeFileSync(SENTINEL, msg + '\n');
+  console.error(`OVER BUDGET (5 MB limit) — wrote sentinel at ${SENTINEL}`);
   process.exit(1);
+} else {
+  if (existsSync(SENTINEL)) {
+    unlinkSync(SENTINEL);
+    console.log(`Cleared prior budget-fail sentinel at ${SENTINEL}`);
+  }
+  // Warn band: 94% of budget
+  if (totalBytes > 0.94 * BUDGET_BYTES) {
+    console.warn(`WARNING: ${(totalBytes / 1024 / 1024).toFixed(2)} MB is within 6% of the ${(BUDGET_BYTES / 1024 / 1024)} MB budget. Future render iterations may exceed it.`);
+  }
 }
