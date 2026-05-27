@@ -80,6 +80,14 @@ export const metadata: Metadata = {
     siteName: "GS Auto Center",
     locale: "mn_MN",
     type: "website",
+    images: [
+      {
+        url: "/models/lc300-360/exterior/hero.webp",
+        width: 1280,
+        height: 720,
+        alt: "Toyota Land Cruiser 300 — GS Auto Center",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
