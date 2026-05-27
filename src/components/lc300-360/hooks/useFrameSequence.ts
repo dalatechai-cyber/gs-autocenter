@@ -47,6 +47,9 @@ export function useFrameSequence(opts: Options): Result {
   const activeLoadsRef = useRef(0);
   const queueRef = useRef<number[]>([]);
   const [retainedCount, setRetainedCount] = useState(0);
+  // Stable ref to pump so finish() can call it without creating a forward
+  // reference to the const declaration — React Compiler flags const-TDZ issues.
+  const pumpRef = useRef<() => void>(() => {});
 
   // Compute frame cap. Floor of 2 prevents pathological zero-retention on absurdly tiny budgets
   // while still honouring small caps (e.g. 12 MB → ~3 frames at 1280x720) the way callers expect.
@@ -120,13 +123,22 @@ export function useFrameSequence(opts: Options): Result {
           scheduleEviction();
         }
         activeLoadsRef.current -= 1;
-        pump();
+        // Call via stable ref so there is no forward-reference to the `pump`
+        // const — React Compiler treats const-TDZ self-references as errors.
+        // pumpRef is kept in sync with the latest pump closure via the effect below.
+        pumpRef.current();
       };
       img.onload = () => finish(true);
       img.onerror = () => finish(false);
       img.src = framePath('', idx, pathPattern);
     }
   }, [pathPattern, reducePreload, scheduleEviction]);
+
+  // Keep pumpRef in sync in an effect (never during render) so the React
+  // Compiler doesn't flag a ref.current write outside of render boundaries.
+  useEffect(() => {
+    pumpRef.current = pump;
+  }, [pump]);
 
   const requestLoad = useCallback((i: number) => {
     if (i < 0 || i >= frameCount) return;
@@ -137,6 +149,7 @@ export function useFrameSequence(opts: Options): Result {
   }, [frameCount, pump]);
 
   useEffect(() => {
+    pumpRef.current = pump;  // ensure ref is current before the first load
     cancelledRef.current = false;
     queueRef.current = [...loadOrder];
     pump();

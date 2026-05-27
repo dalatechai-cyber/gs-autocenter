@@ -16,7 +16,7 @@ class MockImage {
 }
 
 beforeEach(() => {
-  (globalThis as any).Image = MockImage;
+  (globalThis as Record<string, unknown>).Image = MockImage;
 });
 
 describe('useFrameSequence', () => {
