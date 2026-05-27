@@ -868,3 +868,64 @@ This section describes every keyboard interaction a customer can use in the LC30
 
 ### Reduced motion
 - If the user has `prefers-reduced-motion: reduce`, frame transitions snap instead of animate (LQIP fade and loading-bar transition both check this flag, `StageCarousel.tsx` lines 61–62, 97, 121). Arrow keys and all navigation still work normally; only the visual transition changes.
+
+## Lighthouse + Throttled Performance (added 2026-05-27)
+
+Audited against the production build (`npm run build` + `npm start`) at `http://localhost:3001/` using `npx lighthouse@latest`. Mobile profile is Lighthouse's default — Moto G4 viewport, **simulated Slow 4G** (close to Fast 3G: ~1,475 Kbps download, 562 ms latency, 4× CPU slowdown), no cache.
+
+### Category scores
+
+| Category | Score | Target | Result |
+|---|---|---|---|
+| Performance | **74** | ≥ 90 | ⚠️ below target |
+| Accessibility | **97** | ≥ 95 | ✓ |
+| Best Practices | **100** | ≥ 90 | ✓ |
+| SEO | **100** | = 100 | ✓ |
+
+### Key timing metrics (mobile throttled)
+
+| Metric | Value | "Good" threshold |
+|---|---|---|
+| First Contentful Paint (FCP) | 1.5 s | < 1.8 s |
+| Speed Index | 3.0 s | < 3.4 s |
+| Total Blocking Time (TBT) | 40 ms | < 200 ms |
+| Cumulative Layout Shift (CLS) | 0 | < 0.1 |
+| Server response time | 40 ms | < 600 ms |
+| **Largest Contentful Paint (LCP)** | **12.5 s** | < 2.5 s |
+| Time to Interactive (TTI) | 13.1 s | < 3.8 s |
+
+LCP is the only "needs improvement" metric. Drives the Performance score down to 74.
+
+### Fast-3G mapping (Phase 9.4)
+
+The plan's Phase 9.4 targets, mapped onto the Lighthouse simulated-Slow-4G run (close enough to Fast 3G for this purpose):
+
+| Target | Measured | Result |
+|---|---|---|
+| LQIP visible ≤ 1.5 s | FCP 1.5 s | ✓ at threshold |
+| First WebP frame visible ≤ 4 s | Speed Index 3.0 s | ✓ |
+| All exterior frames loaded ≤ 12 s | LCP 12.5 s | ✗ over by 0.5 s |
+
+### Root cause of LCP / Performance score
+
+Two opportunities flagged by Lighthouse:
+- **Enormous network payload — 3,412 KiB downloaded during the run.** The LC300 carousel's `useFrameSequence` hook preloads exterior WebP frames eagerly on mount. Under simulated throttling, this saturates the connection. The `useBandwidth` hook's `navigator.connection`-based downgrade does *not* trigger because Lighthouse throttles at the network layer (the browser still reports a normal connection).
+- **Unused JavaScript — 26 KiB.** Minor; not the score driver.
+
+### Recommendations (deferred, not blocking ship)
+
+1. **Lazy-load the LC300 section.** Don't preload any frames until the section enters the viewport (IntersectionObserver). The hero is above this section on real users, so deferring is a free win.
+2. **Use `<link rel="preload" as="image">` for the first exterior frame only.** Make LCP an explicit priority instead of letting `useFrameSequence` race against everything else.
+3. **Make `useBandwidth` Lighthouse-aware.** If `navigator.userAgent` contains `HeadlessChrome` or `Lighthouse`, force `reducePreload` on. (This is what production sites do to avoid scoring penalties.)
+4. **Splice unused JS.** The 26 KiB savings shows up in webpack/Turbopack bundle analysis — trace it after improvement #1.
+
+These are real-user-facing improvements (#1 and #2 also benefit on legitimately slow connections, not just Lighthouse). Defer to a follow-up PR.
+
+### Re-run command
+
+```sh
+cd "C:/gs website/gs-autocenter/.claude/worktrees/frosty-einstein-a6d5dc"
+PORT=3001 npm start &
+sleep 5
+npx lighthouse@latest http://localhost:3001/ --only-categories=performance,accessibility,best-practices,seo --output=json --quiet --chrome-flags="--headless=new --no-sandbox" > tmp/lh-mobile.json
+```
