@@ -862,7 +862,7 @@ For support staff: how customers can drive the explorer with the keyboard.
 
 ### Modal (when a hotspot is open)
 - **On open** — focus moves immediately to the **close button** ("Хаах") via `closeBtnRef.current?.focus()` (`HotspotModal.tsx` line 20)
-- **Tab order inside modal** — CTA link ("Цаг захиалах · …") comes first in DOM, then close button ("Хаах") second. Because focus opens on the close button, the first Tab keypress moves to the CTA link, then wraps back to close button.
+- **Tab order inside modal** — CTA link ("Цаг захиалах · …") comes first in DOM, then close button ("Хаах") last. Because focus opens on the close button (the last tabbable element) and there is no focus trap, pressing **Tab** from the close button moves focus out of the modal to the next element on the page; pressing **Shift+Tab** from the close button moves backward to the CTA link.
 - **Esc** — closes the modal and returns focus to the hotspot button that triggered it (`returnFocusTo` / `lastTriggerRef.current`, `HotspotModal.tsx` lines 28–29)
 - The modal is **not a strict focus trap** — Tab can move focus outside the modal panel. The a11y contract is: Escape to close + automatic focus return to the trigger. `aria-modal="true"` is set on the dialog (`HotspotModal.tsx` line 35) which signals screen readers to treat it as modal, but browser-level Tab trapping is not implemented.
 - Clicking the backdrop (outside the modal panel) also closes the modal.
