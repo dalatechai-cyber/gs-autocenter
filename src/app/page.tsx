@@ -3,7 +3,7 @@ import TrustStrip from "@/components/TrustStrip";
 import Manifesto from "@/components/Manifesto";
 import Services from "@/components/Services";
 import VehicleShowcase from "@/components/VehicleShowcase";
-import VehicleExplorer from "@/components/VehicleExplorer";
+import LC300CarouselSection from "@/components/LC300CarouselSection";
 import JapanTok from "@/components/JapanTok";
 import About from "@/components/About";
 import DirectorGreeting from "@/components/DirectorGreeting";
@@ -133,7 +133,7 @@ export default function Home() {
       <Manifesto />
       <Services />
       <VehicleShowcase />
-      <VehicleExplorer />
+      <LC300CarouselSection />
       <JapanTok />
       <About />
       <DirectorGreeting />
