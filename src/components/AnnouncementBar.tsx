@@ -52,7 +52,6 @@ function resolveBanner(banner: Banner | null): Resolved {
 export default async function AnnouncementBar() {
   const banner = await getActiveBanner().catch(() => null);
   const a = resolveBanner(banner);
-  const repeated = Array.from({ length: 4 });
 
   return (
     <div
@@ -100,28 +99,30 @@ export default async function AnnouncementBar() {
         </a>
       </div>
 
-      {/* Mobile · marquee */}
-      <div className="ticker-pause relative flex h-9 items-center overflow-hidden sm:hidden">
-        <div className="ticker-track">
-          {repeated.map((_, i) => (
-            <span
-              key={i}
-              className="flex shrink-0 items-center gap-3 text-[10.5px] font-medium uppercase tracking-[0.18em]"
-            >
-              <span
-                aria-hidden
-                className="grid h-4 place-items-center bg-snow px-1.5 text-[9px] font-bold tracking-[0.2em] text-gs-red"
-              >
-                {a.kicker}
-              </span>
-              <span>{a.body}</span>
-              <span
-                aria-hidden
-                className="mx-2 block size-1 shrink-0 bg-snow"
-              />
-            </span>
-          ))}
-        </div>
+      {/* Mobile · static (replaced marquee — animation was the Lighthouse LCP
+          element because the scroll kept revealing larger text states during the
+          measurement window. Static layout matches the desktop visual pattern,
+          truncates long bodies, keeps the CTA tappable.) */}
+      <div className="relative mx-auto flex h-9 max-w-[1440px] items-center justify-between gap-3 px-4 text-[10px] font-medium uppercase tracking-[0.14em] sm:hidden">
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            aria-hidden
+            className="grid h-4 shrink-0 place-items-center bg-snow px-1.5 text-[9px] font-bold tracking-[0.2em] text-gs-red"
+          >
+            {a.kicker}
+          </span>
+          <span className="truncate text-snow/95">{a.body}</span>
+        </span>
+        <a
+          href={a.link}
+          target={a.link.startsWith("http") ? "_blank" : undefined}
+          rel={a.link.startsWith("http") ? "noreferrer noopener" : undefined}
+          className="inline-flex shrink-0 items-center gap-1.5 text-[10px] font-semibold tracking-[0.18em] text-snow"
+          aria-label={a.ariaLabel}
+        >
+          <PhoneIcon className="size-3" />
+          <span>{a.cta}</span>
+        </a>
       </div>
     </div>
   );
