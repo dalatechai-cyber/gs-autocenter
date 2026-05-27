@@ -26,9 +26,17 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
   const { stage, goTo } = useStage();
   const [frame, setFrame] = useState(0);
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
-  const lastTriggerRef = useRef<HTMLElement | null>(null);
-  const firstPaintAt = useRef<number>(performance.now());
+  // returnFocusTarget is kept in state (not a ref read during render) so the
+  // React Compiler doesn't flag a ref.current access in the render path.
+  const [returnFocusTarget, setReturnFocusTarget] = useState<HTMLElement | null>(null);
+  // Capture mount time in an effect so performance.now() is never called
+  // during render (which the React Compiler treats as an impure call).
+  const firstPaintAt = useRef<number>(0);
   const { track } = useAnalytics();
+
+  useEffect(() => {
+    firstPaintAt.current = performance.now();
+  }, []);
 
   useEffect(() => {
     if (manifest) return;
@@ -57,7 +65,7 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
         stage={stageData}
         frame={frame}
         onSelect={(h, el) => {
-          lastTriggerRef.current = el;
+          setReturnFocusTarget(el);
           setActiveHotspot(h);
           track({ name: 'lc300_hotspot_opened', params: { hotspot_id: h.id, stage } });
         }}
@@ -77,7 +85,7 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
       </div>
       <HotspotModal
         hotspot={activeHotspot}
-        returnFocusTo={lastTriggerRef.current}
+        returnFocusTo={returnFocusTarget}
         onClose={() => setActiveHotspot(null)}
         onCtaClick={() => activeHotspot && track({
           name: 'lc300_cta_clicked',
