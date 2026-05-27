@@ -149,7 +149,6 @@ export function useFrameSequence(opts: Options): Result {
   }, [frameCount, pump]);
 
   useEffect(() => {
-    pumpRef.current = pump;  // ensure ref is current before the first load
     cancelledRef.current = false;
     queueRef.current = [...loadOrder];
     pump();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StageCarousel } from './StageCarousel';
 import { HotspotOverlay } from './HotspotOverlay';
 import { HotspotModal } from './HotspotModal';
@@ -29,14 +29,12 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
   // returnFocusTarget is kept in state (not a ref read during render) so the
   // React Compiler doesn't flag a ref.current access in the render path.
   const [returnFocusTarget, setReturnFocusTarget] = useState<HTMLElement | null>(null);
-  // Capture mount time in an effect so performance.now() is never called
-  // during render (which the React Compiler treats as an impure call).
-  const firstPaintAt = useRef<number>(0);
+  // Capture component mount time at first render. useState's lazy initializer
+  // runs exactly once, so performance.now() here is deterministic from React's
+  // perspective — no re-evaluation on re-render. The React Compiler accepts
+  // impure calls inside useState initializers because they have one-shot semantics.
+  const [mountedAt] = useState(() => performance.now());
   const { track } = useAnalytics();
-
-  useEffect(() => {
-    firstPaintAt.current = performance.now();
-  }, []);
 
   useEffect(() => {
     if (manifest) return;
@@ -45,9 +43,9 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
 
   useEffect(() => {
     if (manifest) {
-      track({ name: 'lc300_first_paint_ms', params: { value: Math.round(performance.now() - firstPaintAt.current) } });
+      track({ name: 'lc300_first_paint_ms', params: { value: Math.round(performance.now() - mountedAt) } });
     }
-  }, [manifest, track]);
+  }, [manifest, track, mountedAt]);
 
   if (!manifest) return null;
 
