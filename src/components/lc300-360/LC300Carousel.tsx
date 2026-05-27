@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StageCarousel } from './StageCarousel';
 import { HotspotOverlay } from './HotspotOverlay';
 import { HotspotModal } from './HotspotModal';
@@ -36,6 +36,26 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
   const [mountedAt] = useState(() => performance.now());
   const { track } = useAnalytics();
 
+  // IntersectionObserver: defer heavy carousel mount until section nears viewport.
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px 0px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (manifest) return;
     fetch(MANIFEST_URL).then((r) => r.json()).then(setManifest);
@@ -50,37 +70,58 @@ export default function LC300Carousel({ manifest: ssrManifest }: Props) {
   if (!manifest) return null;
 
   const stageData = manifest.stages[stage];
+  const exteriorStage = manifest.stages.exterior;
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
-      <StageCarousel
-        key={stage}
-        stage={stageData}
-        onFrameChange={setFrame}
-        ariaLabel={STAGE_ARIA[stage]}
-      />
-      <HotspotOverlay
-        stage={stageData}
-        frame={frame}
-        onSelect={(h, el) => {
-          setReturnFocusTarget(el);
-          setActiveHotspot(h);
-          track({ name: 'lc300_hotspot_opened', params: { hotspot_id: h.id, stage } });
-        }}
-      />
-      <div style={{
-        position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 10,
-      }}>
-        <StageButtons
-          stage={stage}
-          onChange={(s) => {
-            track({ name: 'lc300_stage_changed', params: { from: stage, to: s } });
-            goTo(s);
-            setFrame(0);
-          }}
+    <div ref={sectionRef} style={{ position: 'relative', width: '100%' }}>
+      {isVisible ? (
+        <>
+          <StageCarousel
+            key={stage}
+            stage={stageData}
+            onFrameChange={setFrame}
+            ariaLabel={STAGE_ARIA[stage]}
+          />
+          <HotspotOverlay
+            stage={stageData}
+            frame={frame}
+            onSelect={(h, el) => {
+              setReturnFocusTarget(el);
+              setActiveHotspot(h);
+              track({ name: 'lc300_hotspot_opened', params: { hotspot_id: h.id, stage } });
+            }}
+          />
+          <div style={{
+            position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 10,
+          }}>
+            <StageButtons
+              stage={stage}
+              onChange={(s) => {
+                track({ name: 'lc300_stage_changed', params: { from: stage, to: s } });
+                goTo(s);
+                setFrame(0);
+              }}
+            />
+          </div>
+        </>
+      ) : (
+        // Placeholder shown until the section approaches the viewport (~300 px away).
+        // Same dimensions as StageCarousel to prevent layout shift on swap-in.
+        // fetchPriority="high" so the browser fetches it early — it's also the LCP candidate.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={exteriorStage.heroPath}
+          alt="Land Cruiser 300"
+          width={exteriorStage.width}
+          height={exteriorStage.height}
+          style={{ width: '100%', height: 'auto' }}
+          loading="eager"
+          fetchPriority="high"
         />
-      </div>
+      )}
+      {/* HotspotModal is always mounted — hotspot=null renders it invisible.
+          Keeping it outside the isVisible branch avoids conditional state issues. */}
       <HotspotModal
         hotspot={activeHotspot}
         returnFocusTo={returnFocusTarget}
