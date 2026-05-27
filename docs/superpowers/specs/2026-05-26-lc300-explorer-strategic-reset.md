@@ -776,3 +776,56 @@ These are all v2+ candidates if v1 ships and resonates.
 3. **Skeleton silhouette GLB** — **DECIDED:** Claude builds it in Blender via MCP as the first asset in Phase 2. Target: 200 KB, ~3k tris, body silhouette only, neutral grey material.
 4. **LC300 grille and badges** — **DECIDED:** Claude models them in Blender from reference photos via MCP. Includes the LC300 horizontal-slat grille, headlight cluster shape, "LAND CRUISER" badge, and tail-light signature. This is a hard requirement, not optional — the deliverable is "real LC300", not "LX in disguise."
 5. **CTA phone** — **DECIDED:** `+976 77-200-570` (formatted) → `tel:+97677200570` (link). Confirmed current.
+
+---
+
+## GA4 Event Catalog (added 2026-05-27)
+
+The LC300 360° explorer fires 4 GA4 events via `window.gtag('event', name, params)`.
+All events are anonymized (`anonymize_ip: true` in the GA4 init at `src/app/layout.tsx`).
+
+### `lc300_first_paint_ms`
+**Fires:** Once per session, when the manifest finishes loading.
+**Params:**
+- `value: number` — milliseconds from component mount to manifest available
+**Use:** Measure perceived first-paint performance. Slow values indicate manifest fetch latency or render-blocking work.
+**Wired at:** `src/components/lc300-360/LC300Carousel.tsx` (firstPaintAt useEffect)
+
+### `lc300_stage_changed`
+**Fires:** When the user clicks a stage tab (Гадна тал / Капот руу / Хөдөлгүүр / Доод тал).
+**Params:**
+- `from: 'exterior' | 'engine_approach' | 'engine_bay' | 'underneath'` — previous stage
+- `to: 'exterior' | 'engine_approach' | 'engine_bay' | 'underneath'` — new stage
+**Use:** Funnel analysis (which stages do users actually visit?) + drop-off detection (e.g., users never reach engine_bay).
+**Wired at:** `src/components/lc300-360/LC300Carousel.tsx` (StageButtons onChange)
+
+### `lc300_hotspot_opened`
+**Fires:** When the user clicks a hotspot button (any of the 28 hotspots).
+**Params:**
+- `hotspot_id: string` — e.g., `'ext-headlight-l'`, `'eng-block'`, `'und-transfer'`
+- `stage: 'exterior' | 'engine_approach' | 'engine_bay' | 'underneath'` — stage the hotspot was visible in
+**Use:** Engagement analysis — which services drive curiosity? Pair with `lc300_cta_clicked` for conversion ratio per hotspot.
+**Wired at:** `src/components/lc300-360/LC300Carousel.tsx` (HotspotOverlay onSelect)
+
+### `lc300_cta_clicked`
+**Fires:** When the user taps the "Цаг захиалах · +976 77-200-570" CTA in the hotspot modal (tel: link).
+**Params:**
+- `hotspot_id: string` — the hotspot whose modal was open
+- `stage: 'exterior' | 'engine_approach' | 'engine_bay' | 'underneath'` — stage at click time
+**Use:** **Primary conversion metric.** Tracks intent to call. Pair with hotspot_opened for per-hotspot conversion rate.
+**Wired at:** `src/components/lc300-360/LC300Carousel.tsx` (HotspotModal onCtaClick)
+
+### Suggested GA4 reports / explorations
+
+1. **First-paint distribution:** histogram of `lc300_first_paint_ms.value` by device class. Target P75 < 2000ms on 4G.
+2. **Stage funnel:** `lc300_stage_changed` counted by `to` stage → drop-off rate stage-to-stage.
+3. **Hotspot heatmap:** `lc300_hotspot_opened` count by `hotspot_id` → ranks which parts users care about most.
+4. **CTA conversion:** `lc300_cta_clicked` / `lc300_hotspot_opened` ratio per `hotspot_id` → which services have highest call intent.
+
+### Smoke test (after deploy)
+
+1. Visit the production URL with GA Debugger Chrome extension enabled.
+2. Open the LC300 explorer section. Within 5s, verify `lc300_first_paint_ms` appears in GA Realtime → Events.
+3. Click each of the 4 stage tabs in order. Verify 3 `lc300_stage_changed` events (no event fires for first load — only on transitions).
+4. Click any hotspot. Verify `lc300_hotspot_opened`.
+5. Click the Цаг захиалах CTA. Verify `lc300_cta_clicked`. (The phone dialer will also open on mobile.)
