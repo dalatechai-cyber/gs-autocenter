@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { PhoneIcon } from "./icons";
 import {
@@ -62,21 +61,25 @@ export default function Nav() {
             aria-label="GS Auto Center · нүүр хуудас"
             className="flex shrink-0 items-center"
           >
-            <Image
-              src="/logo/gs-logo-horizontal-white.png"
+            {/* Plain <img> (not next/image) on purpose — the surrounding Nav
+                is a Client Component, and hydrating the next/image component
+                was re-painting the logo at ~5 s and re-firing the Lighthouse
+                LCP measurement. A plain <img> is just static HTML, no React
+                hydration of the element itself. We use Next.js's image
+                optimization endpoint directly via srcset for crisp display
+                at common DPRs without the runtime cost. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/_next/image?url=%2Flogo%2Fgs-logo-horizontal-white.png&w=256&q=75"
+              srcSet="
+                /_next/image?url=%2Flogo%2Fgs-logo-horizontal-white.png&w=128&q=75 1x,
+                /_next/image?url=%2Flogo%2Fgs-logo-horizontal-white.png&w=256&q=75 2x
+              "
               alt="GS Auto Center"
               width={540}
               height={212}
-              priority
-              // Next.js 16 regression: `priority` alone does not emit
-              // fetchpriority="high" on the rendered <img>. Explicit prop
-              // ensures the LCP image gets the browser priority hint.
               fetchPriority="high"
-              // Tell Next.js the rendered sizes so the generated srcset
-              // matches actual usage instead of picking the 1080w variant.
-              // h-8 = 32px tall × 2.55 aspect ≈ 82px wide on mobile;
-              // h-9 = 36px × 2.55 ≈ 92px on sm; h-10 = 40px × 2.55 ≈ 102px on lg.
-              sizes="(max-width: 640px) 82px, (max-width: 1024px) 92px, 102px"
+              decoding="async"
               className="h-8 w-auto sm:h-9 lg:h-10"
             />
           </Link>
