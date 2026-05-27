@@ -100,6 +100,11 @@ export function useFrameSequence(opts: Options): Result {
   }, [frameCount, skip]);
 
   const pump = useCallback(() => {
+    // Guard against SSR: getFrame on cache miss calls requestLoad → pump,
+    // which instantiates `new Image()` (DOM-only). Without this guard every
+    // request to a page using this hook returns HTTP 500 from Next.js,
+    // hidden behind client-side hydration that re-renders successfully.
+    if (typeof window === 'undefined') return;
     const maxConcurrent = reducePreload ? 2 : 6;
     while (
       activeLoadsRef.current < maxConcurrent
