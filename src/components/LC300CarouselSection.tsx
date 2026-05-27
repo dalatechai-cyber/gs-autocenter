@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { LC300Carousel } from './lc300-360';
@@ -63,13 +62,13 @@ export default async function LC300CarouselSection() {
         {manifest && (
           <div style={{ display: 'grid', gap: 16 }}>
             {(Object.keys(manifest.stages) as (keyof typeof manifest.stages)[]).map((s) => (
-              <Image
+              // Native img inside noscript — next/image fails SSR inside noscript on Next.js 16
+              <img
                 key={s}
                 src={manifest.stages[s].heroPath}
                 alt={`Land Cruiser 300 — ${s}`}
                 width={manifest.stages[s].width}
                 height={manifest.stages[s].height}
-                priority={s === 'exterior'}
               />
             ))}
           </div>
