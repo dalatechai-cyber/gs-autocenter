@@ -78,34 +78,59 @@ STAGES = {
         'anchors_key': 'engine',
     },
     # Engine sub-sequence B: hood already fully open from frame 0, camera orbits
-    # 360° around the open bay at fixed distance. Drag controls camera rotation only.
+    # 360° around the open bay AT THE ENGINE BAY CENTER (not the car center).
+    # Turntable is temporarily moved to (0, 6, 1) so the orbit happens around
+    # the bay; camera offset (1.5, 0.3, 3.5) puts it above-right of the bay,
+    # angled down. Hood opens to +75° (positive — the sign was inverted in the
+    # prior config because the hood pivot was at the wrong edge, see
+    # HOOD_OPEN_ROT_X). An extra fill light above the bay brightens the engine
+    # cover / intake / battery now visible when the hood is up.
     'engine_bay': {
         'frames': 60,
         'hdr': 'public/hdr/autoshop_01_2k.hdr',
         'samples': 256,
+        'turntable_location': (0.0, 6.0, 1.0),
         'turntable_rotation': lambda f, n: (0, 0, math.radians(360 * f / n)),
-        'camera_local': (0, -2.5, 2.8),
-        'camera_rotation': (math.radians(102), 0, 0),
+        'camera_local': (1.5, 0.3, 3.5),
+        # Euler computed from Vector((1.5,0.3,3.5)).to_track_quat('-Z','Y'):
+        # (0.412, 0.0, 1.768) rad = (23.61, 0.00, 101.31) deg — camera points
+        # at the engine bay center (turntable origin in this stage).
+        'camera_rotation': (0.412040, 0.0, 1.768192),
         'lens': 35,
         'hood_open_frac': 1,
         'anchors_key': 'engine',
+        'engine_bay_fill_light': True,
     },
-    # Underbody pan.
+    # Underbody pan — camera at ground level, looking UP at the chassis.
+    # 180° sweep from -90° (left) through 0° (rear) to +90° (right). Camera
+    # local Z=-1.04 puts it at world Z=0.10 (just above ground) with the
+    # turntable at car center. An underbody area light (added at render
+    # time) illuminates the chassis / diffs / exhaust which would otherwise be
+    # in deep shadow under the car.
     'underneath': {
         'frames': 60,
         'hdr': 'public/hdr/garage_2k.hdr',
         'samples': 256,
         'turntable_rotation': lambda f, n: (0, 0, math.radians(180 * f / n - 90)),
-        'camera_local': (0, -5.0, -0.4),
-        'camera_rotation': (math.radians(105), 0, 0),
+        'camera_local': (0, -1.42, -1.04),
+        # Euler computed from Vector((0,-1.42,-1.04)).to_track_quat('-Z','Y'):
+        # (2.203, 0.0, 0.0) rad = (126.22, 0.0, 0.0) deg — camera points up
+        # at the car center (looking up at the underbody).
+        'camera_rotation': (2.202934, 0.0, 0.0),
         'lens': 28,
         'hood_open_frac': 0,
         'anchors_key': 'underneath',
+        'underbody_fill_light': True,
     },
 }
 
 HOOD_CLOSED_ROT_X = 0.0
-HOOD_OPEN_ROT_X   = math.radians(-65)
+# Hood opens to +75° (positive). Earlier configs used -65° because the pivot
+# fix was using max(Y) instead of min(Y), placing the hinge at the hood's
+# FRONT edge (latch end). With the corrected pivot at min(Y) = rear hinge
+# near the windshield, +75° lifts the FRONT edge UP toward the windshield —
+# the way a real car hood opens.
+HOOD_OPEN_ROT_X   = math.radians(75)
 
 
 def find_object(name):
@@ -161,6 +186,10 @@ def set_camera_pose(stage_cfg, frame, total):
     cam = find_object('TT_Camera')
     if tt is None or cam is None:
         raise RuntimeError('Turntable/TT_Camera missing -- run setup_render_scene.py first')
+    # Optional per-stage turntable location override (e.g. engine_bay orbits
+    # around the bay center at (0, 6, 1) instead of the car center at (0, 3.92, 1.14)).
+    if 'turntable_location' in stage_cfg:
+        tt.location = stage_cfg['turntable_location']
     tt.rotation_euler = stage_cfg['turntable_rotation'](frame, total)
     cam_local = stage_cfg['camera_local']
     if callable(cam_local):
@@ -211,8 +240,12 @@ def fix_hood_pivot_once():
         _hood_pivot_fixed = True
         return
 
-    # Target: rear edge of local bound box (max-Y vertex), at mid-Z.
-    rear_edge_local_y = max(c[1] for c in hood.bound_box)
+    # Target: rear edge of local bound box (min-Y vertex = hinge near windshield),
+    # at mid-Z. Earlier this used max(Y) which selected the FRONT edge of the
+    # hood (latch end) — wrong hinge, hood swung the wrong way. Wheels confirm
+    # +Y is forward (FL/FR wheels at Y=5.97, RL/RR at Y=2.20), so the hood's
+    # rear/hinge edge has the smaller Y value (Y=5.33 in world space).
+    rear_edge_local_y = min(c[1] for c in hood.bound_box)
     rear_edge_local_z = sum(c[2] for c in hood.bound_box) / 8
     rear_edge_local = Vector((0, rear_edge_local_y, rear_edge_local_z))
 
@@ -269,6 +302,42 @@ def detect_degenerate_occlusion(per_frame_projections):
     return False, f'{ratio*100:.0f}% of in-frame hotspots visible (healthy range)'
 
 
+def configure_fill_lights(cfg):
+    """Toggle engine_bay / underbody fill lights for the current stage.
+
+    Idempotent — creates the lights on first call, hides/shows on subsequent
+    stages. Both lights stay in the scene so re-running a single stage doesn't
+    leave the other's light around.
+    """
+    # Engine bay fill: bright area light directly above the engine bay,
+    # pointing DOWN. Needed because the open hood blocks HDRI from reaching
+    # the bay interior — without this, the engine renders as deep shadow.
+    ebl = bpy.data.objects.get('LC300_EngineBayFill')
+    if ebl is None:
+        bpy.ops.object.light_add(type='AREA', location=(0, 6.3, 4.5))
+        ebl = bpy.context.active_object
+        ebl.name = 'LC300_EngineBayFill'
+        ebl.data.size = 2.0
+        ebl.data.energy = 800
+        ebl.data.color = (1.0, 0.98, 0.92)
+        ebl.rotation_euler = (0, 0, 0)  # area lights emit -Z
+    ebl.hide_render = not cfg.get('engine_bay_fill_light', False)
+
+    # Underbody fill: large area light BELOW the car, pointing UP. HDRI and
+    # key/fill lights are all above the car, so the underside is otherwise
+    # in deep shadow.
+    ufl = bpy.data.objects.get('LC300_UnderbodyFill')
+    if ufl is None:
+        bpy.ops.object.light_add(type='AREA', location=(0, 3.92, -1.5))
+        ufl = bpy.context.active_object
+        ufl.name = 'LC300_UnderbodyFill'
+        ufl.data.size = 6.0  # cover car footprint
+        ufl.data.energy = 400
+        ufl.data.color = (1.0, 0.95, 0.88)
+        ufl.rotation_euler = (math.radians(180), 0, 0)  # rotate to emit +Z (up)
+    ufl.hide_render = not cfg.get('underbody_fill_light', False)
+
+
 def render_stage(stage_name):
     cfg = STAGES[stage_name]
     total = args.frames if args.frames else cfg['frames']
@@ -279,6 +348,7 @@ def render_stage(stage_name):
     scene.cycles.samples = cfg['samples']
     configure_hdri(cfg['hdr'])
     fix_hood_pivot_once()
+    configure_fill_lights(cfg)
 
     anchors_key = cfg.get('anchors_key', stage_name)
     hotspots = ANCHORS.get(anchors_key, []) + ANCHORS.get('DEFERRED', [])
