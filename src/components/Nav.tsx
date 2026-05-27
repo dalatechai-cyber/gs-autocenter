@@ -68,6 +68,15 @@ export default function Nav() {
               width={540}
               height={212}
               priority
+              // Next.js 16 regression: `priority` alone does not emit
+              // fetchpriority="high" on the rendered <img>. Explicit prop
+              // ensures the LCP image gets the browser priority hint.
+              fetchPriority="high"
+              // Tell Next.js the rendered sizes so the generated srcset
+              // matches actual usage instead of picking the 1080w variant.
+              // h-8 = 32px tall × 2.55 aspect ≈ 82px wide on mobile;
+              // h-9 = 36px × 2.55 ≈ 92px on sm; h-10 = 40px × 2.55 ≈ 102px on lg.
+              sizes="(max-width: 640px) 82px, (max-width: 1024px) 92px, 102px"
               className="h-8 w-auto sm:h-9 lg:h-10"
             />
           </Link>
