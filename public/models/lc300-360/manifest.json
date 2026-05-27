@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-27T07:21:35.897Z",
+  "generatedAt": "2026-05-27T07:42:36.053Z",
   "stages": {
     "exterior": {
       "frameCount": 90,
@@ -9,8 +9,8 @@
       "framePathPattern": "/models/lc300-360/exterior/frame_{NNN}.webp",
       "lqipPath": "/models/lc300-360/exterior/lqip.webp",
       "heroPath": "/models/lc300-360/exterior/hero.webp",
-      "avgFrameKB": 20,
-      "totalKB": 1844,
+      "avgFrameKB": 25,
+      "totalKB": 2264,
       "occlusionDegenerate": false,
       "hotspotProjections": [
         [
@@ -16582,8 +16582,8 @@
       "framePathPattern": "/models/lc300-360/engine_approach/frame_{NNN}.webp",
       "lqipPath": "/models/lc300-360/engine_approach/lqip.webp",
       "heroPath": "/models/lc300-360/engine_approach/hero.webp",
-      "avgFrameKB": 28,
-      "totalKB": 834,
+      "avgFrameKB": 34,
+      "totalKB": 1034,
       "occlusionDegenerate": false,
       "hotspotProjections": [
         [
@@ -21065,8 +21065,8 @@
       "framePathPattern": "/models/lc300-360/engine_bay/frame_{NNN}.webp",
       "lqipPath": "/models/lc300-360/engine_bay/lqip.webp",
       "heroPath": "/models/lc300-360/engine_bay/hero.webp",
-      "avgFrameKB": 18,
-      "totalKB": 1068,
+      "avgFrameKB": 22,
+      "totalKB": 1316,
       "occlusionDegenerate": false,
       "hotspotProjections": [
         [
@@ -30018,8 +30018,8 @@
       "framePathPattern": "/models/lc300-360/underneath/frame_{NNN}.webp",
       "lqipPath": "/models/lc300-360/underneath/lqip.webp",
       "heroPath": "/models/lc300-360/underneath/hero.webp",
-      "avgFrameKB": 20,
-      "totalKB": 1218,
+      "avgFrameKB": 25,
+      "totalKB": 1523,
       "occlusionDegenerate": false,
       "hotspotProjections": [
         [
