@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "encode-webp": "node scripts/encode-webp.mjs",
+    "build-360": "node scripts/encode-webp.mjs && node scripts/generate-manifest.mjs"
   },
   "dependencies": {
     "@react-spring/three": "^10.0.3",
