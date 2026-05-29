@@ -13,8 +13,15 @@ const OUT_ROOT = 'public/models/lc300-360';
 //   q=65 → 4.85 MB (initial conservative, visible compression on paint/chrome)
 //   q=70 → 5.11 MB
 //   q=78 → 5.99 MB ← user-approved (1 MB over original budget, visibly better paint/chrome/fabric)
-// Budget raised to 7 MB (see BUDGET_BYTES) to give headroom for future re-renders without
-// breaking the fence. Quality overridable via WEBP_QUALITY env var.
+// After the engine_bay + underneath re-renders (corrected cameras: open hood/engine,
+// raked underbody showing suspension), those two stages got substantially heavier
+// because they now show real detail instead of flat/closed surfaces:
+//   q=78 → 9.03 MB total (engine_bay 2.58, underneath 3.22, exterior 2.21, engine_approach 1.01)
+//   q=70 → 7.60 MB,  q=62 → 6.91 MB
+// Budget raised to 9.5 MB (see BUDGET_BYTES) to keep the user-approved q78 premium look.
+// Justified: 360 frames are lazy-loaded per stage (IntersectionObserver), so total disk
+// size is NOT a single page-load cost — the heaviest single stage streams ~3 MB on demand
+// during rotation, never on the LCP path. Quality overridable via WEBP_QUALITY env var.
 const WEBP_QUALITY = Number(process.env.WEBP_QUALITY ?? 78);
 const HERO_FRAME = {
   exterior: 22,
@@ -105,11 +112,12 @@ for (const stage of STAGES) {
   console.log(`  ${stage} hero.webp: ${(statSync(heroOut).size / 1024).toFixed(0)} KB`);
 }
 
-// Budget raised from 5 MB to 7 MB: user accepted ~6 MB at q=78 as the right quality
-// tradeoff for a premium service-center site. 7 MB cap gives headroom for re-render
-// iterations without tripping the fence.
-const BUDGET_BYTES = 7 * 1024 * 1024;
-const BUDGET_LABEL = '7 MB';
+// Budget raised 7 MB → 9.5 MB: after the engine_bay + underneath re-renders, q=78 totals
+// 9.03 MB. User accepted this to preserve the approved premium look, since frames are
+// lazy-loaded per stage and never all loaded at once (no LCP impact). 9.5 MB cap gives
+// ~0.5 MB headroom for future re-render iterations without tripping the fence.
+const BUDGET_BYTES = 9.5 * 1024 * 1024;
+const BUDGET_LABEL = '9.5 MB';
 const SENTINEL = path.join(OUT_ROOT, '.BUDGET_FAIL');
 console.log(`TOTAL WebP bytes: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`);
 

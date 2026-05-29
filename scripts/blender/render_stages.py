@@ -36,6 +36,7 @@ ap.add_argument('--stage',
                 choices=['exterior', 'engine_approach', 'engine_bay', 'underneath', 'all'],
                 default='all')
 ap.add_argument('--frames', type=int, default=None, help='override frame count (debug)')
+ap.add_argument('--samples', type=int, default=None, help='override Cycles sample count (fast test renders)')
 args = ap.parse_args(argv)
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -107,28 +108,31 @@ STAGES = {
         'anchors_key': 'engine',
         'engine_bay_fill_light': True,
     },
-    # Underbody pan — camera at ground level, looking UP at the chassis.
-    # 180° sweep from -90° (left) through 0° (rear) to +90° (right). Camera
-    # local Z=-1.04 puts it at world Z=0.10 (just above ground) with the
-    # turntable at car center. An underbody area light (added at render
-    # time) illuminates the chassis / diffs / exhaust which would otherwise be
-    # in deep shadow under the car.
+    # Underbody — camera pulled back behind the rear bumper and dropped just
+    # above ground, raking forward and up along the belly. NOTE: the NLM model
+    # has NO discrete underbody mechanicals (no driveshaft / diffs / transfer
+    # case / exhaust geometry — those hotspots are estimated-position labels).
+    # What is actually present and worth showing: the Suspension mesh (control
+    # arms + rear axle), the floor pan, and the wheels. The raked angle catches
+    # the suspension and axle in relief instead of the flat black floor pan you
+    # get from a straight-up shot. An underbody area light (added at render
+    # time) lifts it out of deep shadow.
     'underneath': {
         'frames': 60,
         'hdr': 'public/hdr/garage_2k.hdr',
         'samples': 256,
-        # 110° sweep from -55° (rear-left) through 0° (straight up the centre
-        # line from behind) to +55° (rear-right). Narrower than a full ±90°
-        # because the pure side angles (±90°) just show the flat rocker panel;
-        # staying within ±55° keeps the driveshaft / diffs / exhaust / frame
-        # rails framed up the centre of the underbody throughout.
-        'turntable_rotation': lambda f, n: (0, 0, math.radians(110 * f / n - 55)),
-        'camera_local': (0, -1.42, -1.04),
-        # Look up at the car center (turntable origin). Verified angle: camera
-        # at world Z=0.10 (just above ground) tilts up ~36° to frame the frame
-        # rails, diffs, exhaust, driveshaft.
+        # 80° sweep from -40° (rear-left) through 0° (centre line from behind)
+        # to +40° (rear-right). Narrowed from the old ±55° because the wider
+        # extremes drifted toward a low side view of the rocker panel / body;
+        # ±40° keeps every frame focused on the undercarriage (suspension,
+        # axle, floor pan) rather than the side of the car.
+        'turntable_rotation': lambda f, n: (0, 0, math.radians(80 * f / n - 40)),
+        'camera_local': (0.0, -3.3, -1.06),
+        # Look up at the car center (turntable origin). Camera sits ~just above
+        # ground (local Z=-1.06) and ~3.3 behind, tilting up to frame the
+        # suspension, rear axle and floor pan.
         'camera_look_at_local': (0.0, 0.0, 0.0),
-        'lens': 28,
+        'lens': 24,
         'hood_open_frac': 0,
         'anchors_key': 'underneath',
         'underbody_fill_light': True,
@@ -368,11 +372,11 @@ def configure_fill_lights(cfg):
     # in deep shadow.
     ufl = bpy.data.objects.get('LC300_UnderbodyFill')
     if ufl is None:
-        bpy.ops.object.light_add(type='AREA', location=(0, 3.92, -1.5))
+        bpy.ops.object.light_add(type='AREA', location=(0, 3.92, -1.1))
         ufl = bpy.context.active_object
         ufl.name = 'LC300_UnderbodyFill'
-        ufl.data.size = 6.0  # cover car footprint
-        ufl.data.energy = 400
+        ufl.data.size = 7.0  # cover car footprint
+        ufl.data.energy = 1400
         ufl.data.color = (1.0, 0.95, 0.88)
         ufl.rotation_euler = (math.radians(180), 0, 0)  # rotate to emit +Z (up)
     ufl.hide_render = not cfg.get('underbody_fill_light', False)
@@ -385,7 +389,7 @@ def render_stage(stage_name):
     os.makedirs(out_dir, exist_ok=True)
 
     scene = bpy.context.scene
-    scene.cycles.samples = cfg['samples']
+    scene.cycles.samples = args.samples if args.samples else cfg['samples']
     configure_hdri(cfg['hdr'])
     fix_hood_pivot_once()
     configure_fill_lights(cfg)
