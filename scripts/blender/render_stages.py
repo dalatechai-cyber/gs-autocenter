@@ -89,16 +89,19 @@ STAGES = {
         'frames': 60,
         'hdr': 'public/hdr/autoshop_01_2k.hdr',
         'samples': 256,
-        'turntable_location': (0.0, 6.0, 1.0),
+        # Turntable above the engine bay; camera looks STRAIGHT DOWN into the
+        # bay opening. This is the only angle that reliably shows the engine
+        # cover / intake / battery — the open hood tilts back toward the
+        # windshield (Y<5.8) and stays at the top edge of frame. Verified
+        # interactively (test render engine_bay_v13). The 360° turntable
+        # rotation spins the top-down view so the engine is seen from rotating
+        # angles. The look-at point sits directly below the camera (same XY,
+        # lower Z) so the view stays straight-down throughout the orbit rather
+        # than tilting toward the hood.
+        'turntable_location': (0.0, 6.3, 1.0),
         'turntable_rotation': lambda f, n: (0, 0, math.radians(360 * f / n)),
-        'camera_local': (0.8, 0.3, 4.5),
-        # Near-top-down view. Earlier 3/4 angle (1.5, 0.3, 3.5) put the open
-        # hood between the camera and the engine bay, blocking the view.
-        # This higher, more directly-overhead camera clears the upright hood
-        # and looks down into the bay to show the engine cover, intake, etc.
-        # Euler from Vector((0.8,0.3,4.5)).to_track_quat('-Z','Y'):
-        # (0.188, 0.0, 1.930) rad = (10.75, 0.00, 110.56) deg.
-        'camera_rotation': (0.187633, 0.0, 1.929567),
+        'camera_local': (0.0, 0.3, 4.0),
+        'camera_look_at_local': (0.0, 0.3, -1.0),
         'lens': 35,
         'hood_open_frac': 1,
         'anchors_key': 'engine',
@@ -114,12 +117,17 @@ STAGES = {
         'frames': 60,
         'hdr': 'public/hdr/garage_2k.hdr',
         'samples': 256,
-        'turntable_rotation': lambda f, n: (0, 0, math.radians(180 * f / n - 90)),
+        # 110° sweep from -55° (rear-left) through 0° (straight up the centre
+        # line from behind) to +55° (rear-right). Narrower than a full ±90°
+        # because the pure side angles (±90°) just show the flat rocker panel;
+        # staying within ±55° keeps the driveshaft / diffs / exhaust / frame
+        # rails framed up the centre of the underbody throughout.
+        'turntable_rotation': lambda f, n: (0, 0, math.radians(110 * f / n - 55)),
         'camera_local': (0, -1.42, -1.04),
-        # Euler computed from Vector((0,-1.42,-1.04)).to_track_quat('-Z','Y'):
-        # (2.203, 0.0, 0.0) rad = (126.22, 0.0, 0.0) deg — camera points up
-        # at the car center (looking up at the underbody).
-        'camera_rotation': (2.202934, 0.0, 0.0),
+        # Look up at the car center (turntable origin). Verified angle: camera
+        # at world Z=0.10 (just above ground) tilts up ~36° to frame the frame
+        # rails, diffs, exhaust, driveshaft.
+        'camera_look_at_local': (0.0, 0.0, 0.0),
         'lens': 28,
         'hood_open_frac': 0,
         'anchors_key': 'underneath',
@@ -198,10 +206,22 @@ def set_camera_pose(stage_cfg, frame, total):
     if callable(cam_local):
         cam_local = cam_local(frame, total)
     cam.location = cam_local
-    rot = stage_cfg['camera_rotation']
-    if callable(rot):
-        rot = rot(frame, total)
-    cam.rotation_euler = rot
+    # Two ways to orient the camera:
+    #  - 'camera_look_at_local': a point in the turntable's LOCAL frame to aim
+    #    at (computed via to_track_quat). Because the camera is parented to the
+    #    turntable, looking at a fixed local point keeps that target centered as
+    #    the turntable orbits — ideal for engine_bay (look into the bay opening)
+    #    and underneath (look up at the chassis).
+    #  - 'camera_rotation': a fixed Euler tuple (used by exterior/engine_approach).
+    if 'camera_look_at_local' in stage_cfg:
+        target = Vector(stage_cfg['camera_look_at_local'])
+        direction = target - Vector(cam_local)
+        cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+    else:
+        rot = stage_cfg['camera_rotation']
+        if callable(rot):
+            rot = rot(frame, total)
+        cam.rotation_euler = rot
     cam.data.lens = stage_cfg['lens']
 
 
@@ -218,6 +238,15 @@ def set_hood(open_frac):
             'Verify lc300-working.blend contains an object named "Bonnet" '
             '(see scripts/blender/INVENTORY.md).'
         )
+    # Clear any leftover animation action on the hood before setting rotation.
+    # The source .blend has a "Plane.004Action" F-curve driving the Bonnet's
+    # rotation. With the scene parked at frame 273, that F-curve evaluates to
+    # ~closed and OVERRIDES any direct rotation_euler assignment on every
+    # depsgraph evaluation — so set_hood was silently ignored and engine_bay
+    # rendered 60 frames of a closed hood. Clearing the animation data lets the
+    # direct assignment below actually take effect.
+    if hood.animation_data is not None:
+        hood.animation_data_clear()
     hood.rotation_euler.x = HOOD_CLOSED_ROT_X + (HOOD_OPEN_ROT_X - HOOD_CLOSED_ROT_X) * open_frac
 
 
@@ -242,6 +271,14 @@ def fix_hood_pivot_once():
         print('[hood] no Bonnet object found -- skipping pivot fix')
         _hood_pivot_fixed = True
         return
+
+    # Clear the leftover "Plane.004Action" F-curve and reset to rest pose BEFORE
+    # computing the pivot. If the hood is rotated by the F-curve (scene parked at
+    # frame 273), matrix_world would be rotated and the pivot math would be wrong.
+    if hood.animation_data is not None:
+        hood.animation_data_clear()
+    hood.rotation_euler = (0.0, 0.0, 0.0)
+    bpy.context.view_layer.update()
 
     # Target: rear edge of local bound box (min-Y vertex = hinge near windshield),
     # at mid-Z. Earlier this used max(Y) which selected the FRONT edge of the
